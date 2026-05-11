@@ -1,11 +1,19 @@
 #include <string>
 #include <map>
 
+// Enums need to be in PascalCase. Is that only for the enum type or also for its contents?
+enum HttpMethod
+{
+	Get,
+	Post,
+	Delete
+};
+
 struct	HttpRequest
 {
-		std::string method_;
+		enum HttpMethod method_;
 		std::string path_;
 		std::string version_;
-		std::string body_;
 		std::map<std::string, std::string> headers_;
+		std::string body_;
 };
