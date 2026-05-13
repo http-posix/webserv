@@ -42,3 +42,6 @@
 
 # binary file
 webserv
+
+#clang explicit compilation flags
+compile_flags.txt
