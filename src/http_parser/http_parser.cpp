@@ -26,3 +26,26 @@ HttpParser& HttpParser::operator=(const HttpParser& other)
 HttpParser::~HttpParser(void)
 {
 }
+
+HttpParserState HttpParser::Feed(char *str)
+{
+	input_buffer_ += str;
+	int	loop = 0;
+
+	while (loop == 0)
+	{
+		switch (state_)
+		{
+			case Error :
+				// Feed function shouldn't be called if an error has been identified. This is a failsafe
+				loop = -1;
+			case RequestLine :
+				loop = ParseRequestLine();
+			case Header :
+				loop = ParseHeaders();
+			case Body :
+				loop = ParseBody();
+		}
+	}
+	return (external_state_);
+}
