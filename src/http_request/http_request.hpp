@@ -4,6 +4,7 @@
 // Enums need to be in PascalCase. Is that only for the enum type or also for its contents?
 enum HttpMethod
 {
+	None,
 	Get,
 	Post,
 	Delete
