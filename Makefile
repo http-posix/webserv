@@ -17,6 +17,7 @@ CXXFLAGS := -Wall -Wextra -Werror -std=c++17 $(INCLUDE)
 SRC :=  $(shell find src -type f -name "*.cpp" ! -name "main.cpp")
 
 SRC_MAIN := $(SRC_DIR)/main.cpp
+SRC_RUN_APP := $(SRC_DIR)/run_app.cpp
 
 SRC_FULL := $(SRC) $(SRC_MAIN)
 
