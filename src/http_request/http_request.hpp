@@ -9,6 +9,13 @@ enum HttpMethod
 	Delete
 };
 
+enum HttpParserIntState
+{
+	Error,
+	RequestLine,
+	Header,
+	Body
+};
 struct	HttpRequest
 {
 		enum HttpMethod method_;
