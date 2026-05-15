@@ -17,6 +17,14 @@ enum HttpParserIntState
 	Header,
 	Body
 };
+
+enum HttpParserState
+{
+	NeedMoreData,
+	Complete,
+	InvalidRequest
+};
+
 struct	HttpRequest
 {
 		enum HttpMethod method_;
