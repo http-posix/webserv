@@ -74,3 +74,42 @@ int HttpParser::ParseVersion(std::string str)
 	return (0);
 }
 
+int HttpParser::ParseRequestLine()
+{
+	input_i_ = input_buffer_.find("\r\n");
+		if (input_i_ == std::string::npos)
+			return (-1);
+
+	size_t i;
+	i = input_buffer_.find(" ", 0);
+	if (i == std::string::npos)
+	{
+		state_ = Error;
+		external_state_ = InvalidRequest;
+		return (-1);
+	}
+	
+	std::string temp;
+	temp = input_buffer_.substr(0, i);
+	if (ParseMethod(temp) == -1)
+		return (-1);
+		// Invalid Method
+	size_t j;
+	j = input_buffer_.find(" ", i);
+	if (j == std::string::npos)
+	{
+		state_ = Error;
+		external_state_ = InvalidRequest;
+		return (-1);
+	}
+	// Hard copy the path since we don't need to check anything
+	version_ = input_buffer_.substr(i, j);
+	temp = input_buffer_.substr(j, input_i_);
+	if (ParseVersion(temp) == -1)
+		return (-1);	// TODO
+						// Invalid Version.
+	
+	// Trim beginning of buffer to remove the request line. +2 to remove \r\n char as well.
+	input_buffer_ = input_buffer_.substr(input_i_ + 2);
+	return (0);	
+}
