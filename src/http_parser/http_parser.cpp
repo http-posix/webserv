@@ -49,3 +49,16 @@ HttpParserState HttpParser::Feed(char *str)
 	}
 	return (external_state_);
 }
+
+int HttpParser::ParseMethod(std::string str)
+{
+	if (str == "GET")
+		method_ = Get;
+	else if (str == "DELETE")
+		method_ = Delete;
+	else if (str == "POST")
+		method_ = Post;
+	else
+		return (-1);
+	return (0);
+}
