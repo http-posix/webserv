@@ -62,3 +62,15 @@ int HttpParser::ParseMethod(std::string str)
 		return (-1);
 	return (0);
 }
+
+int HttpParser::ParseVersion(std::string str)
+{
+	if (str == "HTTP/1,0")
+		version_ = "HTTP/1.0";
+	else if (str == "HTTP/1.1")
+		version_ = "HTTP/1.1";
+	else
+		return (-1);
+	return (0);
+}
+
