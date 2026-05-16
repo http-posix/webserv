@@ -51,6 +51,18 @@ HttpParserState HttpParser::Feed(const char *str)
 	return (external_state_);
 }
 
+int HttpParser::ParseHeaders()
+{
+	std::cout << "Parse headers called" << std::endl;
+	return (-1);
+}
+
+int HttpParser::ParseBody()
+{
+	std::cout << "Parse  body called" << std::endl;
+	return (-1);
+}
+
 int HttpParser::ParseMethod(std::string str)
 {
 	if (str == "GET")
