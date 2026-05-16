@@ -6,7 +6,7 @@ HttpParser::HttpParser(void)
 	method_ = None;
 	state_ = RequestLine;
 	external_state_ = NeedMoreData;
-
+	std::cout << "Parser initiated" << std::endl;
 }
 
 HttpParser::HttpParser(const HttpParser& other)
@@ -25,6 +25,7 @@ HttpParser& HttpParser::operator=(const HttpParser& other)
 
 HttpParser::~HttpParser(void)
 {
+	std::cout << "Parser Destroyed" << std::endl;
 }
 
 HttpParserState HttpParser::Feed(const char *str)
