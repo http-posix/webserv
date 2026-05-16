@@ -21,9 +21,10 @@ int	main(void)
 {
 	HttpParser	test;
 
-	test.Feed("GET /index.html HTTP/1.0");
+	test.Feed("GET /index.html HTTP/1.0\r\nHost: example.com\r\nContent-Length: 5\r\n\r\nhe");
 	test.PrintParserRequest();
-	test.Feed("\r\n");
+	// Need more data (2/5 bytes of body)
+	test.Feed("llo");
 	test.PrintParserRequest();
 	return (0);
 }

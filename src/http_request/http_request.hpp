@@ -15,7 +15,8 @@ enum HttpParserIntState
 	Error,
 	RequestLine,
 	Header,
-	Body
+	Body,
+	Done
 };
 
 enum HttpParserState
