@@ -78,7 +78,7 @@ int HttpParser::ParseMethod(std::string str)
 
 int HttpParser::ParseVersion(std::string str)
 {
-	if (str == "HTTP/1,0")
+	if (str == "HTTP/1.0")
 		version_ = "HTTP/1.0";
 	else if (str == "HTTP/1.1")
 		version_ = "HTTP/1.1";
