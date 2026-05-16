@@ -43,6 +43,7 @@
 # binary files
 webserv
 **/build/
+tests/build/
 
 #clang explicit compilation flags
 compile_flags.txt
@@ -50,12 +51,7 @@ compile_flags.txt
 # macOS System files
 .DS_Store
 **/.DS_Store
+test/.DS_Store
 
 # IDE setup
 .vscode/
-
-
-        .DS_Store
-        .vscode/
-        test/.DS_Store
-        tests/build/
