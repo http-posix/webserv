@@ -27,7 +27,7 @@ HttpParser::~HttpParser(void)
 {
 }
 
-HttpParserState HttpParser::Feed(char *str)
+HttpParserState HttpParser::Feed(const char *str)
 {
 	input_buffer_ += str;
 	int	loop = 0;

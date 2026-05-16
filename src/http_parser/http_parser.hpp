@@ -27,5 +27,5 @@ class HttpParser
 		HttpParser& operator=(const HttpParser& other);
 		~HttpParser(void);
 
-		HttpParserState Feed(char *str);
+		HttpParserState Feed(const char *str);
 };
