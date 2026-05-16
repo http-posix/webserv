@@ -129,6 +129,7 @@ int HttpParser::ParseRequestLine()
 	
 	// Trim beginning of buffer to remove the request line. +2 to remove \r\n char as well.
 	input_buffer_ = input_buffer_.substr(input_i_ + 2);
+	state_ = Header;
 	return (0);	
 }
 void HttpParser::PrintParserRequest()
