@@ -44,4 +44,25 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all clean fclean re
+TEST_DIR := tests
+TEST_BUILD := $(TEST_DIR)/build
+TEST_SRC := $(shell find $(TEST_DIR) -maxdepth 1 -type f -name "*.cpp")
+TEST_BINS := $(patsubst $(TEST_DIR)/%.cpp, $(TEST_BUILD)/%, $(TEST_SRC))
+
+$(TEST_BUILD)/%: $(TEST_DIR)/%.cpp
+	@mkdir -p $(TEST_BUILD)
+	@$(CXX) $(CXXFLAGS) $< -o $@
+	@echo "Compiled test: $@"
+
+test: $(TEST_BINS)
+	@echo "\nRunning tests...\n"
+	@for bin in $(TEST_BINS); do \
+		echo "--- $$bin ---"; \
+		./$$bin; \
+	done
+
+tests_clean:
+	@rm -rf $(TEST_BUILD)
+	@echo "Tests obj & binary cleaned up."
+
+.PHONY: all clean fclean re test
