@@ -40,12 +40,16 @@ HttpParserState HttpParser::Feed(const char *str)
 			case Error :
 				// Feed function shouldn't be called if an error has been identified. This is a failsafe
 				loop = -1;
+				break ;
 			case RequestLine :
 				loop = ParseRequestLine();
+				break ;
 			case Header :
 				loop = ParseHeaders();
+				break ;
 			case Body :
 				loop = ParseBody();
+				break ;
 		}
 	}
 	return (external_state_);
