@@ -124,6 +124,8 @@ int HttpParser::ParseRequestLine()
 	}
 	// Hard copy the path since we don't need to check anything
 	// j - i: Second parameter of substr is length of the string.
+	// TODO: What if input is: GET  HTTP/1.0
+	// You have no path, only whitespace. How do we deal with this?
 	path_ = input_buffer_.substr(i, j - i);
 	// Skip the space by j + 1
 	j++;
