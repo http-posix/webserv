@@ -59,6 +59,11 @@ HttpParserState HttpParser::Feed(const char *str)
 int HttpParser::ParseHeaders()
 {
 	std::cout << "Parse headers called" << std::endl;
+	input_i_ = input_buffer_.find("\r\n\r\n");
+	if (input_i_ == std::string::npos)
+		return (-1);
+
+	// Current return value just so that testing doesn't infinitely run.
 	return (-1);
 }
 
