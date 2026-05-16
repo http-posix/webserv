@@ -40,11 +40,20 @@
 # debug information files
 *.dwo
 
-# binary file
+# binary files
 webserv
+**/build/
 
 #clang explicit compilation flags
 compile_flags.txt
+
+# macOS System files
+.DS_Store
+**/.DS_Store
+
+# IDE setup
+.vscode/
+
 
         .DS_Store
         .vscode/
