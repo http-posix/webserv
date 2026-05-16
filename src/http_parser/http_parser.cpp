@@ -113,6 +113,8 @@ int HttpParser::ParseRequestLine()
 		return (-1);
 		// Invalid Method
 	size_t j;
+	// i + 1 to skip the first space.
+	i++;
 	j = input_buffer_.find(" ", i);
 	if (j == std::string::npos)
 	{
@@ -121,8 +123,12 @@ int HttpParser::ParseRequestLine()
 		return (-1);
 	}
 	// Hard copy the path since we don't need to check anything
-	version_ = input_buffer_.substr(i, j);
-	temp = input_buffer_.substr(j, input_i_);
+	// j - i: Second parameter of substr is length of the string.
+	path_ = input_buffer_.substr(i, j - i);
+	// Skip the space by j + 1
+	j++;
+	// input_i_ - j because that is the length of the rest of string.
+	temp = input_buffer_.substr(j, input_i_ - j);
 	if (ParseVersion(temp) == -1)
 		return (-1);	// TODO
 						// Invalid Version.
