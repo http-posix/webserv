@@ -130,3 +130,12 @@ int HttpParser::ParseRequestLine()
 	input_buffer_ = input_buffer_.substr(input_i_ + 2);
 	return (0);	
 }
+void HttpParser::PrintParserRequest()
+{
+	std::cout << "PRINTING PARSER INFO::\n\n";
+	std::cout << "Method: " << method_ << "\n";
+	std::cout << "Path: " << path_ << "\n";
+	std::cout << "Version: " << version_ << "\n";
+	std::cout << "Input Buffer: " << input_buffer_;
+	std::cout << std::endl;
+}
