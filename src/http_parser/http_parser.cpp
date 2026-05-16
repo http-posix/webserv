@@ -1,4 +1,5 @@
 #include "http_parser.hpp"
+#include <iostream>
 #include <vector>
 
 HttpParser::HttpParser(void)
