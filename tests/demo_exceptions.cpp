@@ -1,9 +1,11 @@
 #include "app_exception/app_exception.hpp"
 #include <iostream>
 #include <cassert>
+#include "logger/colors.hpp"
+
 
 int main() {
-	std::cout << "=== AppException demo ===\n\n";
+	std::cout << clrs::kMagenta << "=== AppException demo ===\n\n" << clrs::kReset;
 
 	// test 1
 	bool caught = false;

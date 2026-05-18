@@ -9,17 +9,17 @@ int main(int argc, char **argv){
 	
 	int	status = 0;
 	
-	PrintMsg("Hello user!");
+	Logger::GetInstance().PrintMsg("Hello user!");
 	try{
 		run_app(argc, argv);
 	}
+		catch(const std::bad_alloc& error){
+		status = 1;
+		std::cerr << "Error: can't allocate memory " << error.what() << "\n";
+	}
 	catch(const AppException& error){
 		status = 1;
-		std::cerr << error.what() << std::endl;
-	}
-	catch(const std::bad_alloc& error){
-		status = 1;
-		std::cerr << "Error: can't allocate memory " << error.what() << std::endl;
+		LOG_ERROR(std::string("AppException: ") + error.what());
 	}
 	return status;
 }
