@@ -45,3 +45,8 @@ webserv
 
 #clang explicit compilation flags
 compile_flags.txt
+
+        .DS_Store
+        .vscode/
+        test/.DS_Store
+        tests/build/
