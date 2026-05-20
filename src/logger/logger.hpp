@@ -17,7 +17,7 @@ class Logger {
 		Logger(const Logger&) 				= delete;
 		Logger& operator=(const Logger&)	= delete;
 		void Log(LogLevel level, const std::string& msg, const char *file, int line, const char *func);
-		void PrintMsg(const std::string& msg);
+		static void PrintMsg(const std::string& msg);
 
 	private:
 		Logger();

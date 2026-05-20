@@ -4,6 +4,7 @@
 
 void inner_function(){
 	std::cerr << "\n";
+	Logger::PrintMsg("This is inside inner_function:");
 	LOG_DEBUG("DEBUG macro tested");
 	LOG_INFO("INFO macro tested");
 	LOG_WARN("WARN macro tested");
@@ -12,7 +13,7 @@ void inner_function(){
 
 int main(){
 	std::cout << clrs::kMagenta << "=== Logger demo ===\n\n" << clrs::kReset;
-	Logger::GetInstance().PrintMsg("Log levels for Webserv:");
+	Logger::PrintMsg("Log levels for Webserv:");
 	LOG_DEBUG("DEBUG macro tested");
 	LOG_INFO("INFO macro tested");
 	LOG_WARN("WARN macro tested");
