@@ -20,6 +20,16 @@ static bool is_token_char(unsigned char c)
 	}
 }
 
+static bool string_has_non_token_character(const std::string& str)
+{
+	for (size_t i = 0; i < str.size(); i++)
+		{
+			if (!is_token_char(static_cast<unsigned char>(str[i])))
+				return (true);
+		}
+	return (false);
+}
+
 HttpParser::HttpParser(void)
 {
 	method_ = None;
