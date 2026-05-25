@@ -128,82 +128,52 @@ bool HttpParser::ParseDecimalSize(const std::string& s, size_t* out)
 
 int HttpParser::ParseHeaders()
 {
-	// Wait until we have the full header section.
 	input_i_ = input_buffer_.find("\r\n\r\n");
 	if (input_i_ == std::string::npos)
 		return (-1);
 
+	// When we have the double CRLF we have a complete header section.
+	// Extract the header section from the input:
 	std::string header_block = input_buffer_.substr(0, input_i_);
-	// Consume header block + CRLFCRLF.
+
+	// Remove the header section from the buffer.
+	// +4 for the double CRLF
 	input_buffer_ = input_buffer_.substr(input_i_ + 4);
 
-	headers_.clear();
-	body_expected_len_ = 0;
-	chunked_ = false;
-
-	// Parse line by line (CRLF separated)
 	size_t pos = 0;
+	size_t eol;
+	std::string header_line;
+	headers_.clear();
 	while (pos < header_block.size())
 	{
-		size_t eol = header_block.find("\r\n", pos);
-		std::string line;
+		// Find End Of Line (single CRLF) starting from 'pos'
+		eol = header_block.find("\r\n", pos);
 		if (eol == std::string::npos)
 		{
-			line = header_block.substr(pos);
+			// The final header line doesn't have a CRLF
+			// Since we did not copy it beforehand...
+			// So we copy everything starting from 'pos'
+			header_line = header_block.substr(pos);
+			// Make sure we can exit the while loop.
 			pos = header_block.size();
 		}
 		else
 		{
-			line = header_block.substr(pos, eol - pos);
+			// Copy string starting from 'pos' for 'eol - pos' characters
+			header_line = header_block.substr(pos, eol - pos);
+			// Move cursor past line
+			// + 2 to move past CRLF
 			pos = eol + 2;
 		}
-
-		if (line.empty())
+		// Some bimbo could have a header that is empty. Not invalid but a bit silly.
+		if (header_line.empty())
 			continue;
-
-		// Obsolete line folding not supported.
-		if (!line.empty() && (line[0] == ' ' || line[0] == '\t'))
-		{
-			state_ = Error;
-			external_state_ = InvalidRequest;
+			
+		if (ParseSingleHeaderLine(header_line) == -1)
 			return (-1);
-		}
-
-		size_t colon = line.find(':');
-		if (colon == std::string::npos)
-		{
-			state_ = Error;
-			external_state_ = InvalidRequest;
-			return (-1);
-		}
-
-		std::string name = line.substr(0, colon);
-		std::string value = line.substr(colon + 1);
-		name = TrimOWS(name);
-		value = TrimOWS(value);
-		if (name.empty())
-		{
-			state_ = Error;
-			external_state_ = InvalidRequest;
-			return (-1);
-		}
-		for (size_t i = 0; i < name.size(); i++)
-		{
-			if (!is_token_char(static_cast<unsigned char>(name[i])))
-			{
-				state_ = Error;
-				external_state_ = InvalidRequest;
-				return (-1);
-			}
-		}
-
-		std::string name_l = ToLower(name);
-		if (headers_.find(name_l) != headers_.end())
-			headers_[name_l] += "," + value;
-		else
-			headers_[name_l] = value;
 	}
-
+	// EVERYTHING BELOW IS AI GENERATED. I CANNOT TAKE RESPONSIBILITY OF THIS CODE (YET)
+	// 
 	// Determine body semantics (no chunked parsing yet, but detect it).
 	std::map<std::string, std::string>::const_iterator it;
 	it = headers_.find("transfer-encoding");
