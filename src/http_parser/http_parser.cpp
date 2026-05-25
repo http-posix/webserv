@@ -126,6 +126,73 @@ bool HttpParser::ParseDecimalSize(const std::string& s, size_t* out)
 	return true;
 }
 
+// TODO
+// The requirements on HeaderLines are rather strict. 
+// I believe the current implementation is insufficient and
+// Needs further adaptation, along with a correct flowchart
+int HttpParser::ParseSingleHeaderLine(const std::string& header_line)
+{
+	// HTTP Requests are rather specific.
+	// We can have Optional WhiteSpace (OWS)
+	// But it cannot be at the start of the header line...
+	if (header_line[0] == ' ' || header_line[0] == '\t')
+	{
+		state_ = Error;
+		external_state_ = InvalidRequest;
+		return (-1);
+	}
+	size_t colon = header_line.find(":");
+	if (colon == std::string::npos)
+	{
+		state_ = Error;
+		external_state_ = InvalidRequest;
+		return (-1);
+	}
+	std::string name = header_line.substr(0, colon);
+	// +1 to skip the colon itself.
+	std::string value = header_line.substr(colon + 1);
+	name = TrimOWS(name);
+	value = TrimOWS(value);
+	// Empty name for header is invalid.
+	if (name.empty())
+	{
+		state_ = Error;
+		external_state_ = InvalidRequest;
+		return (-1);
+	}
+	// Very specific but the name of a header is not allowed
+	// to have any OWS in the header itself. Only around it.
+	// I know this is weird to read, but if we do not NOT find whitespace
+	// It means we DO have whitespace and the name is invalid.
+	if (name.find(" ") != std::string::npos)
+	{
+		state_ = Error;
+		external_state_ = InvalidRequest;
+		return (-1);
+	}
+	// A header Name is not allowed to have any non-token characters
+	// RFC 7230 explains which characters are (non) tokens.
+	// TODO: This is a local function that I don't need anywhere else
+	// and also is not a method. Therefore I kind of want it in a 
+	// specific file called ParserUtils.cpp that is only
+	// included by this specific file.
+	if (string_has_non_token_character(name))
+	{
+		state_ = Error;
+		external_state_ = InvalidRequest;
+		return (-1);
+	}
+
+	name = ToLower(name);
+	// If there is already a header with a similar name, append it.
+	// Otherwise just add the value to the corresponding map.
+	if (headers_.find(name) != headers_.end())
+		headers_[name] += "," + value;
+	else
+		headers_[name] = value;
+	return (0);
+}
+
 int HttpParser::ParseHeaders()
 {
 	input_i_ = input_buffer_.find("\r\n\r\n");
