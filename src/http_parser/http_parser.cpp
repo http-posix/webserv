@@ -295,6 +295,7 @@ int HttpParser::ParseHeaders()
 	return (0);
 }
 
+// TODO: AI Generated. Cannot Relate
 int HttpParser::ParseBody()
 {
 	// We only support Content-Length bodies for now.
@@ -341,6 +342,9 @@ int HttpParser::ParseRequestLine()
 	i = input_buffer_.find(" ", 0);
 	if (i == std::string::npos)
 	{
+		// Method needs to be separated by a (single) space. 
+		// If there is none, we have an invalid request. 
+		// Example: GETHTTP 1.0
 		state_ = Error;
 		external_state_ = InvalidRequest;
 		return (-1);
