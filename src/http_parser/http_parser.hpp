@@ -24,6 +24,7 @@ class HttpParser
 		int ParseMethod(std::string str);
 		int ParseVersion(std::string str);
 		int ParseHeaders();
+		int ParseSingleHeaderLine(const std::string& header_line);
 		int ParseBody();
 
 		static bool IsOWS(char c);
