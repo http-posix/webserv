@@ -5,6 +5,7 @@
 // Later on move to the Server header ?
 void run_app(int argc, char **argv);
 
+<<<<<<< HEAD
 int main(int argc, char **argv){
 	
 	int	status = 0;
@@ -23,3 +24,13 @@ int main(int argc, char **argv){
 	}
 	return status;
 }
+=======
+int main()
+{
+	HttpRequest request;
+	PrintMsg("Hello user!");
+	fill_response(request);
+	
+	return 0;
+}
+>>>>>>> 14524b6 (progress - implemented serialize method to concatenate response object into an actual response)
