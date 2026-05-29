@@ -249,23 +249,27 @@ int HttpParser::ParseHeaders()
 		if (ParseSingleHeaderLine(header_line) == -1)
 			return (-1);
 	}
-	// EVERYTHING BELOW IS AI GENERATED. I CANNOT TAKE RESPONSIBILITY OF THIS CODE (YET)
-	// 
-	// Determine body semantics (no chunked parsing yet, but detect it).
+	// Use a constant iterator from the map namespace to find transfer-encoding and set content-length
 	std::map<std::string, std::string>::const_iterator it;
+	// The .find() call will fall to .end() if no entry has been found.
+	// Somewhat similar to std::string::npos
 	it = headers_.find("transfer-encoding");
 	if (it != headers_.end())
 	{
+		// Set value to lower just in case.
+		// NB: We are not editing the value itself; we make a copy.
 		std::string te = ToLower(it->second);
 		// Minimal detection: if it contains "chunked", treat as chunked.
 		if (te.find("chunked") != std::string::npos)
 			chunked_ = true;
 	}
 
+	// We do a similar thing for the content-length (when we have a body)
 	it = headers_.find("content-length");
 	if (it != headers_.end())
 	{
 		size_t len = 0;
+		// In case we have an invalid entry for content-length we result in an error.
 		if (!ParseDecimalSize(it->second, &len))
 		{
 			state_ = Error;
@@ -273,29 +277,26 @@ int HttpParser::ParseHeaders()
 			return (-1);
 		}
 		body_expected_len_ = len;
+		// If both TE: chunked and Content-Length are present, we don't implement it yet.
+		if (chunked_)
+		{
+			state_ = Error;
+			external_state_ = InvalidRequest;
+			return (-1);
+		}
+		// If the length of the body is 0, we done and we don't need to (try to) parse it.
+		if (body_expected_len_ == 0)
+		{
+			body_.clear();
+			external_state_ = Complete;
+			state_ = Done;
+			return (0);
+		}
 	}
-
-	// If both TE: chunked and Content-Length are present, we don't implement it yet.
-	if (chunked_)
-	{
-		state_ = Error;
-		external_state_ = InvalidRequest;
-		return (-1);
-	}
-
-	if (body_expected_len_ == 0)
-	{
-		body_.clear();
-		external_state_ = Complete;
-		state_ = Done;
-		return (-1);
-	}
-
 	state_ = Body;
 	return (0);
 }
 
-// TODO: AI Generated. Cannot Relate
 int HttpParser::ParseBody()
 {
 	// We only support Content-Length bodies for now.
