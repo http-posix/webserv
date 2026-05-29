@@ -301,7 +301,11 @@ int HttpParser::ParseBody()
 {
 	// We only support Content-Length bodies for now.
 	if (input_buffer_.size() < body_expected_len_)
+	{
+		state_ = Error;
+		external_state_ = InvalidRequest;
 		return (-1);
+	}
 	body_ = input_buffer_.substr(0, body_expected_len_);
 	input_buffer_ = input_buffer_.substr(body_expected_len_);
 	external_state_ = Complete;
