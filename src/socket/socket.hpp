@@ -1,8 +1,9 @@
 #pragma once
 #include <sys/socket.h>
 
+// description about class
+// 
 
-// Delete in public so in case developer will try to use it he'll get explicit behaviour
 // AF_INET : IPv4 protocol
 // SOCK_STREAM: TCP socket
 
@@ -16,6 +17,7 @@ class Socket{
 		static Socket adopt(int fd);
 
 		//Copy
+		// Delete in public so in case developer will try to use it he'll get explicit behaviour
 		Socket(const Socket& other) = delete;
 		Socket& operator=(const Socket& other) = delete;
 		
