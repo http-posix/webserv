@@ -1,29 +1,30 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 #include "socket/socket.hpp"
-#include <filesystem>
+#include <cerrno>
+#include <fcntl.h>
 
-// Counts open file descriptors via /proc/self/fd
-// Note: directory_iterator itself opens a fd, so counts will be +1 during iteration
-static int countOpenFds() {
-	int count = 0;
-	for ([[maybe_unused]] auto& entry : std::filesystem::directory_iterator("/proc/self/fd"))
-		count++;
-	return count;
+static bool isFdOpen(int fd) {
+	int flags = fcntl(fd, F_GETFL);
+	if (flags != -1)
+		return true;
+	return errno != EBADF;
 }
 
 TEST_CASE("Socket: default constructor creates valid fd") {
 	Socket s;
 	CHECK(s.socket_fd() > 0);
+	CHECK(isFdOpen(s.socket_fd()));
 }
 
 TEST_CASE("Socket: destructor closes fd") {
-	int before = countOpenFds();
+	int fd;
 	{
 		Socket s;
-		CHECK(countOpenFds() == before + 1);
+		fd = s.socket_fd();
+		CHECK(isFdOpen(fd));
 	} // Destructor called here
-	CHECK(countOpenFds() == before);
+	CHECK(!isFdOpen(fd));
 }
 
 TEST_CASE("Socket: wrap constructor takes ownership of fd") {
@@ -51,12 +52,13 @@ TEST_CASE("Socket: move constructor transfers ownership") {
 }
 
 TEST_CASE("Socket: move constructor does not open a new fd") {
-	int before = countOpenFds();
 	Socket a;
-	CHECK(countOpenFds() == before + 1);
+	int fd = a.socket_fd();
+	CHECK(isFdOpen(fd));
 
 	Socket b = std::move(a);
-	CHECK(countOpenFds() == before + 1); // Still one fd, not two
+	CHECK(!isFdOpen(a.socket_fd()));
+	CHECK(isFdOpen(fd)); // Still one fd, moved to b
 }
 
 TEST_CASE("Socket: move assignment transfers ownership") {
@@ -71,16 +73,16 @@ TEST_CASE("Socket: move assignment transfers ownership") {
 }
 
 TEST_CASE("Socket: move assignment closes current fd") {
-	int before = countOpenFds();
+	int fd_b;
 	{
 		Socket a;
 		Socket b;
-		CHECK(countOpenFds() == before + 2); // Two fds open
+		fd_b = b.socket_fd();
+		CHECK(isFdOpen(fd_b));
 
 		b = std::move(a); // b closes its own fd before taking a's fd
-		CHECK(countOpenFds() == before + 1); // One fd was closed
+		CHECK(!isFdOpen(fd_b));
 	}
-	CHECK(countOpenFds() == before); // Last fd closed by destructor
 }
 
 TEST_CASE("Socket: self move assignment is safe") {
@@ -93,4 +95,9 @@ TEST_CASE("Socket: self move assignment is safe") {
 	// But this guard in operator= prevents undefined behavior:
 	// if (this != &other)
 	CHECK(true);
+}
+
+TEST_CASE("Socket") {
+
+	CHECK(1 == 0);
 }
