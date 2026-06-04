@@ -69,7 +69,8 @@ $(TEST_BUILD)/%: $(TEST_DIR)/%.cpp $(TEST_DEPS)
 
 test: $(TEST_BINS)
 	@echo "\nRunning tests..."
-	@for bin in $(TEST_BINS); do \
+	@set -e; \
+	for bin in $(TEST_BINS); do \
 		echo "\n\--- $$bin ---"; \
 		./$$bin; \
 	done
