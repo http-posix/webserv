@@ -1,8 +1,10 @@
 #pragma once
 #include <sys/socket.h>
 
-// description about class
-// 
+// RAII wrapper for a POSIX file descriptor (socket).
+// Owns exactly one fd — closes it in the destructor.
+// Move-only: copy is deleted to prevent double-close.
+// Use adopt() to wrap an existing fd (e.g. returned by accept()).
 
 // AF_INET : IPv4 protocol
 // SOCK_STREAM: TCP socket
@@ -17,7 +19,7 @@ class Socket{
 		static Socket adopt(int fd);
 
 		//Copy
-		// Delete in public so in case developer will try to use it he'll get explicit behaviour
+		// Deleted in public section: prevents implicit use and gives explicit compiler error
 		Socket(const Socket& other) = delete;
 		Socket& operator=(const Socket& other) = delete;
 		
