@@ -97,7 +97,3 @@ TEST_CASE("Socket: self move assignment is safe") {
 	CHECK(true);
 }
 
-TEST_CASE("Socket") {
-
-	CHECK(1 == 0);
-}
