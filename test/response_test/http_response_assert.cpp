@@ -184,11 +184,11 @@ int main(void) {
   assert((directory_status == FORBIDDEN || directory_status == OK) &&
          "Directory path behavior is platform-dependent for now");
   html_type_req = make_request(existing_path, "GET");
-  assert(parse_type(html_type_req) == "html" &&
+  assert(parse_type(html_type_req) == "text/html" &&
          "Expected lowercase extension parsing for .html");
   uppercase_type_req =
       make_request("test/response_test/mock_site/SIMPLE.HTML", "GET");
-  assert(parse_type(uppercase_type_req) == "HTML" &&
+  assert(parse_type(uppercase_type_req) == "text/html" &&
          "Expected extension parsing to preserve case for now");
   no_extension_req = make_request("test/response_test/mock_site/README", "GET");
   assert(parse_type(no_extension_req).empty() &&
