@@ -38,5 +38,4 @@ class HttpParser
 		~HttpParser(void);
 
 		HttpParserState Feed(const char *str);
-		void PrintParserRequest();
 };

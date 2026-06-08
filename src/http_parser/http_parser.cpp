@@ -393,16 +393,3 @@ int HttpParser::ParseRequestLine()
 	return (0);	
 }
 
-void HttpParser::PrintParserRequest()
-{
-	std::cout << "PRINTING PARSER INFO::\n\n";
-	std::cout << "Method: " << method_ << "\n";
-	std::cout << "Path: " << path_ << "\n";
-	std::cout << "Version: " << version_ << "\n";
-	std::cout << "Headers: " << "\n";
-	for (const auto& pair : headers_)
-        std::cout << pair.first << " = " << pair.second << "\n";
-	std::cout << "Body: " << body_ << "\n";
-	std::cout << "Input Buffer: " << input_buffer_;
-	std::cout << std::endl;
-}
