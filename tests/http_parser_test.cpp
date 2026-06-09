@@ -33,3 +33,28 @@ TEST_CASE("Valid Simple GET Request") {
 	CHECK(p.GetVersion() == "HTTP/1.1");
 }
 
+TEST_CASE("Valid Simple POST Request")
+{
+	HttpParser p;
+
+	p.Feed("POST /somefilegoeshere HTTP/1.1");
+	p.Feed("\r\n");
+	p.Feed("Host: httpbin.org");
+	p.Feed("\r\n");
+	p.Feed("Content-Type: application/json");
+	p.Feed("\r\n");
+	p.Feed("Content-Length: 35");
+	p.Feed("\r\n");
+	p.Feed("\r\n");
+	p.Feed("{\"request\":\"give me some response\"}");
+	p.Feed("\r\n\r\n");
+
+	CHECK(p.GetInternalState() == Done);
+	CHECK(p.GetExternalState() == Complete);
+	
+	CHECK(p.GetMethod() == Post);
+	CHECK(p.GetPath() == "/somefilegoeshere");
+	CHECK(p.GetVersion() == "HTTP/1.1");
+	CHECK(p.GetBodyExpectedLength() == 35);
+	CHECK(p.GetBody() == "{\"request\":\"give me some response\"}");
+}
