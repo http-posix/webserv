@@ -7,3 +7,11 @@ TEST_CASE("Incomplete request requiring more data") {
 
 	CHECK(p.Feed("GET") == NeedMoreData);
 }
+
+TEST_CASE("InvalidMethod") {
+	HttpParser p;
+
+	p.Feed("GETT\r\n");
+	CHECK(p.GetInternalState() == Error);
+	CHECK(p.GetExternalState() == InvalidRequest);
+}
