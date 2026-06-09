@@ -393,3 +393,47 @@ int HttpParser::ParseRequestLine()
 	return (0);	
 }
 
+HttpParserIntState HttpParser::GetInternalState()
+{
+	return (this->state_);
+}
+
+HttpParserState HttpParser::GetExternalState()
+{
+	return (this->external_state_);
+}
+
+HttpMethod HttpParser::GetMethod()
+{
+	return (this->method_);
+}
+
+std::string HttpParser::GetPath()
+{
+	return (this->path_);
+}
+
+std::string HttpParser::GetVersion()
+{
+	return (this->version_);
+}
+
+std::map<std::string, std::string> HttpParser::GetHeaders()
+{
+	return (this->headers_);
+}
+
+std::string HttpParser::GetBody()
+{
+	return (this->body_);
+}
+
+size_t HttpParser::GetBodyExpectedLength()
+{
+	return (this->body_expected_len_);
+}
+
+bool HttpParser::GetChunked()
+{
+	return (this->chunked_);
+}

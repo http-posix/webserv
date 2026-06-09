@@ -38,4 +38,15 @@ class HttpParser
 		~HttpParser(void);
 
 		HttpParserState Feed(const char *str);
+
+		//Getters for Testing, ResponseGen and Good Practice
+		HttpParserIntState GetInternalState();
+		HttpParserState GetExternalState();
+		HttpMethod GetMethod();
+		std::string GetPath();
+		std::string GetVersion();
+		std::map<std::string, std::string> GetHeaders();
+		std::string GetBody();
+		size_t GetBodyExpectedLength();
+		bool GetChunked();
 };
