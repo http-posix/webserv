@@ -88,3 +88,20 @@ TEST_CASE("Multiple headers with same name (combined with comma)") {
 	CHECK(headers["accept"] == "text/html,application/json");
 	CHECK(p.GetExternalState() == Complete);
 }
+
+TEST_CASE("POST request with large Content-Length") {
+	HttpParser p;
+
+	std::string large_body(1000, 'a');
+	
+	p.Feed("POST /upload HTTP/1.1\r\n");
+	p.Feed("Host: example.com\r\n");
+	p.Feed("Content-Length: 1000\r\n");
+	p.Feed("\r\n");
+	p.Feed(large_body.c_str());
+
+	CHECK(p.GetMethod() == Post);
+	CHECK(p.GetBodyExpectedLength() == 1000);
+	CHECK(p.GetBody() == large_body);
+	CHECK(p.GetExternalState() == Complete);
+}
