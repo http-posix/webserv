@@ -105,3 +105,15 @@ TEST_CASE("POST request with large Content-Length") {
 	CHECK(p.GetBody() == large_body);
 	CHECK(p.GetExternalState() == Complete);
 }
+TEST_CASE("Invalid header with leading whitespace") {
+	HttpParser p;
+
+	p.Feed("GET / HTTP/1.1\r\n");
+	p.Feed(" Host: example.com\r\n");
+	p.Feed("\r\n");
+	
+	// Leading whitespace in header should cause InvalidRequest
+	CHECK(p.GetExternalState() == InvalidRequest);
+	CHECK(p.GetInternalState() == Error);
+}
+
