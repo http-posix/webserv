@@ -73,3 +73,18 @@ TEST_CASE("Valid DELETE Request") {
 	CHECK(p.GetInternalState() == Done);
 	CHECK(p.GetBodyExpectedLength() == 0);
 }
+
+TEST_CASE("Multiple headers with same name (combined with comma)") {
+	HttpParser p;
+
+	p.Feed("GET / HTTP/1.1\r\n");
+	p.Feed("Accept: text/html\r\n");
+	p.Feed("Accept: application/json\r\n");
+	p.Feed("Host: example.com\r\n");
+	p.Feed("\r\n");
+
+	auto headers = p.GetHeaders();
+	CHECK(headers.find("accept") != headers.end());
+	CHECK(headers["accept"] == "text/html,application/json");
+	CHECK(p.GetExternalState() == Complete);
+}
