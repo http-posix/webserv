@@ -58,3 +58,18 @@ TEST_CASE("Valid Simple POST Request")
 	CHECK(p.GetBodyExpectedLength() == 35);
 	CHECK(p.GetBody() == "{\"request\":\"give me some response\"}");
 }
+TEST_CASE("Valid DELETE Request") {
+	HttpParser p;
+
+	p.Feed("DELETE /resource/123 HTTP/1.0\r\n");
+	p.Feed("Host: example.com\r\n");
+	p.Feed("Connection: Close\r\n");
+	p.Feed("\r\n");
+
+	CHECK(p.GetMethod() == Delete);
+	CHECK(p.GetPath() == "/resource/123");
+	CHECK(p.GetVersion() == "HTTP/1.0");
+	CHECK(p.GetExternalState() == Complete);
+	CHECK(p.GetInternalState() == Done);
+	CHECK(p.GetBodyExpectedLength() == 0);
+}
