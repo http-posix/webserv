@@ -117,3 +117,14 @@ TEST_CASE("Invalid header with leading whitespace") {
 	CHECK(p.GetInternalState() == Error);
 }
 
+TEST_CASE("Invalid Content-Length (non-numeric value)") {
+	HttpParser p;
+
+	p.Feed("POST / HTTP/1.1\r\n");
+	p.Feed("Content-Length: abc\r\n");
+	p.Feed("\r\n");
+
+	CHECK(p.GetExternalState() == InvalidRequest);
+	CHECK(p.GetInternalState() == Error);
+}
+
