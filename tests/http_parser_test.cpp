@@ -26,6 +26,22 @@ TEST_CASE("Empty Method") {
 	CHECK(p.GetExternalState() == InvalidRequest);
 }
 
+TEST_CASE("Content-length with trailing zero's") {
+	HttpParser p;
+
+	std::string body = "Hello, World!";
+	
+	p.Feed("POST / HTTP/1.1\r\n");
+	p.Feed("Host: example.com\r\n");
+	p.Feed("Content-Length: 00013\r\n");
+	p.Feed("\r\n");
+	p.Feed(body.c_str());
+
+	CHECK(p.GetBodyExpectedLength() == 13);
+	CHECK(p.GetBody() == "Hello, World!");
+	CHECK(p.GetExternalState() == Complete);
+}
+
 TEST_CASE("Valid Simple GET Request") {
 	HttpParser p;
 
