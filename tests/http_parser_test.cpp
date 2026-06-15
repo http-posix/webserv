@@ -58,6 +58,23 @@ TEST_CASE("Zero-length body with extra trailing data") {
 	CHECK(p.GetExternalState() == Complete);
 }
 
+TEST_CASE("Incomplete body (partial data)") {
+	// If body is incomplete, should stay in NeedMoreData
+	HttpParser p;
+
+	p.Feed("POST / HTTP/1.1\r\n");
+	p.Feed("Host: example.com\r\n");
+	p.Feed("Content-Length: 13\r\n");
+	p.Feed("\r\n");
+	p.Feed("Hello");  // Only 5 bytes of 13
+
+	CHECK(p.GetExternalState() == NeedMoreData);
+	CHECK(p.GetInternalState() == Body);
+
+	p.Feed(", World!"); // Final 8 bytes
+	CHECK(p.GetExternalState() == Complete);
+}
+
 TEST_CASE("Valid Simple GET Request") {
 	HttpParser p;
 
