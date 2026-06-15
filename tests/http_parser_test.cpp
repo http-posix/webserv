@@ -75,6 +75,21 @@ TEST_CASE("Incomplete body (partial data)") {
 	CHECK(p.GetExternalState() == Complete);
 }
 
+TEST_CASE("Multiple colons in header value") {
+	// Edge case: URL-like header value with colons
+	HttpParser p;
+
+	p.Feed("GET / HTTP/1.1\r\n");
+	p.Feed("Host: example.com\r\n");
+	p.Feed("X-URL: http://example.com:8080\r\n");
+	p.Feed("\r\n");
+
+	auto headers = p.GetHeaders();
+	CHECK(headers.find("x-url") != headers.end());
+	CHECK(headers["x-url"] == "http://example.com:8080");
+	CHECK(p.GetExternalState() == Complete);
+}
+
 TEST_CASE("Valid Simple GET Request") {
 	HttpParser p;
 
