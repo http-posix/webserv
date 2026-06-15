@@ -16,6 +16,16 @@ TEST_CASE("InvalidMethod") {
 	CHECK(p.GetExternalState() == InvalidRequest);
 }
 
+TEST_CASE("Empty Method") {
+	HttpParser p;
+
+	p.Feed(" / HTTP/1.1\r\n");
+	p.Feed("Host: example.com\r\n");
+	p.Feed("\r\n");
+
+	CHECK(p.GetExternalState() == InvalidRequest);
+}
+
 TEST_CASE("Valid Simple GET Request") {
 	HttpParser p;
 
