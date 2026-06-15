@@ -11,7 +11,7 @@ TEST_CASE("Incomplete request requiring more data") {
 TEST_CASE("InvalidMethod") {
 	HttpParser p;
 
-	p.Feed("GETT\r\n");
+	p.Feed("GETT / HTTP/1.1\r\n");
 	CHECK(p.GetInternalState() == Error);
 	CHECK(p.GetExternalState() == InvalidRequest);
 }
