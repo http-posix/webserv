@@ -362,8 +362,12 @@ int HttpParser::ParseRequestLine()
 	std::string temp;
 	temp = input_buffer_.substr(0, i);
 	if (ParseMethod(temp) == -1)
+	{
+		state_ = Error;
+		external_state_ = InvalidRequest;
 		return (-1);
 		// Invalid Method
+	}
 	size_t j;
 	// i + 1 to skip the first space.
 	i++;
