@@ -42,6 +42,22 @@ TEST_CASE("Content-length with trailing zero's") {
 	CHECK(p.GetExternalState() == Complete);
 }
 
+TEST_CASE("Zero-length body with extra trailing data") {
+	// Content-Length is 0 but there's data after headers
+	HttpParser p;
+
+	p.Feed("POST / HTTP/1.1\r\n");
+	p.Feed("Host: example.com\r\n");
+	p.Feed("Content-Length: 0\r\n");
+	p.Feed("\r\n");
+	p.Feed("UNEXPECTED_DATA");
+
+	// Should succeed with zero-length body and ignore trailing data
+	CHECK(p.GetBodyExpectedLength() == 0);
+	CHECK(p.GetBody() == "");
+	CHECK(p.GetExternalState() == Complete);
+}
+
 TEST_CASE("Valid Simple GET Request") {
 	HttpParser p;
 
