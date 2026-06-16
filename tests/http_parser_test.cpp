@@ -201,6 +201,19 @@ TEST_CASE("GET request with root path and extra whitespace") {
 	CHECK(p.GetExternalState() == Complete);
 }
 
+TEST_CASE("Path with only whitespace should be rejected") {
+	HttpParser p;
+
+	p.Feed("GET  HTTP/1.1\r\n");
+	p.Feed("Host: example.com\r\n");
+	p.Feed("\r\n");
+
+	// TODO
+	// This should either fail or handle it gracefully
+	// Current behavior: path_ = " " (single space)
+	CHECK(p.GetPath() == "");  // Should be empty, not a space
+}
+
 TEST_CASE("Multiple headers with same name (combined with comma)") {
 	HttpParser p;
 
