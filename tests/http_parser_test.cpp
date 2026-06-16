@@ -175,6 +175,19 @@ TEST_CASE("Invalid request of Both Transfer-Encoding and Content-Length present"
 	CHECK(p.GetInternalState() == Error);
 }
 
+TEST_CASE("Very large Content-Length value (near size_t max)") {
+	// Edge case with overflow protection
+	HttpParser p;
+
+	p.Feed("POST / HTTP/1.1\r\n");
+	p.Feed("Host: example.com\r\n");
+	p.Feed("Content-Length: 99999999999999999999\r\n");
+	p.Feed("\r\n");
+
+	// ParseDecimalSize should handle overflow
+	CHECK(p.GetExternalState() == InvalidRequest);
+}
+
 TEST_CASE("Multiple headers with same name (combined with comma)") {
 	HttpParser p;
 
