@@ -148,6 +148,19 @@ TEST_CASE("Valid DELETE Request") {
 	CHECK(p.GetBodyExpectedLength() == 0);
 }
 
+TEST_CASE("Header with tab as OWS") {
+	HttpParser p;
+
+	p.Feed("GET / HTTP/1.1\r\n");
+	p.Feed("Host:\texample.com\r\n");  // Tab instead of space
+	p.Feed("\r\n");
+
+	auto headers = p.GetHeaders();
+	CHECK(headers.find("host") != headers.end());
+	CHECK(headers["host"] == "example.com");
+	CHECK(p.GetExternalState() == Complete);
+}
+
 TEST_CASE("Multiple headers with same name (combined with comma)") {
 	HttpParser p;
 
