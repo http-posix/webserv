@@ -161,6 +161,20 @@ TEST_CASE("Header with tab as OWS") {
 	CHECK(p.GetExternalState() == Complete);
 }
 
+TEST_CASE("Invalid request of Both Transfer-Encoding and Content-Length present") {
+	// According to RFC, you cannot have both Transfer-Encoding and Content-Length
+	HttpParser p;
+
+	p.Feed("POST / HTTP/1.1\r\n");
+	p.Feed("Host: example.com\r\n");
+	p.Feed("Transfer-Encoding: chunked\r\n");
+	p.Feed("Content-Length: 5\r\n");
+	p.Feed("\r\n");
+
+	CHECK(p.GetExternalState() == InvalidRequest);
+	CHECK(p.GetInternalState() == Error);
+}
+
 TEST_CASE("Multiple headers with same name (combined with comma)") {
 	HttpParser p;
 
