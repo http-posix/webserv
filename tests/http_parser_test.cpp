@@ -188,6 +188,19 @@ TEST_CASE("Very large Content-Length value (near size_t max)") {
 	CHECK(p.GetExternalState() == InvalidRequest);
 }
 
+//TODO
+TEST_CASE("GET request with root path and extra whitespace") {
+	HttpParser p;
+
+	p.Feed("GET /    HTTP/1.1\r\n");
+	p.Feed("Host: localhost:8080\r\n");
+	p.Feed("\r\n");
+
+	CHECK(p.GetPath() == "/");
+	CHECK(p.GetMethod() == Get);
+	CHECK(p.GetExternalState() == Complete);
+}
+
 TEST_CASE("Multiple headers with same name (combined with comma)") {
 	HttpParser p;
 
