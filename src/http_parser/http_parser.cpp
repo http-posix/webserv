@@ -387,6 +387,8 @@ int HttpParser::ParseRequestLine()
 	j++;
 	// input_i_ - j because that is the length of the rest of string.
 	temp = input_buffer_.substr(j, input_i_ - j);
+	// Trim Optional Whitespace left over from the path
+	temp = TrimOWS(temp);
 	if (ParseVersion(temp) == -1)
 		return (-1);	// TODO
 						// Invalid Version.
