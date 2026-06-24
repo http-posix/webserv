@@ -188,7 +188,6 @@ TEST_CASE("Very large Content-Length value (near size_t max)") {
 	CHECK(p.GetExternalState() == InvalidRequest);
 }
 
-//TODO
 TEST_CASE("GET request with root path and extra whitespace") {
 	HttpParser p;
 
@@ -210,7 +209,7 @@ TEST_CASE("Path with only whitespace should be rejected") {
 
 	// TODO
 	// This should either fail or handle it gracefully
-	// Current behavior: path_ = " " (single space)
+	// Current behavior: path_ = "" (single space)
 	CHECK(p.GetPath() == "");  // Should be empty, not a space
 }
 
