@@ -1,3 +1,7 @@
+#include "config_parser.hpp"
+#include <fstream>
+#include <sstream>
+#include <iostream>
 ConfigParser::ConfigParser(void) {
 	
 }
