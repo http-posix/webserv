@@ -11,6 +11,14 @@ TEST_CASE("Open and print content config file")
 	REQUIRE(p.readFile(file) == 0);
 }
 TEST_CASE("Open file with insufficient permissions")
+TEST_CASE("Open empty file")
+{
+	ConfigParser p;
+	std::string file = "tests/config_test_files/emptyfile";
+
+	CHECK(p.readFile(file) != 0);
+}
+
 TEST_CASE("Open non existing file")
 {
 	ConfigParser p;
