@@ -11,9 +11,10 @@ TEST_CASE("Open and print content config file")
 	REQUIRE(p.readFile(file) == 0);
 }
 TEST_CASE("Open file with insufficient permissions")
+TEST_CASE("Open directory instead of file")
 {
 	ConfigParser p;
-	std::string file = "tests/config_test_files/chmod000";
+	std::string file = "tests/";
 
 	CHECK(p.readFile(file) != 0);
 }
