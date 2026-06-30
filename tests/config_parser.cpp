@@ -6,7 +6,7 @@
 TEST_CASE("Open and print content config file")
 {
 	ConfigParser p;
-	std::string file = "config_test_files/simpletest";
+	std::string file = "tests/config_test_files/simpletest";
 
 	REQUIRE(p.readFile(file) == 0);
 }
