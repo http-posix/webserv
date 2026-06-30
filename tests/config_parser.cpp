@@ -10,7 +10,10 @@ TEST_CASE("Open and print content config file")
 
 	REQUIRE(p.readFile(file) == 0);
 }
-TEST_CASE("Open file with insufficient permissions")
+
+// The next three test cases don't make a destinition between the
+// different errors. Currently the main point I consider is that we
+// return an error. Not necessarily informing the user what the error is.
 TEST_CASE("Open empty file")
 {
 	ConfigParser p;
