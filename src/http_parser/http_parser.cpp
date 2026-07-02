@@ -399,6 +399,15 @@ int HttpParser::ParseRequestLine()
 	return (0);	
 }
 
+void	HttpParser::FillRequest(HttpRequest* request)
+{
+	request->method_ = this->method_;
+	request->path_ = this->path_;
+	request->version_ = this->version_;
+	request->headers_ = this->headers_;
+	request->body_ = this->body_;
+}
+
 HttpParserIntState HttpParser::GetInternalState()
 {
 	return (this->state_);

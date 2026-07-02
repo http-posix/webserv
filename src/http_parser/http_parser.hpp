@@ -49,4 +49,6 @@ class HttpParser
 		std::string GetBody();
 		size_t GetBodyExpectedLength();
 		bool GetChunked();
+		//Request can be reused. Memory management handled by separate unit.
+		void FillRequest(HttpRequest *request);
 };
