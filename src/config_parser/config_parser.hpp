@@ -7,6 +7,7 @@ class ConfigParser {
 
 	public:
 		int readFile(const std::string& filename);
+		int removeComments();
 
 		ConfigParser(void);
 		ConfigParser(const ConfigParser& other);
