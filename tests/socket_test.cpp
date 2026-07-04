@@ -13,7 +13,7 @@ static bool isFdOpen(int fd) {
 
 TEST_CASE("Socket: default constructor creates valid fd") {
 	Socket s;
-	CHECK(s.socket_fd() > 0);
+	CHECK(s.socket_fd() >= 0);
 	CHECK(isFdOpen(s.socket_fd()));
 }
 
@@ -35,10 +35,8 @@ TEST_CASE("Socket: wrap constructor takes ownership of fd") {
 }
 
 TEST_CASE("Socket: copy is deleted (must not compile)") {
-	// Uncomment to verify compile-time enforcement:
-	// Socket a;
-	// Socket b = a;  // Expected: compile error
-	CHECK(true);
+	static_assert(!std::is_copy_constructible_v<Socket>, "Socket must not be copyable");
+	static_assert(!std::is_copy_assignable_v<Socket>, "Socket must not be copy-assignable");
 }
 
 TEST_CASE("Socket: move constructor transfers ownership") {
@@ -95,4 +93,25 @@ TEST_CASE("Socket: self move assignment is safe") {
 	// But this guard in operator= prevents undefined behavior:
 	// if (this != &other)
 	CHECK(true);
+}
+
+TEST_CASE("Default constructor produces non-blocking socket") {
+	Socket s;
+	CHECK(s.socket_fd() >= 0);
+	int flags = fcntl(s.socket_fd(), F_GETFL, 0);
+	CHECK((flags & O_NONBLOCK) != 0);
+}
+
+TEST_CASE("Adopted socket is non-blocking") {
+	int raw_fd = ::socket(AF_INET, SOCK_STREAM, 0);
+	Socket s = Socket::adopt(raw_fd);
+	int flags = fcntl(s.socket_fd(), F_GETFL, 0);
+	CHECK((flags & O_NONBLOCK) != 0);
+}
+
+TEST_CASE("Move leaves source with invalid fd") {
+	Socket a;
+	Socket b = std::move(a);
+	CHECK(b.socket_fd() >= 0);
+	CHECK(a.socket_fd() == -1);
 }
