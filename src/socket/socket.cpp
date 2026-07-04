@@ -8,7 +8,6 @@
 // global scope resolution for syscalls
 
 Socket::Socket(){
-
 	sockfd_ = ::socket(default_domain, default_type, default_protocol); 
 	if (sockfd_ == kInvalidFd){
 		LOG_ERROR("Socket constructor");
@@ -22,10 +21,10 @@ Socket::~Socket(){
 }
 
 Socket Socket::adopt(int fd) {
-    return Socket(fd);
+	return Socket(fd);
 }
 
-int Socket::socket_fd() const{
+int Socket::socket_fd() const noexcept{
 	return sockfd_;
 }
 

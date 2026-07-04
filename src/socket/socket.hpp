@@ -27,7 +27,7 @@ class Socket{
 		Socket(Socket&& other) noexcept;
 		Socket& operator=(Socket&& other) noexcept;
 
-		int socket_fd() const;
+		int socket_fd() const noexcept;
 
 	private:
 		int sockfd_;
