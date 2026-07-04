@@ -63,6 +63,7 @@ TEST_DEPS += $(SRC_DIR)/socket/socket.cpp
 TEST_DEPS += $(SRC_DIR)/http_response/http_response_state.cpp
 TEST_DEPS += $(SRC_DIR)/http_response/src_http_response.cpp
 TEST_DEPS += $(SRC_DIR)/http_parser/http_parser.cpp
+TEST_DEPS += $(SRC_DIR)/server/server.cpp
 TEST_FLAGS = $(CXXFLAGS) $(DEPFLAGS) -DDEBUG_MODE -DLOG_TO_FILE
 
 $(TEST_BUILD)/%: $(TEST_DIR)/%.cpp $(TEST_DEPS)
