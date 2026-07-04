@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include "app_exception/app_exception.hpp"
 #include "logger/logger.hpp"
+#include <fcntl.h>
+#include <cassert>
 
 // sockfd = socket(int socket_family, int socket_type, int protocol);
 // global scope resolution for syscalls
@@ -13,6 +15,7 @@ Socket::Socket(){
 		LOG_ERROR("Socket constructor");
 		throw  ServerException("Socket fails");
 	}
+	SetNonBlockingMode();
 }
 
 Socket::~Socket(){
@@ -21,6 +24,7 @@ Socket::~Socket(){
 }
 
 Socket Socket::adopt(int fd) {
+	assert((fd >= 0) && "Adopt method received an invalid fd, which violates the contract");
 	return Socket(fd);
 }
 
@@ -48,4 +52,21 @@ Socket& Socket::operator=(Socket&& other) noexcept{
 // Private
 Socket::Socket(int fd){
 	sockfd_ = fd;
+	SetNonBlockingMode();
+}
+
+void	Socket::SetNonBlockingMode(){
+	int flags = ::fcntl(sockfd_, F_GETFL, 0);
+	if (flags == -1)
+	{
+		::close(sockfd_);
+		LOG_ERROR("fcntl(F_GETFL) failed on socket fd " + std::to_string(sockfd_) + ": " + std::string(strerror(errno)));
+		throw ServerException("Failed to get socket flags");
+	}
+	int ret_code = ::fcntl(sockfd_, F_SETFL, flags | O_NONBLOCK);
+	if (ret_code == -1){
+		::close(sockfd_);
+		LOG_ERROR("fcntl(F_SETFL) failed on socket fd " + std::to_string(sockfd_) + ": " + std::string(strerror(errno)));
+		throw ServerException("Failed to set socket into non-blocking mode");
+	}
 }

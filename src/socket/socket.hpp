@@ -30,10 +30,12 @@ class Socket{
 		int socket_fd() const noexcept;
 
 	private:
-		int sockfd_;
-		explicit Socket(int fd);
 		constexpr static int kInvalidFd = -1;
 		constexpr static int default_domain = AF_INET;
 		constexpr static int default_type = SOCK_STREAM;
 		constexpr static int default_protocol = 0;
+
+		int	sockfd_ = kInvalidFd;
+		explicit Socket(int fd);
+		void	SetNonBlockingMode();
 };
