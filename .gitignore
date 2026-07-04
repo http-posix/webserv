@@ -45,6 +45,7 @@ log/
 webserv
 **/build/
 tests/build/
+echo_server
 
 #clang explicit compilation flags
 compile_flags.txt
