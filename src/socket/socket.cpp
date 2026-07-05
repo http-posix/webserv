@@ -4,6 +4,7 @@
 #include "logger/logger.hpp"
 #include <fcntl.h>
 #include <cassert>
+#include <cerrno>
 
 // sockfd = socket(int socket_family, int socket_type, int protocol);
 // global scope resolution for syscalls
