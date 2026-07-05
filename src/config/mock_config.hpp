@@ -4,6 +4,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <cstdint>
 
 
 // uint16_t - max port size 0–65535
