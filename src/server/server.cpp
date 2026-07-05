@@ -109,10 +109,6 @@ void	Server::ListenSocket(){
 	}
 }
 
-void Server::NonBlockingSocket(){
-
-}
-
 int	Server::fd() const noexcept{
 	return(socket_.socket_fd());
 }

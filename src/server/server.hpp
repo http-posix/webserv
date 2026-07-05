@@ -38,7 +38,6 @@ class Server{
 		void	SetupSocketOptions();
 		void	BindSocket(const sockaddr* ai_addr, socklen_t ai_addrlen);
 		void	ListenSocket();
-		void	NonBlockingSocket();
 };
 
 //namespace a bit overkill for project scale
