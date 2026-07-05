@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <cassert>
 #include <cerrno>
+#include <cstring>
 
 // sockfd = socket(int socket_family, int socket_type, int protocol);
 // global scope resolution for syscalls
