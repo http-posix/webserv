@@ -27,7 +27,7 @@ std::vector<Server> CreateListeners(const Config& config){
 			[[maybe_unused]] auto [ignored_iter, insert_result] = unique_pairs.insert({obj.host, port});
 			if (!insert_result){
 				LOG_ERROR("Duplicate configuration detected for server: " + obj.host + ":" + std::to_string(port));
-				throw ServerException("Server initialization failed due to duplicate listen ports. ");
+				throw ServerException("Cannot bind multiple servers to the same host:port. Virtual hosts are not supported.");
 			}
 			listeners.push_back(Server(obj.host, port));
 		}
