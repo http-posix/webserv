@@ -25,7 +25,7 @@ TEST_SUITE("Server") {
 	}
 
 	// it is two active server, not TIME_WAIT
-	// expect to fail with EADDRINUSE
+	// expect to fail with EADDRINUSE + LOG_ERROR("bind()")
 	TEST_CASE("binding the same fixed port twice throws (EADDRINUSE)") {
 		const uint16_t test_port = 54321;
 
@@ -33,6 +33,7 @@ TEST_SUITE("Server") {
 		CHECK_THROWS_AS(Server second("127.0.0.1", test_port), ServerException);
 	}
 
+	// produce LOG_ERROR("getaddrinfo()")
 	TEST_CASE("invalid/unresolvable host throws via getaddrinfo failure") {
 		CHECK_THROWS_AS(
 			Server srv("this.host.does.not.resolve.invalid", 8080),
@@ -76,6 +77,7 @@ TEST_SUITE("CreateListeners") {
 		CHECK(listeners.size() == 2);
 	}
 
+	// Produce LOG_ERROR("Duplicate configuration detected")
 	TEST_CASE("throws on duplicate host:port across servers") {
 		Config cfg = MockConfig::TwoServersSameSettings("127.0.0.1", 8083);
 		CHECK_THROWS_AS(CreateListeners(cfg), ServerException);
