@@ -3,6 +3,7 @@
 #include "socket/socket.hpp"
 #include <cerrno>
 #include <fcntl.h>
+#include <type_traits>
 
 static bool isFdOpen(int fd) {
 	int flags = fcntl(fd, F_GETFL);
@@ -27,7 +28,7 @@ TEST_CASE("Socket: destructor closes fd") {
 	CHECK(!isFdOpen(fd));
 }
 
-TEST_CASE("Socket: wrap constructor takes ownership of fd") {
+TEST_CASE("Socket: adopt() takes ownership of fd") {
 	int raw = ::socket(AF_INET, SOCK_STREAM, 0);
 	REQUIRE(raw >= 0);
 	Socket b = Socket::adopt(raw);
@@ -39,24 +40,16 @@ TEST_CASE("Socket: copy is deleted (must not compile)") {
 	static_assert(!std::is_copy_assignable_v<Socket>, "Socket must not be copy-assignable");
 }
 
-TEST_CASE("Socket: move constructor transfers ownership") {
-	Socket a;
-	int fd = a.socket_fd();
-
-	Socket b = std::move(a);
-
-	CHECK(a.socket_fd() == -1); // Source is no longer the owner
-	CHECK(b.socket_fd() == fd); // New owner holds the fd
-}
-
-TEST_CASE("Socket: move constructor does not open a new fd") {
+TEST_CASE("Socket: move constructor transfers fd ownership") {
 	Socket a;
 	int fd = a.socket_fd();
 	CHECK(isFdOpen(fd));
 
 	Socket b = std::move(a);
-	CHECK(!isFdOpen(a.socket_fd()));
-	CHECK(isFdOpen(fd)); // Still one fd, moved to b
+
+	CHECK(a.socket_fd() == -1);
+	CHECK(b.socket_fd() == fd);
+	CHECK(isFdOpen(fd));
 }
 
 TEST_CASE("Socket: move assignment transfers ownership") {
@@ -85,38 +78,44 @@ TEST_CASE("Socket: move assignment closes current fd") {
 
 TEST_CASE("Socket: self move assignment is safe") {
 	Socket a;
+	int fd = a.socket_fd();
 
 	Socket& ref = a;
-	a = std::move(ref); // Must not crash or double-close
+	a = std::move(ref);
 
-	// Behavior after self-move is unspecified by the standard,
-	// But this guard in operator= prevents undefined behavior:
-	// if (this != &other)
-	CHECK(true);
+	// if guard (this != &other) в operator= works correctly,
+	// self-move cann't broke
+	CHECK(a.socket_fd() == fd);
+	CHECK(isFdOpen(fd));
 }
 
-TEST_CASE("Default constructor produces non-blocking socket") {
+TEST_CASE("Socket: default constructor produces non-blocking socket") {
 	Socket s;
-	CHECK(s.socket_fd() >= 0);
+	REQUIRE(s.socket_fd() >= 0);
+
 	int flags = fcntl(s.socket_fd(), F_GETFL, 0);
+	REQUIRE(flags != -1);
 	CHECK((flags & O_NONBLOCK) != 0);
 }
 
-TEST_CASE("Adopted socket is non-blocking") {
+TEST_CASE("Socket: adopted socket is non-blocking") {
 	int raw_fd = ::socket(AF_INET, SOCK_STREAM, 0);
+	REQUIRE(raw_fd >= 0);
+
 	Socket s = Socket::adopt(raw_fd);
+	REQUIRE(s.socket_fd() >= 0);
+
 	int flags = fcntl(s.socket_fd(), F_GETFL, 0);
+	REQUIRE(flags != -1);
 	CHECK((flags & O_NONBLOCK) != 0);
 }
 
-TEST_CASE("Move leaves source with invalid fd") {
-	Socket a;
-	Socket b = std::move(a);
-	CHECK(b.socket_fd() >= 0);
-	CHECK(a.socket_fd() == -1);
-}
+// Produce LOG_ERROR()
+TEST_CASE("Socket: adopt() with invalid fd does not throw, ends invalid") {
+	int fd = ::socket(AF_INET, SOCK_STREAM, 0);
+	REQUIRE(fd >= 0);
+	::close(fd);
 
-TEST_CASE("adopt() with fd that fails fcntl does not throw, ends invalid") {
-	Socket s = Socket::adopt(9999);
+	Socket s = Socket::adopt(fd);
 	CHECK(s.socket_fd() == -1);
 }
