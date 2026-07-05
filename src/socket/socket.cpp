@@ -1,5 +1,4 @@
 #include "socket/socket.hpp"
-#include <sys/socket.h>
 #include <unistd.h>
 #include "app_exception/app_exception.hpp"
 #include "logger/logger.hpp"
@@ -32,12 +31,12 @@ Socket::~Socket(){
 // PRECONDITION: fd must be >= 0
 // POSTCONDITION: returned Socket's socket_fd() may be kInvalidFd if
 // internal setup (non-blocking mode) failed — caller must check before use
-Socket Socket::adopt(int fd) noexcept{
+Socket Socket::adopt(int fd){
 	assert((fd >= 0) && "Adopt method received an invalid fd, which violates the contract");
 	return Socket(fd);
 }
 
-int Socket::socket_fd() const noexcept{
+int Socket::socket_fd() const {
 	return sockfd_;
 }
 
@@ -60,7 +59,7 @@ Socket& Socket::operator=(Socket&& other) noexcept{
 
 // Private
 // used after accept() for connections
-Socket::Socket(int fd) noexcept{
+Socket::Socket(int fd) {
 	sockfd_ = fd;
 	if (SetNonBlockingMode() != 0){
 		::close(sockfd_);
@@ -68,7 +67,7 @@ Socket::Socket(int fd) noexcept{
 	}
 }
 
-int	Socket::SetNonBlockingMode() noexcept{
+int	Socket::SetNonBlockingMode() {
 	int flags = ::fcntl(sockfd_, F_GETFL, 0);
 	if (flags == -1)
 	{

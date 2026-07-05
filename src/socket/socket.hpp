@@ -1,5 +1,7 @@
 #pragma once
 
+#include <sys/socket.h>
+
 // RAII wrapper for a POSIX file descriptor (socket).
 // Owns exactly one fd — closes it in the destructor.
 // Move-only: copy is deleted to prevent double-close.
