@@ -64,7 +64,6 @@ Server::Server(const std::string& host, uint16_t port){
 	SetupSocketOptions();
 	BindSocket(addr_guard.ptr->ai_addr, addr_guard.ptr->ai_addrlen);
 	ListenSocket();
-	NonBlockingSocket();
 }
 
 // private
