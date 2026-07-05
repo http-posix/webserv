@@ -9,13 +9,18 @@
 // sockfd = socket(int socket_family, int socket_type, int protocol);
 // global scope resolution for syscalls
 
+// Used for Server socket
 Socket::Socket(){
 	sockfd_ = ::socket(default_domain, default_type, default_protocol); 
 	if (sockfd_ == kInvalidFd){
 		LOG_ERROR("Socket constructor");
 		throw  ServerException("Socket fails");
 	}
-	SetNonBlockingMode();
+	if (SetNonBlockingMode() != 0){
+		// LOG_ERROR() happened in SetNonBlockingMode()
+		::close(sockfd_);
+		throw  ServerException("Failed to set socket into non-blocking mode");
+	}
 }
 
 Socket::~Socket(){
@@ -23,7 +28,11 @@ Socket::~Socket(){
 		::close(sockfd_);
 }
 
-Socket Socket::adopt(int fd) {
+// Wraps an already-open, valid fd from accept()
+// PRECONDITION: fd must be >= 0
+// POSTCONDITION: returned Socket's socket_fd() may be kInvalidFd if
+// internal setup (non-blocking mode) failed — caller must check before use
+Socket Socket::adopt(int fd) noexcept{
 	assert((fd >= 0) && "Adopt method received an invalid fd, which violates the contract");
 	return Socket(fd);
 }
@@ -50,23 +59,26 @@ Socket& Socket::operator=(Socket&& other) noexcept{
 }
 
 // Private
-Socket::Socket(int fd){
+// used after accept() for connections
+Socket::Socket(int fd) noexcept{
 	sockfd_ = fd;
-	SetNonBlockingMode();
+	if (SetNonBlockingMode() != 0){
+		::close(sockfd_);
+		sockfd_ = kInvalidFd;
+	}
 }
 
-void	Socket::SetNonBlockingMode(){
+int	Socket::SetNonBlockingMode() noexcept{
 	int flags = ::fcntl(sockfd_, F_GETFL, 0);
 	if (flags == -1)
 	{
-		::close(sockfd_);
 		LOG_ERROR("fcntl(F_GETFL) failed on socket fd " + std::to_string(sockfd_) + ": " + std::string(strerror(errno)));
-		throw ServerException("Failed to get socket flags");
+		return 1;
 	}
 	int ret_code = ::fcntl(sockfd_, F_SETFL, flags | O_NONBLOCK);
 	if (ret_code == -1){
-		::close(sockfd_);
 		LOG_ERROR("fcntl(F_SETFL) failed on socket fd " + std::to_string(sockfd_) + ": " + std::string(strerror(errno)));
-		throw ServerException("Failed to set socket into non-blocking mode");
+		return 1;
 	}
+	return 0;
 }

@@ -115,3 +115,8 @@ TEST_CASE("Move leaves source with invalid fd") {
 	CHECK(b.socket_fd() >= 0);
 	CHECK(a.socket_fd() == -1);
 }
+
+TEST_CASE("adopt() with fd that fails fcntl does not throw, ends invalid") {
+	Socket s = Socket::adopt(9999);
+	CHECK(s.socket_fd() == -1);
+}

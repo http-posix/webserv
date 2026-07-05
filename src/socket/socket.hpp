@@ -1,5 +1,4 @@
 #pragma once
-#include <sys/socket.h>
 
 // RAII wrapper for a POSIX file descriptor (socket).
 // Owns exactly one fd — closes it in the destructor.
@@ -27,7 +26,7 @@ class Socket{
 		Socket(Socket&& other) noexcept;
 		Socket& operator=(Socket&& other) noexcept;
 
-		int socket_fd() const noexcept;
+		int socket_fd() const;
 
 	private:
 		constexpr static int kInvalidFd = -1;
@@ -37,5 +36,5 @@ class Socket{
 
 		int	sockfd_ = kInvalidFd;
 		explicit Socket(int fd);
-		void	SetNonBlockingMode();
+		int	SetNonBlockingMode();
 };
