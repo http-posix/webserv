@@ -11,7 +11,7 @@ struct ConfigToken
 		Number,
 		String,
 		EndOfFile
-	};
+	} type;
 	std::string value;
 };
 
