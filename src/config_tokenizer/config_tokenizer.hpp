@@ -16,9 +16,10 @@ struct ConfigToken
 };
 
 class ConfigTokenizer
-{ public:
+{
+	public:
 		explicit ConfigTokenizer(const std::string& input);
-		ConfigToken next();
+		ConfigToken Next();
 	private:
 		std::string src;
 		size_t pos;
