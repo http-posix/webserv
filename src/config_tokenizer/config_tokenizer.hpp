@@ -23,4 +23,5 @@ class ConfigTokenizer
 	private:
 		std::string src;
 		size_t pos;
+		bool isKeyword(std::string word);
 };
