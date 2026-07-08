@@ -1,6 +1,6 @@
 #pragma once
 
-#include "config/mock_config.hpp"
+#include "../tests/mock_files/mock_config.hpp"
 #include "socket/socket.hpp"
 #include <vector>
 #include <string>
