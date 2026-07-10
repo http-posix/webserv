@@ -40,4 +40,28 @@ ConfigToken ConfigTokenizer::Next()
 		return {ConfigToken::Number, src.substr(start, pos = start)};
 	}
 
+	if (src[pos] == '"' || src[pos] == '\'')
+	{
+		// Quote can either be ' or ", that's why we save it dynamically
+		char quote = src[pos];
+		size_t start = ++pos;
+		while (pos < src.size() && src[pos] != quote)
+			++pos;
+		std::string str = src.substr(start, pos - start);
+		if (pos < src.size()) 
+			++pos;
+		return {ConfigToken::String, str};
+	}
+
+	// Final call we check for things such as {, } ; etc.
+	// (Single Character Tokens AKA Symbols)
+	char ch = src[pos];
+	// Skip char so we don't infinitely loop on it.
+	++pos;
+	if (ch == '{' || ch == '}' || ch == ':')
+		return {ConfigToken::Symbol, std::string(1, ch)};
+
+	// As a failsafe, we assume final possibility to be Identifier
+	// Things such as ':' or '/' for paths or ports
+	return {ConfigToken::Identifier, std::string(1, ch)};
 }
