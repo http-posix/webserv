@@ -64,6 +64,8 @@ TEST_DEPS += $(SRC_DIR)/socket/socket.cpp
 TEST_DEPS += $(SRC_DIR)/http_parser/http_parser.cpp
 TEST_DEPS += $(SRC_DIR)/server/server.cpp
 TEST_DEPS += $(SRC_DIR)/event_loop/signal_handler.cpp
+TEST_DEPS += $(SRC_DIR)/event_loop/poll_manager.cpp
+
 
 TEST_FLAGS = $(CXXFLAGS) $(DEPFLAGS) -DDEBUG_MODE -DLOG_TO_FILE
 
