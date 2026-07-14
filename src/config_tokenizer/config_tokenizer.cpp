@@ -37,7 +37,7 @@ ConfigToken ConfigTokenizer::Next()
 	{
 		size_t start = pos;
 		while (pos < src.size() && isdigit(src[pos])) ++pos;
-		return {ConfigToken::Number, src.substr(start, pos = start)};
+		return {ConfigToken::Number, src.substr(start, pos - start)};
 	}
 
 	if (src[pos] == '"' || src[pos] == '\'')
