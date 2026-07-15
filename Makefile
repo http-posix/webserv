@@ -21,6 +21,8 @@ ifdef DBG
 	ifdef LOG
 		CXXFLAGS += -DLOG_TO_FILE
 	endif
+else
+	CXXFLAGS += -DNDEBUG
 endif
 
 # run shell funcion to find only files in src with name *.cpp and return output without main.cpp
