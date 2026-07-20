@@ -38,7 +38,7 @@ Socket Socket::adopt(int fd){
 	return Socket(fd);
 }
 
-int Socket::socket_fd() const {
+int Socket::fd() const {
 	return sockfd_;
 }
 
@@ -70,13 +70,18 @@ Socket::Socket(int fd) {
 }
 
 int	Socket::SetNonBlockingMode() {
+// read-modify-write pattern is a best practice in POSIX
+// but flag F_GETFL isn't allowed in this project
+// in this particular project this is ok, 'cause we set flags on just created socket wich hasn't any other flags
+/* 
 	int flags = ::fcntl(sockfd_, F_GETFL, 0);
 	if (flags == -1)
 	{
 		LOG_ERROR("fcntl(F_GETFL) failed on socket fd " + std::to_string(sockfd_) + ": " + std::string(strerror(errno)));
 		return 1;
 	}
-	int ret_code = ::fcntl(sockfd_, F_SETFL, flags | O_NONBLOCK);
+*/
+	int ret_code = ::fcntl(sockfd_, F_SETFL, O_NONBLOCK);
 	if (ret_code == -1){
 		LOG_ERROR("fcntl(F_SETFL) failed on socket fd " + std::to_string(sockfd_) + ": " + std::string(strerror(errno)));
 		return 1;
