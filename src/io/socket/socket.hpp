@@ -28,7 +28,7 @@ class Socket{
 		Socket(Socket&& other) noexcept;
 		Socket& operator=(Socket&& other) noexcept;
 
-		int socket_fd() const;
+		int fd() const;
 
 	private:
 		constexpr static int kInvalidFd = -1;
