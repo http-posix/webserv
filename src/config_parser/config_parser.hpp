@@ -25,6 +25,27 @@ struct LocationConfig
 	// autoindex
 };
 
+struct ServerConfig
+{
+	// Non-virtual so we only have one hostname (ip adress)
+	std::string hostname;
+
+	// Ports to listen to. Multiple ports are allowed.
+	// Ports are like gateways; our castle can have multiple entrances.
+	std::vector<uint16_t> listen_port;
+
+	// Html error pages to return in case of specific error pages.
+	// Most browser have their own error page if non are provided,
+	// however, subject defines we must give our own error_pages.
+	std::pair<int, std::string> error_pages;
+
+	// Settings for a specific location/directory
+	std::vector<struct LocationConfig> locations;
+
+	// Defines what the maximum size of a request should be.
+	size_t client_max_body_size;
+};
+
 
 class ConfigParser {
 	private:
