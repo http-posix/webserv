@@ -38,13 +38,12 @@ void	ConfigParser::createServerConfig()
 {
 	pos = tokenizer_.Next();
 
+	ServerConfig server_config;
+
 	//TODO: I need to find an efficient way to check whether one of 
 	// the keywords is present so that I can give specific 
 	// instructions to set the variables for the server structure correctly
 	//
-	// TODO: I need to create a ServerConfig Structure. AKA:
-	// I need to use the `new` keyword and add it to the vector
-	// of the entire Config.
 
 	// Keywords to look for:
 	// - listen
@@ -57,6 +56,52 @@ void	ConfigParser::createServerConfig()
 	// - location
 	// - end of block `}`
 
+	while (pos.value != "}")
+	{
+		if (pos.value == "listen")
+		{
+		}
+		// The following is an example of what we should do when we find one of the
+		// eligible keywords. It is basically a ruleset/switchcase where we act on
+		// specific keywords and set them to their corresponding values in our struct.
+		else if (pos.value == "hostname")
+		{
+			std::string result;
+			pos = tokenizer_.Next();
+			if (pos.type == ConfigToken::Identifier || pos.type == ConfigToken::String)
+			{
+				result = pos.value;
+				pos = tokenizer_.Next();
+				while (pos.value != ";")
+				{
+					if (pos.type == ConfigToken::Identifier || pos.type == ConfigToken::String)
+						result += pos.value;
+					else
+					{
+						//TODO: 
+						// Throw error; unexpected token.
+						return ;
+					}
+					pos = tokenizer_.Next();
+				}
+				server_config.hostname = result;
+			}
+			else
+			{
+				// TODO:
+				// Throw error unexpected token.
+				return ;
+			}
+		}
+		else
+		{
+			// TODO:
+			// throw error; unexpected token
+			return ;
+		}
+	}
+	// TODO:
+	// apend serverConfig to Config Structure.
 }
 
 void ConfigParser::createLocationConfig()
