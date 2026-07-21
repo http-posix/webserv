@@ -37,8 +37,32 @@ int	ConfigParser::removeComments()
 
 }
 
+void ConfigParser::parseFromString()
+{
+	removeComments();
+
+	ConfigTokenizer tokenizer(file_string_);
+	ConfigToken	pos;
+	pos = tokenizer.Next();
+	
+	while (pos.type != ConfigToken::EndOfFile)
+	{
+		//TODO: Should we throw an error if we get a keyword that we
+		// do not expect to be here? I think we should.
+		if (pos.type == ConfigToken::Keyword && pos.value == "server")
+		{
+			pos = tokenizer.Next();
+			//TODO; throw error.
+			if (pos.value != "{")
+				return ;
+			createServerConfig();
+		}
+		pos = tokenizer.Next();
 	}
-	return *this;
+
+	return ;
+};
+
 ConfigParser::ConfigParser(const std::string& filename) : tokenizer_(filename) {
 }
 
