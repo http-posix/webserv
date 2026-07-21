@@ -46,6 +46,10 @@ struct ServerConfig
 	size_t client_max_body_size;
 };
 
+struct Config
+{
+	std::vector<struct ServerConfig> servers;
+};
 
 class ConfigParser {
 	private:
