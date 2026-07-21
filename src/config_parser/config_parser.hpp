@@ -57,6 +57,7 @@ struct Config
 
 class ConfigParser {
 	private:
+		Config config_;
 		std::string	file_string_;
 		ConfigTokenizer tokenizer_;
 		ConfigToken pos;
