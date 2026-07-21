@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include "../config_tokenizer/config_tokenizer.hpp"
 
 struct LocationConfig
 {
