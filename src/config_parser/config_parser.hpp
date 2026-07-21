@@ -65,6 +65,7 @@ class ConfigParser {
 		int removeComments();
 		void parseFromString();
 		void createServerConfig();
+		void createLocationConfig();
 
 		ConfigParser(const std::string& filename);
 		~ConfigParser(void);
