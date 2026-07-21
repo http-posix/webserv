@@ -39,6 +39,7 @@ int	ConfigParser::removeComments()
 
 	}
 	return *this;
+ConfigParser::ConfigParser(const std::string& filename) : tokenizer_(filename) {
 }
 
 ConfigParser::~ConfigParser(void) {
