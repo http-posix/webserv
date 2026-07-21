@@ -21,7 +21,7 @@ class ConfigTokenizer
 		explicit ConfigTokenizer(const std::string& input);
 		ConfigToken Next();
 	private:
-		std::string src;
-		size_t pos;
+		std::string src_;
+		size_t pos_;
 		bool isKeyword(std::string word);
 };
