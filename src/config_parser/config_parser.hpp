@@ -62,5 +62,6 @@ class ConfigParser {
 		int readFile(const std::string& filename);
 		int removeComments();
 
+		ConfigParser(const std::string& filename);
 		~ConfigParser(void);
 };
