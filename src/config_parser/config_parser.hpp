@@ -57,6 +57,8 @@ struct Config
 class ConfigParser {
 	private:
 		std::string	file_string_;
+		ConfigTokenizer tokenizer_;
+		ConfigToken pos;
 
 	public:
 		int readFile(const std::string& filename);
