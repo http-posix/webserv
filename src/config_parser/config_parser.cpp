@@ -1,3 +1,4 @@
+#include "../config_tokenizer/config_tokenizer.hpp"
 #include "config_parser.hpp"
 #include <fstream>
 #include <sstream>
