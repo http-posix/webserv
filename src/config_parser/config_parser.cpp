@@ -58,6 +58,18 @@ void	ConfigParser::createServerConfig()
 
 }
 
+void ConfigParser::createLocationConfig()
+{
+	pos = tokenizer_.Next();
+
+	//- method
+	//- return
+	//- upload_store
+	//- autoindex
+	//- index
+	//- cgi path
+	//- `}` (end of location block)
+
 }
 
 void ConfigParser::parseFromString()
