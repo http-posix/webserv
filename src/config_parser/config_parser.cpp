@@ -33,6 +33,29 @@ int	ConfigParser::removeComments()
 	return (0);
 }
 
+void	ConfigParser::createServerConfig()
+{
+	pos = tokenizer_.Next();
+
+	//TODO: I need to find an efficient way to check whether one of 
+	// the keywords is present so that I can give specific 
+	// instructions to set the variables for the server structure correctly
+	//
+	// TODO: I need to create a ServerConfig Structure. AKA:
+	// I need to use the `new` keyword and add it to the vector
+	// of the entire Config.
+
+	// Keywords to look for:
+	// - listen
+	// - server_name
+	// - host
+	// - root
+	// - client_max_body_size
+	// - index
+	// - error_page
+	// - location
+	// - end of block `}`
+
 }
 
 }
