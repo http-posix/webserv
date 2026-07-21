@@ -1,5 +1,8 @@
 #pragma once
 #include <string>
+#include <vector>
+#include <cstdint>
+
 struct LocationConfig
 {
 	// URI: Uniform Resource Identifier -> path to the location
