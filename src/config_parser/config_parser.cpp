@@ -2,7 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-
+#include <cstdint>
 int ConfigParser::readFile(const std::string& filename)
 {
 	std::ifstream		inputFile(filename.c_str());
