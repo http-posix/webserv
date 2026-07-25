@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iostream>
 #include <cstdint>
+
 int ConfigParser::readFile(const std::string& filename)
 {
 	std::ifstream		inputFile(filename.c_str());
@@ -58,7 +59,7 @@ void	ConfigParser::createServerConfig()
 
 	while (pos.value != "}")
 	{
-		if (pos.value == "listen")
+		if (pos.value == "port")
 		{
 		}
 		// The following is an example of what we should do when we find one of the
@@ -149,4 +150,5 @@ ConfigParser::ConfigParser(const std::string& filename) : tokenizer_(filename) {
 
 ConfigParser::~ConfigParser(void) {
 }
+	ConfigToken token;
 
