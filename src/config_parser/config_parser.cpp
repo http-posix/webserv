@@ -82,6 +82,36 @@ void	ConfigParser::createServerConfig()
 			}
 			pos = tokenizer_.Next();
 		}
+		else if (pos.value == "error_page")
+		{
+			std::string result;
+			pos = tokenizer_.Next();
+			if (pos.type == ConfigToken::Number)
+			{
+				// TODO: How to set a variable for a pair data type?
+				result = pos.value;
+				// TODO: Convert string to integer.
+			}
+			else 
+			{
+				// TODO: Throw error; unexpected token.
+			}
+			pos = tokenizer_.Next();
+			if (pos.type == ConfigToken::String)
+			{
+				result = pos.value;
+				// TODO: Pair path to given integer.
+			}
+			else
+			{
+				// TODO: Throw error for unexpected token.
+			}
+			pos = tokenizer_.Next();
+			if (pos.value != ";")
+				// TODO: Unexpected token.
+			pos = tokenizer_.Next();
+		}
+
 		// The following is an example of what we should do when we find one of the
 		// eligible keywords. It is basically a ruleset/switchcase where we act on
 		// specific keywords and set them to their corresponding values in our struct.
