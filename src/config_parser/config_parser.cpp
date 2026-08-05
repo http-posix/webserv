@@ -62,6 +62,26 @@ void	ConfigParser::createServerConfig()
 		if (pos.value == "port")
 		{
 		}
+		else if (pos.value == "client_max_body_size")
+		{
+			size_t result;
+			pos = tokenizer_.Next();
+			if (pos.type == ConfigToken::Number)
+			{
+				result = std::stoul(pos.value);
+				server_config.client_max_body_size = result;
+			}
+			else
+			{
+				// TODO: Unexpected token
+			}
+			pos = tokenizer_.Next();
+			if (pos.value != ";")
+			{
+				//TODO: Unexpected token.
+			}
+			pos = tokenizer_.Next();
+		}
 		// The following is an example of what we should do when we find one of the
 		// eligible keywords. It is basically a ruleset/switchcase where we act on
 		// specific keywords and set them to their corresponding values in our struct.
