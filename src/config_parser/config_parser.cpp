@@ -84,6 +84,23 @@ int ConfigParser::parseInt(const std::string& value)
 	return (static_cast<int>(result));
 }
 
+size_t ConfigParser::parseSize(const std::string& value)
+{
+	std::size_t idx = 0;
+	unsigned long result;
+	try
+	{
+		result = std::stoul(value, &idx);
+	}
+	catch (const std::exception&)
+	{
+		throw ConfigException("Invalid size '" + value + "'.");
+	}
+	if (idx != value.size())
+		throw ConfigException("Invalid size '" + value + "'.");
+	return (static_cast<size_t>(result));
+}
+
 	//TODO: I need to find an efficient way to check whether one of 
 	// the keywords is present so that I can give specific 
 	// instructions to set the variables for the server structure correctly
