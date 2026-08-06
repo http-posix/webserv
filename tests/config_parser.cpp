@@ -37,3 +37,22 @@ TEST_CASE("Open directory instead of file")
 
 	CHECK(p.readFile(file) != 0);
 }
+
+TEST_CASE("Simple Config File with single Server Block")
+{
+	ConfigParser p;
+	std::string file = "tests/config_test_files/single_server_block";
+
+	//Check if file gets read correctly
+	CHECK(p.readFile(file) == 0);
+	p.parseFromString();	
+	Config c = p.getConfig();
+
+	CHECK(c.servers[0].hostname == "127.0.0.1");
+	CHECK(c.servers[0].listen_port[0] == 8002);
+	CHECK(c.servers[0].error_pages.at(404) == "error_pages/404.html");
+	CHECK(c.servers[0].error_pages.at(303) == "error_pages/303.html");
+	CHECK(c.servers[0].root == "docs/fusion_web/");
+}
+
+
