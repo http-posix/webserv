@@ -21,6 +21,15 @@ struct LocationConfig
 	// If non is provided, the server's default is used
 	std::string root;
 
+	// Default index file to serve inside this location
+	std::string index;
+
+	// Whether to generate a directory listing when no index is present
+	bool autoindex = false;
+
+	// Whether file uploads are allowed in this location
+	bool upload_enable = false;
+
 	// Location where uploaded files while be uploaded.
 	std::string upload_location;
 
@@ -41,7 +50,14 @@ struct ServerConfig
 	// Html error pages to return in case of specific error pages.
 	// Most browser have their own error page if non are provided,
 	// however, subject defines we must give our own error_pages.
-	std::pair<int, std::string> error_pages;
+	std::unordered_map<int, std::string> error_pages;
+
+	// Default root (directory) used by every location that does not
+	// provide its own.
+	std::string root;
+
+	// Default index file used by every location that does not provide its own.
+	std::string index;
 
 	// Settings for a specific location/directory
 	std::vector<struct LocationConfig> locations;
