@@ -81,6 +81,7 @@ class ConfigParser {
 		void expect(const std::string& value);
 		static std::string join(const std::vector<std::string>& values);
 		static int parseInt(const std::string& value);
+		static size_t parseSize(const std::string& value);
 	public:
 		int readFile(const std::string& filename);
 		int removeComments();
