@@ -32,10 +32,6 @@ struct LocationConfig
 
 	// Location where uploaded files while be uploaded.
 	std::string upload_location;
-
-	// TODO
-	// index
-	// autoindex
 };
 
 struct ServerConfig
