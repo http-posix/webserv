@@ -51,6 +51,12 @@ void	ConfigParser::createServerConfig()
 	return (values);
 }
 
+void ConfigParser::expect(const std::string& value)
+{
+	if (pos.value != value)
+		throw ConfigException("Expected '" + value + "' but got '" + pos.value + "'.");
+	pos = tokenizer_.Next();
+}
 	ServerConfig server_config;
 
 	//TODO: I need to find an efficient way to check whether one of 
