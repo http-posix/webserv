@@ -194,6 +194,10 @@ void ConfigParser::parseFromString()
 
 	return ;
 };
+const Config& ConfigParser::getConfig() const
+{
+	return (config_);
+}
 
 ConfigParser::ConfigParser(const std::string& filename) : tokenizer_(filename) {
 }

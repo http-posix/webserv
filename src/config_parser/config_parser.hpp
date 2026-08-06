@@ -78,6 +78,7 @@ class ConfigParser {
 		int readFile(const std::string& filename);
 		int removeComments();
 		void parseFromString();
+		const Config& getConfig() const;
 		void createServerConfig();
 		void createLocationConfig();
 
