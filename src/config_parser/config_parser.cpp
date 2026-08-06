@@ -35,9 +35,21 @@ int	ConfigParser::removeComments()
 	return (0);
 }
 
+std::vector<std::string> ConfigParser::collectUntil(const std::string& stop)
 void	ConfigParser::createServerConfig()
 {
+	std::vector<std::string> values;
 	pos = tokenizer_.Next();
+	while (pos.value != stop)
+	{
+		if (pos.type == ConfigToken::EndOfFile)
+			throw ConfigException("Unexpected end of file, expected '" + stop + "'.");
+		values.push_back(pos.value);
+		pos = tokenizer_.Next();
+	}
+	pos = tokenizer_.Next();
+	return (values);
+}
 
 	ServerConfig server_config;
 
