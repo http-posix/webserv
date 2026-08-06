@@ -167,10 +167,51 @@ size_t ConfigParser::applyUnit(size_t value, const std::string& unit)
 				// TODO: Convert string to integer.
 			}
 			else 
+void ConfigParser::createLocationConfig(LocationConfig& location)
+{
+	while (pos.value != "}")
+	{
+		if (pos.type == ConfigToken::EndOfFile)
+			throw ConfigException("Unterminated 'location' block, expected '}'.");
+
+		if (pos.value == "methods")
+		{
+			std::vector<std::string> values = collectUntil(";");
+			for (size_t i = 0; i < values.size(); ++i)
 			{
+				if (values[i] == ",")
+					continue;
+				location.allowed_methods.push_back(values[i]);
 				// TODO: Throw error; unexpected token.
 			}
+			if (location.allowed_methods.empty())
+				throw ConfigException("Empty 'methods' directive.");
+		}
+		else if (pos.value == "return")
+		{
 			pos = tokenizer_.Next();
+			if (pos.type != ConfigToken::Number)
+				throw ConfigException("Expected a status code after 'return'.");
+			int code = parseInt(pos.value);
+			std::string url = join(collectUntil(";"));
+			if (url.empty())
+				throw ConfigException("Empty URL in 'return' directive.");
+			location.redirections = std::make_pair(code, url);
+		}
+		else if (pos.value == "root")
+		{
+			location.root = join(collectUntil(";"));
+			if (location.root.empty())
+				throw ConfigException("Empty 'root' directive in location '" + location.uri_path + "'.");
+		}
+		else if (pos.value == "index")
+		{
+			location.index = join(collectUntil(";"));
+			if (location.index.empty())
+				throw ConfigException("Empty 'index' directive in location '" + location.uri_path + "'.");
+		}
+		else if (pos.value == "autoindex")
+		{
 			if (pos.type == ConfigToken::String)
 			{
 				result = pos.value;
@@ -181,48 +222,41 @@ size_t ConfigParser::applyUnit(size_t value, const std::string& unit)
 				// TODO: Throw error for unexpected token.
 			}
 			pos = tokenizer_.Next();
-			if (pos.value != ";")
-				// TODO: Unexpected token.
+			if (pos.value == "on")
+				location.autoindex = true;
+			else if (pos.value == "off")
+				location.autoindex = false;
+			else
+				throw ConfigException("Expected 'on' or 'off' after 'autoindex'.");
 			pos = tokenizer_.Next();
+			expect(";");
 		}
+		else if (pos.value == "upload_enable")
 
 		// The following is an example of what we should do when we find one of the
 		// eligible keywords. It is basically a ruleset/switchcase where we act on
 		// specific keywords and set them to their corresponding values in our struct.
 		else if (pos.value == "hostname")
 		{
-			std::string result;
 			pos = tokenizer_.Next();
-			if (pos.type == ConfigToken::Identifier || pos.type == ConfigToken::String)
-			{
-				result = pos.value;
-				pos = tokenizer_.Next();
-				while (pos.value != ";")
-				{
-					if (pos.type == ConfigToken::Identifier || pos.type == ConfigToken::String)
-						result += pos.value;
-					else
-					{
-						//TODO: 
-						// Throw error; unexpected token.
-						return ;
-					}
-					pos = tokenizer_.Next();
-				}
-				server_config.hostname = result;
-			}
+			if (pos.value == "on")
+				location.upload_enable = true;
+			else if (pos.value == "off")
+				location.upload_enable = false;
 			else
-			{
-				// TODO:
-				// Throw error unexpected token.
-				return ;
-			}
+				throw ConfigException("Expected 'on' or 'off' after 'upload_enable'.");
+			pos = tokenizer_.Next();
+			expect(";");
+		}
+		else if (pos.value == "upload_store")
+		{
+			location.upload_location = join(collectUntil(";"));
+			if (location.upload_location.empty())
+				throw ConfigException("Empty 'upload_store' directive in location '" + location.uri_path + "'.");
 		}
 		else
 		{
-			// TODO:
-			// throw error; unexpected token
-			return ;
+			throw ConfigException("Unexpected token '" + pos.value + "' in location '" + location.uri_path + "'.");
 		}
 	}
 	// TODO:
