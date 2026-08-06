@@ -79,6 +79,7 @@ class ConfigParser {
 		std::vector<std::string> collectUntil(const std::string& stop);
 		// Expects the current token to equal `value`, then advances.
 		void expect(const std::string& value);
+		static std::string join(const std::vector<std::string>& values);
 	public:
 		int readFile(const std::string& filename);
 		int removeComments();
