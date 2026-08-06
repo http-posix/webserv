@@ -80,6 +80,7 @@ class ConfigParser {
 		// Expects the current token to equal `value`, then advances.
 		void expect(const std::string& value);
 		static std::string join(const std::vector<std::string>& values);
+		static int parseInt(const std::string& value);
 	public:
 		int readFile(const std::string& filename);
 		int removeComments();
