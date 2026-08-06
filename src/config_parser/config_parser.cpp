@@ -279,29 +279,34 @@ void ConfigParser::createLocationConfig()
 
 void ConfigParser::parseFromString()
 {
+	if (file_string_.empty())
+		throw ConfigException("Configuration file is empty.");
 	removeComments();
 
-	ConfigTokenizer tokenizer(file_string_);
-	ConfigToken	pos;
-	pos = tokenizer.Next();
-	
+	config_.servers.clear();
+	tokenizer_ = ConfigTokenizer(file_string_);
+	pos = tokenizer_.Next();
+
 	while (pos.type != ConfigToken::EndOfFile)
 	{
-		//TODO: Should we throw an error if we get a keyword that we
-		// do not expect to be here? I think we should.
 		if (pos.type == ConfigToken::Keyword && pos.value == "server")
 		{
-			pos = tokenizer.Next();
-			//TODO; throw error.
-			if (pos.value != "{")
-				return ;
+			pos = tokenizer_.Next();
+			if (pos.type != ConfigToken::Symbol || pos.value != "{")
+				throw ConfigException("Expected '{' after 'server' keyword.");
+			pos = tokenizer_.Next();
 			createServerConfig();
 		}
-		pos = tokenizer.Next();
+		else
+		{
+			throw ConfigException("Unexpected token '" + pos.value + "' outside a 'server' block.");
+		}
 	}
 
-	return ;
-};
+	if (config_.servers.empty())
+		throw ConfigException("Configuration must contain at least one 'server' block.");
+}
+
 const Config& ConfigParser::getConfig() const
 {
 	return (config_);
