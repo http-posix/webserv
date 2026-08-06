@@ -101,10 +101,24 @@ size_t ConfigParser::parseSize(const std::string& value)
 	return (static_cast<size_t>(result));
 }
 
+size_t ConfigParser::applyUnit(size_t value, const std::string& unit)
+{
+	std::string normalized = unit;
+	for (size_t i = 0; i < normalized.size(); ++i)
+		normalized[i] = static_cast<char>(std::tolower(static_cast<unsigned char>(normalized[i])));
 	//TODO: I need to find an efficient way to check whether one of 
 	// the keywords is present so that I can give specific 
 	// instructions to set the variables for the server structure correctly
 	//
+
+	if (normalized == "k" || normalized == "kb")
+		return (value * 1024);
+	if (normalized == "m" || normalized == "mb")
+		return (value * 1024 * 1024);
+	if (normalized == "g" || normalized == "gb")
+		return (value * 1024 * 1024 * 1024);
+	throw ConfigException("Unknown size unit '" + unit + "'.");
+}
 
 	// Keywords to look for:
 	// - listen
