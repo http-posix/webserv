@@ -63,7 +63,7 @@ struct ServerConfig
 	std::vector<struct LocationConfig> locations;
 
 	// Defines what the maximum size of a request should be.
-	size_t client_max_body_size;
+	size_t client_max_body_size = 0;
 };
 
 struct Config
