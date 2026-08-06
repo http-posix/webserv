@@ -59,6 +59,14 @@ void ConfigParser::expect(const std::string& value)
 }
 	ServerConfig server_config;
 
+std::string ConfigParser::join(const std::vector<std::string>& values)
+{
+	std::string result;
+	for (size_t i = 0; i < values.size(); ++i)
+		result += values[i];
+	return (result);
+}
+
 	//TODO: I need to find an efficient way to check whether one of 
 	// the keywords is present so that I can give specific 
 	// instructions to set the variables for the server structure correctly
