@@ -1,8 +1,10 @@
+#include "../app_exception/app_exception.hpp"
 #include "../config_tokenizer/config_tokenizer.hpp"
 #include "config_parser.hpp"
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <cctype>
 #include <cstdint>
 
 int ConfigParser::readFile(const std::string& filename)
