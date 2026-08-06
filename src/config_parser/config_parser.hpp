@@ -96,8 +96,4 @@ class ConfigParser {
 		const Config& getConfig() const;
 		void createServerConfig();
 		void createLocationConfig(LocationConfig& location);
-		void createLocationConfig();
-
-		ConfigParser(const std::string& filename);
-		~ConfigParser(void);
 };
