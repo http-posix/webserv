@@ -36,7 +36,6 @@ int	ConfigParser::removeComments()
 }
 
 std::vector<std::string> ConfigParser::collectUntil(const std::string& stop)
-void	ConfigParser::createServerConfig()
 {
 	std::vector<std::string> values;
 	pos = tokenizer_.Next();
@@ -57,7 +56,6 @@ void ConfigParser::expect(const std::string& value)
 		throw ConfigException("Expected '" + value + "' but got '" + pos.value + "'.");
 	pos = tokenizer_.Next();
 }
-	ServerConfig server_config;
 
 std::string ConfigParser::join(const std::vector<std::string>& values)
 {
@@ -106,10 +104,6 @@ size_t ConfigParser::applyUnit(size_t value, const std::string& unit)
 	std::string normalized = unit;
 	for (size_t i = 0; i < normalized.size(); ++i)
 		normalized[i] = static_cast<char>(std::tolower(static_cast<unsigned char>(normalized[i])));
-	//TODO: I need to find an efficient way to check whether one of 
-	// the keywords is present so that I can give specific 
-	// instructions to set the variables for the server structure correctly
-	//
 
 	if (normalized == "k" || normalized == "kb")
 		return (value * 1024);
@@ -123,16 +117,6 @@ size_t ConfigParser::applyUnit(size_t value, const std::string& unit)
 void	ConfigParser::createServerConfig()
 {
 	ServerConfig server_config;
-	// Keywords to look for:
-	// - listen
-	// - server_name
-	// - host
-	// - root
-	// - client_max_body_size
-	// - index
-	// - error_page
-	// - location
-	// - end of block `}`
 
 	while (pos.value != "}")
 	{
@@ -231,7 +215,6 @@ void ConfigParser::createLocationConfig(LocationConfig& location)
 				if (values[i] == ",")
 					continue;
 				location.allowed_methods.push_back(values[i]);
-				// TODO: Throw error; unexpected token.
 			}
 			if (location.allowed_methods.empty())
 				throw ConfigException("Empty 'methods' directive.");
@@ -261,15 +244,6 @@ void ConfigParser::createLocationConfig(LocationConfig& location)
 		}
 		else if (pos.value == "autoindex")
 		{
-			if (pos.type == ConfigToken::String)
-			{
-				result = pos.value;
-				// TODO: Pair path to given integer.
-			}
-			else
-			{
-				// TODO: Throw error for unexpected token.
-			}
 			pos = tokenizer_.Next();
 			if (pos.value == "on")
 				location.autoindex = true;
@@ -281,11 +255,6 @@ void ConfigParser::createLocationConfig(LocationConfig& location)
 			expect(";");
 		}
 		else if (pos.value == "upload_enable")
-
-		// The following is an example of what we should do when we find one of the
-		// eligible keywords. It is basically a ruleset/switchcase where we act on
-		// specific keywords and set them to their corresponding values in our struct.
-		else if (pos.value == "hostname")
 		{
 			pos = tokenizer_.Next();
 			if (pos.value == "on")
@@ -308,22 +277,7 @@ void ConfigParser::createLocationConfig(LocationConfig& location)
 			throw ConfigException("Unexpected token '" + pos.value + "' in location '" + location.uri_path + "'.");
 		}
 	}
-	// TODO:
-	// apend serverConfig to Config Structure.
-}
-
-void ConfigParser::createLocationConfig()
-{
 	pos = tokenizer_.Next();
-
-	//- method
-	//- return
-	//- upload_store
-	//- autoindex
-	//- index
-	//- cgi path
-	//- `}` (end of location block)
-
 }
 
 void ConfigParser::parseFromString()
