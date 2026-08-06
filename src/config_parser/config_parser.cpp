@@ -120,6 +120,9 @@ size_t ConfigParser::applyUnit(size_t value, const std::string& unit)
 	throw ConfigException("Unknown size unit '" + unit + "'.");
 }
 
+void	ConfigParser::createServerConfig()
+{
+	ServerConfig server_config;
 	// Keywords to look for:
 	// - listen
 	// - server_name
@@ -133,40 +136,86 @@ size_t ConfigParser::applyUnit(size_t value, const std::string& unit)
 
 	while (pos.value != "}")
 	{
-		if (pos.value == "port")
+		if (pos.type == ConfigToken::EndOfFile)
+			throw ConfigException("Unterminated 'server' block, expected '}'.");
+
+		if (pos.value == "listen")
 		{
+			pos = tokenizer_.Next();
+			if (pos.type != ConfigToken::Number)
+				throw ConfigException("Expected a port number after 'listen'.");
+			int port = parseInt(pos.value);
+			if (port < 0 || port > 65535)
+				throw ConfigException("Port out of range: '" + pos.value + "'.");
+			server_config.listen_port.push_back(static_cast<uint16_t>(port));
+			pos = tokenizer_.Next();
+			expect(";");
+		}
+		else if (pos.value == "hostname")
+		{
+			server_config.hostname = join(collectUntil(";"));
+			if (server_config.hostname.empty())
+				throw ConfigException("Empty 'hostname' directive.");
+		}
+		else if (pos.value == "root")
+		{
+			server_config.root = join(collectUntil(";"));
+			if (server_config.root.empty())
+				throw ConfigException("Empty 'root' directive.");
+		}
+		else if (pos.value == "index")
+		{
+			server_config.index = join(collectUntil(";"));
+			if (server_config.index.empty())
+				throw ConfigException("Empty 'index' directive.");
 		}
 		else if (pos.value == "client_max_body_size")
 		{
-			size_t result;
 			pos = tokenizer_.Next();
-			if (pos.type == ConfigToken::Number)
-			{
-				result = std::stoul(pos.value);
-				server_config.client_max_body_size = result;
-			}
-			else
-			{
-				// TODO: Unexpected token
-			}
+			if (pos.type != ConfigToken::Number)
+				throw ConfigException("Expected a number after 'client_max_body_size'.");
+			size_t result = parseSize(pos.value);
 			pos = tokenizer_.Next();
 			if (pos.value != ";")
 			{
-				//TODO: Unexpected token.
+				if (pos.type != ConfigToken::Identifier)
+					throw ConfigException("Expected ';' after 'client_max_body_size'.");
+				result = applyUnit(result, pos.value);
+				pos = tokenizer_.Next();
 			}
-			pos = tokenizer_.Next();
+			expect(";");
+			server_config.client_max_body_size = result;
 		}
 		else if (pos.value == "error_page")
 		{
-			std::string result;
 			pos = tokenizer_.Next();
-			if (pos.type == ConfigToken::Number)
-			{
-				// TODO: How to set a variable for a pair data type?
-				result = pos.value;
-				// TODO: Convert string to integer.
-			}
-			else 
+			if (pos.type != ConfigToken::Number)
+				throw ConfigException("Expected a status code after 'error_page'.");
+			int code = parseInt(pos.value);
+			std::string path = join(collectUntil(";"));
+			if (path.empty())
+				throw ConfigException("Empty path in 'error_page' directive.");
+			server_config.error_pages[code] = path;
+		}
+		else if (pos.value == "location")
+		{
+			std::string uri = join(collectUntil("{"));
+			if (uri.empty())
+				throw ConfigException("Missing URI for 'location' directive.");
+			LocationConfig location;
+			location.uri_path = uri;
+			createLocationConfig(location);
+			server_config.locations.push_back(location);
+		}
+		else
+		{
+			throw ConfigException("Unexpected token '" + pos.value + "' in 'server' block.");
+		}
+	}
+	pos = tokenizer_.Next();
+	config_.servers.push_back(server_config);
+}
+
 void ConfigParser::createLocationConfig(LocationConfig& location)
 {
 	while (pos.value != "}")
