@@ -61,6 +61,7 @@ TEST_BINS := $(patsubst $(TEST_DIR)/%.cpp, $(TEST_BUILD)/%, $(TEST_SRC))
 TEST_DEPS := $(SRC_DIR)/logger/logger.cpp
 TEST_DEPS += $(SRC_DIR)/socket/socket.cpp
 TEST_DEPS += $(SRC_DIR)/config_parser/config_parser.cpp
+TEST_DEPS += $(SRC_DIR)/config_tokenizer/config_tokenizer.cpp
 TEST_FLAGS = $(CXXFLAGS) $(DEPFLAGS) -DDEBUG_MODE -DLOG_TO_FILE
 
 $(TEST_BUILD)/%: $(TEST_DIR)/%.cpp $(TEST_DEPS)
