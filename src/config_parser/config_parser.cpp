@@ -273,10 +273,16 @@ const Config& ConfigParser::getConfig() const
 	return (config_);
 }
 
-ConfigParser::ConfigParser(const std::string& filename) : tokenizer_(filename) {
+ConfigParser::ConfigParser(void) : tokenizer_("")
+{
 }
 
-ConfigParser::~ConfigParser(void) {
+ConfigParser::ConfigParser(const std::string& filename) : tokenizer_("")
+{
+	if (readFile(filename) != 0)
+		throw ConfigException("Failed to open configuration file: " + filename);
 }
-	ConfigToken token;
 
+ConfigParser::~ConfigParser(void)
+{
+}

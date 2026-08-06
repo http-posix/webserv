@@ -85,6 +85,10 @@ class ConfigParser {
 		static size_t applyUnit(size_t value, const std::string& unit);
 
 	public:
+		ConfigParser();
+		ConfigParser(const std::string& filename);
+		~ConfigParser(void);
+
 		int readFile(const std::string& filename);
 		int removeComments();
 		void parseFromString();
