@@ -77,6 +77,8 @@ class ConfigParser {
 		// Collects token values up to (and consuming) `stop`.
 		// Throws ConfigException on end of file.
 		std::vector<std::string> collectUntil(const std::string& stop);
+		// Expects the current token to equal `value`, then advances.
+		void expect(const std::string& value);
 	public:
 		int readFile(const std::string& filename);
 		int removeComments();
