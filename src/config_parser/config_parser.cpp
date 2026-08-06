@@ -67,6 +67,23 @@ std::string ConfigParser::join(const std::vector<std::string>& values)
 	return (result);
 }
 
+int ConfigParser::parseInt(const std::string& value)
+{
+	std::size_t idx = 0;
+	long result;
+	try
+	{
+		result = std::stol(value, &idx);
+	}
+	catch (const std::exception&)
+	{
+		throw ConfigException("Invalid number '" + value + "'.");
+	}
+	if (idx != value.size())
+		throw ConfigException("Invalid number '" + value + "'.");
+	return (static_cast<int>(result));
+}
+
 	//TODO: I need to find an efficient way to check whether one of 
 	// the keywords is present so that I can give specific 
 	// instructions to set the variables for the server structure correctly
