@@ -73,3 +73,18 @@ TEST_CASE("Config File with two simple servers")
 	CHECK(c.servers[1].listen_port[0] == 9090);
 	CHECK(c.servers[1].listen_port[1] == 1212);
 }
+TEST_CASE("Testing location file")
+{
+	ConfigParser p;
+	std::string file = "tests/config_test_files/simple_location";
+
+	CHECK(p.readFile(file) == 0);
+	p.parseFromString();
+	
+	Config c = p.getConfig();
+	CHECK(c.servers[0].locations[0].uri_path == "/non_existing");
+	CHECK(c.servers[0].locations[0].index == "/index_non_existing");
+	CHECK(c.servers[0].locations[0].allowed_methods[0] == "GET");
+	CHECK(c.servers[0].locations[0].allowed_methods[1] == "POST");
+	CHECK(c.servers[0].locations[0].allowed_methods[2] == "DELETE");
+}
