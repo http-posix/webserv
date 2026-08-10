@@ -1,0 +1,10 @@
+server
+{
+	hostname doesntmatter;
+	listen 8080;
+	location /non_existing
+	{
+		methods GET POST DELETE;
+		index /index_non_existing;
+	}
+}
