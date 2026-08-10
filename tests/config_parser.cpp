@@ -38,6 +38,8 @@ TEST_CASE("Open directory instead of file")
 	CHECK(p.readFile(file) != 0);
 }
 
+// Test cases that check numerous amounts of config files
+
 TEST_CASE("Simple Config File with single Server Block")
 {
 	ConfigParser p;
@@ -55,4 +57,19 @@ TEST_CASE("Simple Config File with single Server Block")
 	CHECK(c.servers[0].root == "docs/fusion_web/");
 }
 
+TEST_CASE("Config File with two simple servers")
+{
+	ConfigParser p;
+	std::string file = "tests/config_test_files/two_simple_servers";
 
+	CHECK(p.readFile(file) == 0);
+	p.parseFromString();
+	
+	Config c = p.getConfig();
+
+	CHECK(c.servers[0].hostname == "localhost");
+	CHECK(c.servers[0].listen_port[0] == 8080);
+	CHECK(c.servers[1].hostname == "mfw.com");
+	CHECK(c.servers[1].listen_port[0] == 9090);
+	CHECK(c.servers[1].listen_port[1] == 1212);
+}
