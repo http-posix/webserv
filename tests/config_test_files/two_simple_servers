@@ -1,0 +1,10 @@
+server
+{
+	hostname localhost;
+	listen 8080;
+}
+server {
+	hostname mfw.com;
+	listen 9090;
+	listen 1212;
+}
