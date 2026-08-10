@@ -73,6 +73,7 @@ TEST_CASE("Config File with two simple servers")
 	CHECK(c.servers[1].listen_port[0] == 9090);
 	CHECK(c.servers[1].listen_port[1] == 1212);
 }
+
 TEST_CASE("Testing location file")
 {
 	ConfigParser p;
@@ -88,3 +89,12 @@ TEST_CASE("Testing location file")
 	CHECK(c.servers[0].locations[0].allowed_methods[1] == "POST");
 	CHECK(c.servers[0].locations[0].allowed_methods[2] == "DELETE");
 }
+
+//TODO
+// No path given for location should crash
+// invalid methods should not be stored. Instead of strings, have enums
+// non existing index
+// 
+// listen_port too large
+// redirection for locations does not need an integer for the pair?
+
