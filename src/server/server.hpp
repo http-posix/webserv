@@ -27,7 +27,9 @@ class Server{
 		Server(Server&& other) noexcept = default;
 		Server& operator=(Server&& other) noexcept = default;
 
-		int fd() const noexcept;
+		int					fd() const noexcept;
+		uint16_t			server_port() const noexcept;
+		const std::string&	server_host() const noexcept;
 
 	private:
 		Socket			socket_;

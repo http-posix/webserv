@@ -10,7 +10,10 @@
 #include "app_exception/app_exception.hpp"
 #include <cassert>
 
-// free function
+/* ========================================================================== */
+/*                               Free Functions                               */
+/* ========================================================================== */
+
 // https://cplusplus.com/reference/set/set/insert/
 std::vector<Server> CreateListeners(const Config& config){
 
@@ -35,6 +38,10 @@ std::vector<Server> CreateListeners(const Config& config){
 	return listeners;
 }
 
+/* ========================================================================== */
+/*                             Anonymous Namespace                            */
+/* ========================================================================== */
+
 namespace {
 	// Guard Class - provide RAII and avoid multiply freeaddrinfo calls
 	struct AddrinfoGuard {
@@ -53,10 +60,35 @@ namespace {
 		AddrinfoGuard& operator=(const AddrinfoGuard&) = delete;
 	};
 
-	AddrinfoGuard SetupAddrinfo(const std::string& host, uint16_t port);
+	// specify addrinfo struct for bind() call
+	// getaddrinfo has individual set of errors – check manual page
+	AddrinfoGuard SetupAddrinfo(const std::string& host, uint16_t port){
+		addrinfo	hints{}; // to specify our needs
+
+		hints.ai_family = AF_INET;// to use IPv4
+		hints.ai_socktype = SOCK_STREAM;// to use TCP
+		hints.ai_flags = AI_PASSIVE;// to create exactly server 
+
+		addrinfo* res = nullptr;
+
+		int ret_code = ::getaddrinfo(
+			host.c_str(),
+			std::to_string(port).c_str(),
+			&hints,
+			&res
+		);
+
+		if (ret_code != 0){
+			LOG_ERROR("getaddrinfo() failed for " + host + ":" + std::to_string(port) + " | Error: " + std::string(::gai_strerror(ret_code)));
+			throw ServerException("Failed to resolve server address configuration");
+			}
+		return AddrinfoGuard(res);
+	}
 }
 
-// public
+/* ========================================================================== */
+/*                               Public Methods                               */
+/* ========================================================================== */
 // sys_socket.h(0p), netinet_in.h(0p)
 // => I need to keep config struct to give locations for Response
 Server::Server(const std::string& host, uint16_t port){
@@ -67,7 +99,25 @@ Server::Server(const std::string& host, uint16_t port){
 	ListenSocket();
 }
 
-// private
+/* ========================================================================== */
+/*                             Accessors & Mutators                           */
+/* ========================================================================== */
+
+int	Server::fd() const noexcept{
+	return socket_.fd();
+}
+
+uint16_t	Server::server_port() const noexcept{
+	return port_;
+}
+
+const std::string&	Server::server_host() const noexcept{
+	return host_;
+}
+
+/* ========================================================================== */
+/*                              Private Methods                               */
+/* ========================================================================== */
 // keep server data for debug
 void	Server::SetServerData(const std::string& host, uint16_t port){
 	host_ = host;
@@ -107,38 +157,6 @@ void	Server::ListenSocket(){
 		LOG_ERROR("listen() failed on socket fd " + std::to_string(socket_.fd()) + ": " + std::string(strerror(errno)));
 		throw ServerException("Failed to put server into listening mode");
 	}
-}
-
-int	Server::fd() const noexcept{
-	return(socket_.fd());
-}
-
-namespace {
-// specify addrinfo struct for bind() call
-// getaddrinfo has individual set of errors – check manual page
-AddrinfoGuard SetupAddrinfo(const std::string& host, uint16_t port){
-	addrinfo	hints{}; // to specify our needs
-
-	hints.ai_family = AF_INET;// to use IPv4
-	hints.ai_socktype = SOCK_STREAM;// to use TCP
-	hints.ai_flags = AI_PASSIVE;// to create exactly server 
-
-	addrinfo* res = nullptr;
-
-	int ret_code = ::getaddrinfo(
-		host.c_str(),
-		std::to_string(port).c_str(),
-		&hints,
-		&res
-	);
-
-	if (ret_code != 0){
-		LOG_ERROR("getaddrinfo() failed for " + host + ":" + std::to_string(port) + " | Error: " + std::string(::gai_strerror(ret_code)));
-		throw ServerException("Failed to resolve server address configuration");
-		}
-	return AddrinfoGuard(res);
-}
-
 }
 
 // struct addrinfo {
