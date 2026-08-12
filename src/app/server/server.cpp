@@ -58,6 +58,7 @@ namespace {
 
 // public
 // sys_socket.h(0p), netinet_in.h(0p)
+// => I need to keep config struct to give locations for Response
 Server::Server(const std::string& host, uint16_t port){
 	SetServerData(host, port);
 	AddrinfoGuard addr_guard = SetupAddrinfo(host, port);
@@ -76,7 +77,7 @@ void	Server::SetServerData(const std::string& host, uint16_t port){
 void	Server::SetupSocketOptions(){
 	int option_value = 1;
 	int ret_code = ::setsockopt(
-		socket_.socket_fd(),
+		socket_.fd(),
 		SOL_SOCKET,// general level/layot of socket settings
 		SO_REUSEADDR,// avoid EADDRINUSE on restart, socket may be in TIME_WAIT
 		&option_value,
@@ -90,7 +91,7 @@ void	Server::SetupSocketOptions(){
 
 void	Server::BindSocket(const sockaddr* ai_addr, socklen_t ai_addrlen){
 	int ret_code = ::bind(
-		socket_.socket_fd(),
+		socket_.fd(),
 		ai_addr,
 		ai_addrlen
 	);
@@ -101,15 +102,15 @@ void	Server::BindSocket(const sockaddr* ai_addr, socklen_t ai_addrlen){
 }
 
 void	Server::ListenSocket(){
-	int ret_code = ::listen(socket_.socket_fd(), SOMAXCONN);
+	int ret_code = ::listen(socket_.fd(), SOMAXCONN);
 	if (ret_code == -1){
-		LOG_ERROR("listen() failed on socket fd " + std::to_string(socket_.socket_fd()) + ": " + std::string(strerror(errno)));
+		LOG_ERROR("listen() failed on socket fd " + std::to_string(socket_.fd()) + ": " + std::string(strerror(errno)));
 		throw ServerException("Failed to put server into listening mode");
 	}
 }
 
 int	Server::fd() const noexcept{
-	return(socket_.socket_fd());
+	return(socket_.fd());
 }
 
 namespace {
