@@ -34,10 +34,10 @@ int main(){
 	addr.sin_port = htons(8080);
 	addr.sin_addr.s_addr = INADDR_ANY;
 
-	bind(server.socket_fd(), reinterpret_cast<sockaddr*>(&addr), sizeof(addr));
-	listen(server.socket_fd(), 1);
+	bind(server.fd(), reinterpret_cast<sockaddr*>(&addr), sizeof(addr));
+	listen(server.fd(), 1);
 
-	int client_fd = accept(server.socket_fd(), nullptr, nullptr);
+	int client_fd = accept(server.fd(), nullptr, nullptr);
 
 	Socket	client_socket = Socket::adopt(client_fd);
 
@@ -48,6 +48,6 @@ int main(){
 	"\r\n"
 	"Hello, world!\nWe are happy to see you!\n";
 
-	write(client_socket.socket_fd(), response.data(), response.size());
+	write(client_socket.fd(), response.data(), response.size());
 	return 0;
 }
