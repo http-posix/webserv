@@ -20,7 +20,7 @@ not erroneous closes mid-run.
 `Socket` is a non-copyable RAII wrapper. Fd is closed in the destructor,
 exactly once. The only way to construct a `Socket` from a raw fd is through
 the `Socket::adopt(fd)` factory — a public constructor was tried first
-and allowed accidental double-wrapping (`Socket b{a.socket_fd()}`), which
+and allowed accidental double-wrapping (`Socket b{a.fd()}`), which
 reproduced the original bug.
 
 ## Alternatives
