@@ -68,6 +68,17 @@ TEST_SUITE("Server") {
 		CHECK(srv1.fd() == -1);
 		CHECK(srv2.fd() == original_fd);
 	}
+
+	TEST_CASE("server_host() returns the host passed to constructor") {
+		Server srv("127.0.0.1", 0);
+		CHECK(srv.server_host() == "127.0.0.1");
+	}
+
+	TEST_CASE("server_port() returns the port passed to constructor") {
+		const uint16_t test_port = 54322;
+		Server srv("127.0.0.1", test_port);
+		CHECK(srv.server_port() == test_port);
+	}
 }
 
 TEST_SUITE("CreateListeners") {
