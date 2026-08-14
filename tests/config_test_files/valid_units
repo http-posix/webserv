@@ -1,0 +1,24 @@
+server {
+    listen 80;
+    client_max_body_size 15K;
+}
+server {
+    listen 81;
+    client_max_body_size 2M;
+}
+server {
+    listen 82;
+    client_max_body_size 1g;
+}
+server {
+    listen 83;
+    client_max_body_size 100kb;
+}
+server {
+    listen 84;
+    client_max_body_size 1mb;
+}
+server {
+    listen 85;
+    client_max_body_size 1024;
+}

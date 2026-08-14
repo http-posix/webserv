@@ -1,0 +1,12 @@
+server {
+    listen 80;
+    location / {
+        autoindex on;
+        upload_enable on;
+        upload_store /data/uploads;
+    }
+    location /uploads {
+        autoindex off;
+        upload_enable off;
+    }
+}

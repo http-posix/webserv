@@ -1,0 +1,19 @@
+server {
+    listen 8080;
+    hostname localhost;
+    location / {
+        methods GET;
+        autoindex on;
+        index index.html;
+    }
+    location /upload {
+        methods GET POST DELETE;
+        upload_enable on;
+        upload_store www/uploads;
+        root www;
+        index upload.html;
+    }
+    location /old-page {
+        return 301 /new-page;
+    }
+}

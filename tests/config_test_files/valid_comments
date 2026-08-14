@@ -1,0 +1,12 @@
+# Top level comment
+server { # inline comment
+    listen 8080; # comment after directive
+    # Full line comment
+    hostname localhost;
+    client_max_body_size 15K;
+    location / {
+        methods GET POST; # comment inside location
+        autoindex on;
+    }
+}
+# Trailing comment
