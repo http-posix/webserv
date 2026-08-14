@@ -1,0 +1,15 @@
+server {
+    listen 8080;
+    listen 8081;
+    hostname localhost;
+    error_page 404 error_pages/404.html;
+}
+server {
+    listen 9090;
+    hostname mfw.com;
+    client_max_body_size 100000;
+}
+server {
+    listen 1212;
+    hostname third.com;
+}

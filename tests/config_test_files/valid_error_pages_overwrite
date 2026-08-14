@@ -1,0 +1,6 @@
+server {
+    listen 80;
+    error_page 404 error_pages/404.html;
+    error_page 500 error_pages/500.html;
+    error_page 404 error_pages/other404.html;
+}
