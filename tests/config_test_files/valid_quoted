@@ -1,0 +1,9 @@
+server {
+    listen 80;
+    hostname 'foo.bar';
+    index "index.html";
+    location /q {
+        root "/tmp root";
+        index 'my index.html';
+    }
+}

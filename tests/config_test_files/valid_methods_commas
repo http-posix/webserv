@@ -1,0 +1,9 @@
+server {
+    listen 80;
+    location /x {
+        methods GET, POST, DELETE;
+    }
+    location /y {
+        methods GET ,POST, DELETE;
+    }
+}
