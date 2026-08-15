@@ -47,8 +47,9 @@ webserv
 tests/build/
 echo_server
 
-#clang explicit compilation flags
+#clangd configuration
 compile_flags.txt
+.clangd
 
 # macOS System files
 .DS_Store
