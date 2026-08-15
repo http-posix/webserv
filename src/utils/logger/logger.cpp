@@ -1,5 +1,5 @@
-#include "logger/logger.hpp"
-#include "logger/colors.hpp"
+#include "utils/logger/logger.hpp"
+#include "utils/logger/colors.hpp"
 #include <iostream>
 #include <ctime>
 #include <sys/stat.h>

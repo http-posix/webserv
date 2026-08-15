@@ -1,10 +1,10 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 
-#include "server/server.hpp"
+#include "app/server/server.hpp"
 #include "config/mock_config.hpp"
 #include <type_traits>
-#include "app_exception/app_exception.hpp"
+#include "utils/app_exception/app_exception.hpp"
 
 TEST_SUITE("Server") {
 
