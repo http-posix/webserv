@@ -1,7 +1,7 @@
 #pragma once
 
 #include "config/mock_config.hpp"
-#include "socket/socket.hpp"
+#include "io/socket/socket.hpp"
 #include <vector>
 #include <string>
 #include <cstdint>
