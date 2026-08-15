@@ -44,3 +44,8 @@
 
 - general info
 	- [Regular Expressions](https://pubs.opengroup.org/onlinepubs/9799919799/)
+
+- Makefile
+	- [GNU Make](https://www.gnu.org/software/make/manual/html_node/index.html)
+	- [for make Version 3.73 Beta. April 1995](https://www.math.utah.edu/docs/info/make_toc.html#SEC12)
+	- [BashGuide](https://mywiki.wooledge.org/BashGuide)
