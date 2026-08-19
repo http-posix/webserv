@@ -91,7 +91,7 @@ DEMO_BINS := $(patsubst $(TEST_DIR)/demo/%.cpp,$(TEST_BUILD)/%,$(DEMO_SRC))
 # (faster build, no unrelated breakage).
 TEST_DEPS := $(SRC_DIR)/utils/logger/logger.cpp
 TEST_DEPS += $(SRC_DIR)/io/socket/socket.cpp
-TEST_DEPS += $(SRC_DIR)/http/http_parser/http_parser.cpp
+TEST_DEPS += $(SRC_DIR)/http/parser/parser.cpp
 TEST_DEPS += $(SRC_DIR)/app/server/server.cpp
 
 # -U after -D cancels previous define
