@@ -1,4 +1,4 @@
-// ngnix – https://docs.nginx.com/nginx/admin-guide/basic-functionality/managing-configuration-files/
+// nginx – https://docs.nginx.com/nginx/admin-guide/basic-functionality/managing-configuration-files/
 // Two servers on DIFFERENT ports → "multiple servers" without virtual hosts.
 
 #pragma once
@@ -42,3 +42,5 @@ inline Config ParseConfig(const std::string& /*config_path*/) {
 	obj.servers.push_back({ "10.1.1.1", { 8082 } });
 	return obj;
 }
+
+

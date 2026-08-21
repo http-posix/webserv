@@ -89,7 +89,7 @@ void PollManager::SetEvents(int fd, short events){
  * this value — that's the caller's (EventLoop's) job.
  */
 int PollManager::Poll(int timeout_ms){
-	return ::poll(poll_fds_.data(), poll_fds_.size(), timeout_ms);	
+	return ::poll(poll_fds_.data(), poll_fds_.size(), timeout_ms);
 }
 
 /* ========================================================================== */
