@@ -1,11 +1,14 @@
-#include "event_loop/event_loop.hpp"
 #include "logger/logger.hpp"
+#include "event_loop/event_loop.hpp"
 #include "event_loop/signal_handler.hpp"
 #include "socket/socket.hpp"
+#include "connection/instruction.hpp"
+
 #include <cerrno>
 #include <cstddef>
 #include <sys/poll.h>
 #include <sys/socket.h>
+#include <cstring>
 
 /* 
 POLLIN
@@ -35,7 +38,7 @@ The specified fd value is not an open file descriptor. This flag is only valid i
 /*                          Constructors & Destructors                        */
 /* ========================================================================== */
 
-EventLoop::EventLoop(std::vector<Server> listeners):
+EventLoop::EventLoop(std::vector<Server>&& listeners):
 	listeners_(std::move(listeners)),
 	size_listeners_(listeners_.size())
 {
@@ -68,9 +71,9 @@ An invalid timeout interval was specified.
 
 void	EventLoop::run(){
 	while (Signal::g_signal_running){
-		int ready_count = pm_.Poll(timeout_);
+		int ready_count = pm_.Poll(kPollTimeoutMs);
 		
-		// check timeout once here, because in if I'll do it in the end I'll never get there if I'll in if-continue loop
+		// check timeout once here, because if I'll do it in the end I'll never get there if I'll in if-continue loop
 
 		// early return for readability & branch prediction make it cheap
 		if (ready_count < 0 /*&& !timeout?*/){
@@ -135,6 +138,9 @@ void	EventLoop::HandleWatched(int ready_count){
        socklen_t *restrict address_len);*/
 
 void	EventLoop::HandleListener(const pollfd poll_entry, size_t i){
+	// Contract 
+	assert(i < size_listeners_);
+	assert(poll_entry.fd == listeners_[i].fd());
 
 	// early return
 	if (poll_entry.revents & (POLLHUP | POLLERR | POLLNVAL)){
@@ -150,10 +156,10 @@ void	EventLoop::HandleListener(const pollfd poll_entry, size_t i){
 		return ;
 	}
 
-	//happy path
+	// Happy path
 	int accepted_fd = AcceptConnection(poll_entry.fd);
 
-	//https://man7.org/linux/man-pages/man2/accept.2.html
+	// https://man7.org/linux/man-pages/man2/accept.2.html
 	if (accepted_fd < 0){
 		if (errno == EMFILE || errno == ENFILE){
 			LOG_WARN("fd limit reached, cannot accept new connections, active: " +
@@ -166,7 +172,8 @@ void	EventLoop::HandleListener(const pollfd poll_entry, size_t i){
 		return ;// fd was closed in adopt() in case of fail
 	}
 	// HttpParser should have move ctor too
-	// to avoid loosing data 'cause of unspecified 
+
+	// To avoid loosing data 'cause of unspecified 
 	// order of evaluation of function arguments
 	int fd = accepted_socket.fd();
 	connections_.emplace(fd, Connection(std::move(accepted_socket)));
@@ -187,11 +194,87 @@ int	EventLoop::AcceptConnection(int listener_fd){
 	return fd;
 }
 
-int	EventLoop::HandleConnectionEvent(const pollfd /*entry*/){
+void	EventLoop::HandleConnectionEvent(const pollfd entry){
+	// Find owner - is this CGI connection or normal one
+	int owner_fd = FindOwner(entry.fd);
 
-	return 0;
+	// Find Connection instance
+	auto it = connections_.find(owner_fd);
+	if (it == connections_.end()) // Connection has been already closed
+		return;
+	
+	Connection&		connection = it->second;
+	InstructionList	instructions;
+
+	// First resolve is it cgi or not, then check what happened
+	if (entry.fd != owner_fd)
+		instructions = connection.OnCgi();
+	else if (entry.revents & POLLIN)
+		instructions = connection.OnReadable();
+	else if (entry.revents & POLLOUT)
+		instructions = connection.OnWritable();
+	else {
+		// TODO: proper POLLERR/POLLHUP/POLLNVAL handling (different for cgi pipe vs client fd)
+		CloseConnection(owner_fd);
+		return ;
+	}
+
+	ApplyInstructions(instructions, owner_fd);
 }
 
-void	RequestShutdown(){
+void	EventLoop::RequestShutdown(){
 	Signal::g_signal_running = 0;
+}
+
+int	EventLoop::FindOwner(int fd){
+	auto it = cgi_owners_.find(fd);
+	if (it == cgi_owners_.end()) // Early return
+		return fd;
+	return it->second;
+}
+
+/* in this case it will leave only inside if statement
+if (auto it = cgi_owners_.find(fd); it != cgi_owners_.end())
+	return it->second;
+return fd;
+*/
+
+
+void	EventLoop::ApplyInstructions(const InstructionList& instructions, int owner_fd){
+	// At this moment don't know is cgi or not
+	// There could be queue of instructions if this is cgi
+	// For common connection we expected only 1 instruction
+	for (int i = 0; i < instructions.count; i++){
+		int fd = instructions.list[i].target_fd;
+		switch (instructions.list[i].action){
+			case Action::WaitReadable:
+				pm_.SetEvents(fd, POLLIN);
+				break;
+			case Action::WaitWritable:
+				pm_.SetEvents(fd, POLLOUT);
+				break;
+			case Action::WatchCgi:
+				pm_.Watch(fd, POLLIN);
+				cgi_owners_[fd] = owner_fd;
+				break;
+			case Action::StopWatching:
+				pm_.Unwatch(fd);
+				cgi_owners_.erase(fd);
+				break;
+			case Action::CloseConnection:
+				CloseConnection(owner_fd); // Check logic when CGI will work
+				return;
+		}
+	}
+}
+
+void	EventLoop::CloseConnection(int fd){
+	auto it = connections_.find(fd);
+	if (it == connections_.end())
+		return; // Already closed
+	
+		// CGI ?
+	pm_.Unwatch(fd);
+	connections_.erase(it);
+	LOG_DEBUG("Close connection " + std::to_string(fd));
 }
