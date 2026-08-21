@@ -135,6 +135,9 @@ void	EventLoop::HandleWatched(int ready_count){
        socklen_t *restrict address_len);*/
 
 void	EventLoop::HandleListener(const pollfd poll_entry, size_t i){
+	// Contract 
+	assert(i < size_listeners_)
+	assert(entry.fd == listeners_[i].fd());
 
 	// early return
 	if (poll_entry.revents & (POLLHUP | POLLERR | POLLNVAL)){
@@ -150,10 +153,10 @@ void	EventLoop::HandleListener(const pollfd poll_entry, size_t i){
 		return ;
 	}
 
-	//happy path
+	// Happy path
 	int accepted_fd = AcceptConnection(poll_entry.fd);
 
-	//https://man7.org/linux/man-pages/man2/accept.2.html
+	// https://man7.org/linux/man-pages/man2/accept.2.html
 	if (accepted_fd < 0){
 		if (errno == EMFILE || errno == ENFILE){
 			LOG_WARN("fd limit reached, cannot accept new connections, active: " +
@@ -166,7 +169,8 @@ void	EventLoop::HandleListener(const pollfd poll_entry, size_t i){
 		return ;// fd was closed in adopt() in case of fail
 	}
 	// HttpParser should have move ctor too
-	// to avoid loosing data 'cause of unspecified 
+
+	// To avoid loosing data 'cause of unspecified 
 	// order of evaluation of function arguments
 	int fd = accepted_socket.fd();
 	connections_.emplace(fd, Connection(std::move(accepted_socket)));
@@ -187,11 +191,74 @@ int	EventLoop::AcceptConnection(int listener_fd){
 	return fd;
 }
 
-int	EventLoop::HandleConnectionEvent(const pollfd /*entry*/){
+void	EventLoop::HandleConnectionEvent(const pollfd entry){
+	// Find owner - is this CGI connection or normal one
+	int owner_fd = FindOwner(entry.fd);
 
-	return 0;
+	// Find Connection instance
+	auto it = connections_.find(owner_fd);
+	if (it == connections_.end()) // Connection has been already closed
+		return;
+	
+	Connection&		connection = it->second;
+	ConnectionResult result;
+
+	// First resolve is it cgi or not, then check what happened
+	if (entry.fd != owner_fd)
+		result = connection.OnCgi();
+	else if (entry.revents & POLLIN)
+		result = connection.OnReadable();
+	else if (entry.revents & POLLOUT)
+		result = connection.OnWritable();
+
+	ApplyInstructions(result, owner_fd);
 }
 
-void	RequestShutdown(){
+void	EventLoop::RequestShutdown(){
 	Signal::g_signal_running = 0;
+}
+
+int	EventLoop::FindOwner(int fd){
+	auto it = cgi_owners_.find(fd);
+	if (it == cgi_owners_.end()) // Early return
+		return fd;
+	return it->second;
+}
+
+/* in this case it will leave only inside if statement
+if (auto it = cgi_owners_.find(fd); it != cgi_owners_.end())
+	return it->second;
+return fd;
+*/
+
+
+void	EventLoop::ApplyInstructions(const ConnectionResult& result, int owner_fd){
+	for (const Instruction& obj : result.instructions){
+		switch (obj.action){
+			case Action::WatchReadable:
+				pm_.Watch(obj, POLLIN);
+				if (obj.target != owner_fd)
+					cgi_owners_[obj.target] = owner_fd;
+				break;
+			case Action::WatchWritable:
+				pm_.Watch(obj.target, POLLOUT);
+				break;
+			case Action::StopWatching:
+				pm_.Unwatch(obj);
+				cgi_owners_.erase(obj.target); // Safe
+				break;
+			case Action::CloseConnection:
+				return;
+		}
+	}
+}
+
+void	EventLoop::CloseConnection(int fd){
+	auto it = connections_.find(fd);
+	if (it == connections_.end())
+		return; // Already closed
+	
+		// CGI ?
+	pm_.Unwatch(fd);
+	connections_.erase(it);
 }

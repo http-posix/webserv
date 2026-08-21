@@ -18,6 +18,7 @@ class EventLoop{
 
 	private:
 		std::vector<Server>					listeners_;
+		// not kVariableName `cause value defined in runtime. not a compile time
 		const size_t						size_listeners_;
 		static int							timeout_; //60-75 sec in NGNIX – we need ms(!)
 		PollManager							pm_;
@@ -33,10 +34,10 @@ class EventLoop{
 		Severity	HandlePollError();
 		void		HandleWatched(int ready_count);//finished
 		void		HandleListener(pollfd poll_entry, size_t i);//still need to check error behavior
-		int			HandleConnectionEvent(pollfd poll_entry);
+		void		HandleConnectionEvent(pollfd poll_entry);
 		int			HandleCGI();
 		int			AcceptConnection(int listener);
 		void		RequestShutdown();
-
+		void		CloseConnection(int fd);
 };
 
