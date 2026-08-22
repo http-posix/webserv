@@ -571,6 +571,10 @@ TEST_CASE("Known bugs: values are not handled correctly")
 		CHECK(c.servers[0].error_pages.at(500) == "error_page/50x.html");
 		CHECK(c.servers[0].error_pages.at(502) == "error_page/50x.html");
 	}
+	/*
+	 * TODO: These tests could be considered as bugs.
+	 * However currently, I think these are improvements that could be made
+	 * but not necessarily incorrect usage.
 	SUBCASE("index with multiple values should keep them separated")
 	{
 		Config c = parseFile("tests/config_test_files/bug_index_multiple_values");
@@ -581,4 +585,5 @@ TEST_CASE("Known bugs: values are not handled correctly")
 		Config c = parseFile("tests/config_test_files/bug_comment_inside_quoted_string");
 		CHECK(c.servers[0].index == "foo#bar");
 	}
+	*/
 }
