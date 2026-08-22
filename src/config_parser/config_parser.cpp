@@ -179,6 +179,7 @@ void	ConfigParser::createServerConfig()
 			pos = tokenizer_.Next();
 			if (pos.type != ConfigToken::Number)
 				throw ConfigException("Expected a status code after 'error_page'.");
+
 			int code = parseInt(pos.value);
 			if (code < 400 || code > 599)
 				throw ConfigException("Error page: " + pos.value + " out of range (400-599)");
