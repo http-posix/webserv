@@ -565,11 +565,9 @@ TEST_CASE("Known bugs: values are not handled correctly")
 		Config c = parseFile("tests/config_test_files/bug_duplicate_methods");
 		CHECK(c.servers[0].locations[0].allowed_methods.size() == 2);
 	}
-	SUBCASE("error_page with multiple codes should map every code to the page")
+	SUBCASE("error_page with multiple codes on same line should throw an error")
 	{
-		Config c = parseFile("tests/config_test_files/bug_error_page_multiple_codes");
-		CHECK(c.servers[0].error_pages.at(500) == "error_page/50x.html");
-		CHECK(c.servers[0].error_pages.at(502) == "error_page/50x.html");
+		expectParseFailure("tests/config_test_files/bug_error_page_multiple_codes");
 	}
 	/*
 	 * TODO: These tests could be considered as bugs.
