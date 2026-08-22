@@ -71,7 +71,7 @@ TEST_CASE("Simple Config File with single Server Block")
 	CHECK(c.servers[0].hostname == "127.0.0.1");
 	CHECK(c.servers[0].listen_port[0] == 8002);
 	CHECK(c.servers[0].error_pages.at(404) == "error_pages/404.html");
-	CHECK(c.servers[0].error_pages.at(303) == "error_pages/303.html");
+	CHECK(c.servers[0].error_pages.at(505) == "error_pages/505.html");
 	CHECK(c.servers[0].root == "docs/fusion_web/");
 }
 
@@ -124,7 +124,7 @@ TEST_CASE("Valid: server with every supported directive")
 	CHECK(c.servers[0].index == "index.html");
 	CHECK(c.servers[0].client_max_body_size == 3000);
 	CHECK(c.servers[0].error_pages.at(404) == "error_pages/404.html");
-	CHECK(c.servers[0].error_pages.at(303) == "error_pages/303.html");
+	CHECK(c.servers[0].error_pages.at(505) == "error_pages/505.html");
 
 	CHECK(c.servers[0].locations.size() == 1);
 	const LocationConfig& loc = c.servers[0].locations[0];

@@ -5,7 +5,7 @@ server {
     index index.html;
     client_max_body_size 3000;
     error_page 404 error_pages/404.html;
-    error_page 303 error_pages/303.html;
+    error_page 505 error_pages/505.html;
     location /cgi-bin {
         methods GET POST DELETE;
         autoindex off;
