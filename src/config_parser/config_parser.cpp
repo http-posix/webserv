@@ -237,6 +237,8 @@ void ConfigParser::createLocationConfig(LocationConfig& location)
 			if (pos.type != ConfigToken::Number)
 				throw ConfigException("Expected a status code after 'return'.");
 			int code = parseInt(pos.value);
+			if (code < 300 || code > 399)
+				throw ConfigException("Redirection code: " + pos.value + "out of range (300-399)");
 			std::string url = join(collectUntil(";"));
 			if (url.empty())
 				throw ConfigException("Empty URL in 'return' directive.");
