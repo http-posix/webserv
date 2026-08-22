@@ -182,6 +182,12 @@ void	ConfigParser::createServerConfig()
 			int code = parseInt(pos.value);
 			if (code < 400 || code > 599)
 				throw ConfigException("Error page: " + pos.value + " out of range (400-599)");
+
+			ConfigToken temp_pos;
+			temp_pos = tokenizer_.checkNext();
+			if (temp_pos.type == ConfigToken::Number)
+				throw ConfigException("Error number cannot be followed by another error number.");
+
 			std::string path = join(collectUntil(";"));
 			if (path.empty())
 				throw ConfigException("Empty path in 'error_page' directive.");
