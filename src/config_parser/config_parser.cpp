@@ -133,6 +133,8 @@ void	ConfigParser::createServerConfig()
 			int port = parseInt(pos.value);
 			if (port < 0 || port > 65535)
 				throw ConfigException("Port out of range: '" + pos.value + "'.");
+			if (port == 0)
+				throw ConfigException("Port 0 should not be used for legitimate purposes");
 			server_config.listen_port.push_back(static_cast<uint16_t>(port));
 			pos = tokenizer_.Next();
 			expect(";");
