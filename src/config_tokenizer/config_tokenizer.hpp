@@ -20,6 +20,7 @@ class ConfigTokenizer
 	public:
 		explicit ConfigTokenizer(const std::string& input);
 		ConfigToken Next();
+		ConfigToken checkNext();
 	private:
 		std::string src_;
 		size_t pos_;
