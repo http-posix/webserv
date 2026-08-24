@@ -4,6 +4,9 @@
 ConfigTokenizer::ConfigTokenizer(const std::string& input) 
 	: src_(input), pos_(0) {}
 
+ConfigTokenizer::~ConfigTokenizer()
+{}
+
 // Technically a helper function and does not need to be part of the class
 bool ConfigTokenizer::isKeyword(std::string word)
 {

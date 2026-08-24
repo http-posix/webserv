@@ -19,6 +19,7 @@ class ConfigTokenizer
 {
 	public:
 		explicit ConfigTokenizer(const std::string& input);
+		~ConfigTokenizer();
 		ConfigToken next();
 		ConfigToken checkNext();
 	private:
