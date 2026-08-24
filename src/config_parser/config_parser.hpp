@@ -73,7 +73,7 @@ class ConfigParser {
 		Config config_;
 		std::string	file_string_;
 		ConfigTokenizer tokenizer_;
-		ConfigToken pos;
+		ConfigToken pos_;
 
 		// Collects token values up to (and consuming) `stop`.
 		// Throws ConfigException on end of file.
