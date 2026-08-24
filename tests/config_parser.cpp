@@ -1,8 +1,11 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
-#include "config_parser/config_parser.hpp"
-#include "../src/config_parser/config_parser.hpp"
-#include "../src/app_exception/app_exception.hpp"
+
+//#include "../src/config_parser/config_parser.hpp"
+#include "../src/config/parser/parser.hpp"
+
+//#include "../src/app_exception/app_exception.hpp"
+#include "../src/utils/app_exception/app_exception.hpp"
 
 // Helper: parse a file, expecting it to be rejected with a ConfigException.
 static void expectParseFailure(const std::string& file)
