@@ -40,23 +40,23 @@ int	ConfigParser::removeComments()
 std::vector<std::string> ConfigParser::collectUntil(const std::string& stop)
 {
 	std::vector<std::string> values;
-	pos = tokenizer_.Next();
-	while (pos.value != stop)
+	pos_ = tokenizer_.next();
+	while (pos_.value != stop)
 	{
-		if (pos.type == ConfigToken::EndOfFile)
+		if (pos_.type == ConfigToken::EndOfFile)
 			throw ConfigException("Unexpected end of file, expected '" + stop + "'.");
-		values.push_back(pos.value);
-		pos = tokenizer_.Next();
+		values.push_back(pos_.value);
+		pos_ = tokenizer_.next();
 	}
-	pos = tokenizer_.Next();
+	pos_ = tokenizer_.next();
 	return (values);
 }
 
 void ConfigParser::expect(const std::string& value)
 {
-	if (pos.value != value)
-		throw ConfigException("Expected '" + value + "' but got '" + pos.value + "'.");
-	pos = tokenizer_.Next();
+	if (pos_.value != value)
+		throw ConfigException("Expected '" + value + "' but got '" + pos_.value + "'.");
+	pos_ = tokenizer_.next();
 }
 
 std::string ConfigParser::join(const std::vector<std::string>& values)
@@ -120,69 +120,69 @@ void	ConfigParser::createServerConfig()
 {
 	ServerConfig server_config;
 
-	while (pos.value != "}")
+	while (pos_.value != "}")
 	{
-		if (pos.type == ConfigToken::EndOfFile)
+		if (pos_.type == ConfigToken::EndOfFile)
 			throw ConfigException("Unterminated 'server' block, expected '}'.");
 
-		if (pos.value == "listen")
+		if (pos_.value == "listen")
 		{
-			pos = tokenizer_.Next();
-			if (pos.type != ConfigToken::Number)
+			pos_ = tokenizer_.next();
+			if (pos_.type != ConfigToken::Number)
 				throw ConfigException("Expected a port number after 'listen'.");
-			int port = parseInt(pos.value);
+			int port = parseInt(pos_.value);
 			if (port < 0 || port > 65535)
-				throw ConfigException("Port out of range: '" + pos.value + "'.");
+				throw ConfigException("Port out of range: '" + pos_.value + "'.");
 			if (port == 0)
 				throw ConfigException("Port 0 should not be used for legitimate purposes");
 			server_config.listen_port.push_back(static_cast<uint16_t>(port));
-			pos = tokenizer_.Next();
+			pos_ = tokenizer_.next();
 			expect(";");
 		}
-		else if (pos.value == "hostname")
+		else if (pos_.value == "hostname")
 		{
 			server_config.hostname = join(collectUntil(";"));
 			if (server_config.hostname.empty())
 				throw ConfigException("Empty 'hostname' directive.");
 		}
-		else if (pos.value == "root")
+		else if (pos_.value == "root")
 		{
 			server_config.root = join(collectUntil(";"));
 			if (server_config.root.empty())
 				throw ConfigException("Empty 'root' directive.");
 		}
-		else if (pos.value == "index")
+		else if (pos_.value == "index")
 		{
 			server_config.index = join(collectUntil(";"));
 			if (server_config.index.empty())
 				throw ConfigException("Empty 'index' directive.");
 		}
-		else if (pos.value == "client_max_body_size")
+		else if (pos_.value == "client_max_body_size")
 		{
-			pos = tokenizer_.Next();
-			if (pos.type != ConfigToken::Number)
+			pos_ = tokenizer_.next();
+			if (pos_.type != ConfigToken::Number)
 				throw ConfigException("Expected a number after 'client_max_body_size'.");
-			size_t result = parseSize(pos.value);
-			pos = tokenizer_.Next();
-			if (pos.value != ";")
+			size_t result = parseSize(pos_.value);
+			pos_ = tokenizer_.next();
+			if (pos_.value != ";")
 			{
-				if (pos.type != ConfigToken::Identifier)
+				if (pos_.type != ConfigToken::Identifier)
 					throw ConfigException("Expected ';' after 'client_max_body_size'.");
-				result = applyUnit(result, pos.value);
-				pos = tokenizer_.Next();
+				result = applyUnit(result, pos_.value);
+				pos_ = tokenizer_.next();
 			}
 			expect(";");
 			server_config.client_max_body_size = result;
 		}
-		else if (pos.value == "error_page")
+		else if (pos_.value == "error_page")
 		{
-			pos = tokenizer_.Next();
-			if (pos.type != ConfigToken::Number)
+			pos_ = tokenizer_.next();
+			if (pos_.type != ConfigToken::Number)
 				throw ConfigException("Expected a status code after 'error_page'.");
 
-			int code = parseInt(pos.value);
+			int code = parseInt(pos_.value);
 			if (code < 400 || code > 599)
-				throw ConfigException("Error page: " + pos.value + " out of range (400-599)");
+				throw ConfigException("Error page: " + pos_.value + " out of range (400-599)");
 
 			ConfigToken temp_pos;
 			temp_pos = tokenizer_.checkNext();
@@ -194,7 +194,7 @@ void	ConfigParser::createServerConfig()
 				throw ConfigException("Empty path in 'error_page' directive.");
 			server_config.error_pages[code] = path;
 		}
-		else if (pos.value == "location")
+		else if (pos_.value == "location")
 		{
 			std::string uri = join(collectUntil("{"));
 			if (uri.empty())
@@ -206,7 +206,7 @@ void	ConfigParser::createServerConfig()
 		}
 		else
 		{
-			throw ConfigException("Unexpected token '" + pos.value + "' in 'server' block.");
+			throw ConfigException("Unexpected token '" + pos_.value + "' in 'server' block.");
 		}
 	}
 	// Check if server block has necessary information to function.
@@ -214,18 +214,18 @@ void	ConfigParser::createServerConfig()
 		server_config.hostname = "";
 	if (server_config.listen_port.empty())
 		throw (ConfigException("Server block requires at least one port!"));
-	pos = tokenizer_.Next();
+	pos_ = tokenizer_.next();
 	config_.servers.push_back(server_config);
 }
 
 void ConfigParser::createLocationConfig(LocationConfig& location)
 {
-	while (pos.value != "}")
+	while (pos_.value != "}")
 	{
-		if (pos.type == ConfigToken::EndOfFile)
+		if (pos_.type == ConfigToken::EndOfFile)
 			throw ConfigException("Unterminated 'location' block, expected '}'.");
 
-		if (pos.value == "methods")
+		if (pos_.value == "methods")
 		{
 			std::vector<std::string> values = collectUntil(";");
 			for (size_t i = 0; i < values.size(); ++i)
@@ -240,56 +240,56 @@ void ConfigParser::createLocationConfig(LocationConfig& location)
 			if (location.allowed_methods.empty())
 				throw ConfigException("Empty 'methods' directive.");
 		}
-		else if (pos.value == "return")
+		else if (pos_.value == "return")
 		{
-			pos = tokenizer_.Next();
-			if (pos.type != ConfigToken::Number)
+			pos_ = tokenizer_.next();
+			if (pos_.type != ConfigToken::Number)
 				throw ConfigException("Expected a status code after 'return'.");
-			int code = parseInt(pos.value);
+			int code = parseInt(pos_.value);
 			if (code < 300 || code > 399)
-				throw ConfigException("Redirection code: " + pos.value + "out of range (300-399)");
+				throw ConfigException("Redirection code: " + pos_.value + "out of range (300-399)");
 			std::string url = join(collectUntil(";"));
 			if (url.empty())
 				throw ConfigException("Empty URL in 'return' directive.");
 			location.redirections = std::make_pair(code, url);
 		}
-		else if (pos.value == "root")
+		else if (pos_.value == "root")
 		{
 			location.root = join(collectUntil(";"));
 			if (location.root.empty())
 				throw ConfigException("Empty 'root' directive in location '" + location.uri_path + "'.");
 		}
-		else if (pos.value == "index")
+		else if (pos_.value == "index")
 		{
 			location.index = join(collectUntil(";"));
 			if (location.index.empty())
 				throw ConfigException("Empty 'index' directive in location '" + location.uri_path + "'.");
 		}
-		else if (pos.value == "autoindex")
+		else if (pos_.value == "autoindex")
 		{
-			pos = tokenizer_.Next();
-			if (pos.value == "on")
+			pos_ = tokenizer_.next();
+			if (pos_.value == "on")
 				location.autoindex = true;
-			else if (pos.value == "off")
+			else if (pos_.value == "off")
 				location.autoindex = false;
 			else
 				throw ConfigException("Expected 'on' or 'off' after 'autoindex'.");
-			pos = tokenizer_.Next();
+			pos_ = tokenizer_.next();
 			expect(";");
 		}
-		else if (pos.value == "upload_enable")
+		else if (pos_.value == "upload_enable")
 		{
-			pos = tokenizer_.Next();
-			if (pos.value == "on")
+			pos_ = tokenizer_.next();
+			if (pos_.value == "on")
 				location.upload_enable = true;
-			else if (pos.value == "off")
+			else if (pos_.value == "off")
 				location.upload_enable = false;
 			else
 				throw ConfigException("Expected 'on' or 'off' after 'upload_enable'.");
-			pos = tokenizer_.Next();
+			pos_ = tokenizer_.next();
 			expect(";");
 		}
-		else if (pos.value == "upload_store")
+		else if (pos_.value == "upload_store")
 		{
 			location.upload_location = join(collectUntil(";"));
 			if (location.upload_location.empty())
@@ -297,10 +297,10 @@ void ConfigParser::createLocationConfig(LocationConfig& location)
 		}
 		else
 		{
-			throw ConfigException("Unexpected token '" + pos.value + "' in location '" + location.uri_path + "'.");
+			throw ConfigException("Unexpected token '" + pos_.value + "' in location '" + location.uri_path + "'.");
 		}
 	}
-	pos = tokenizer_.Next();
+	pos_ = tokenizer_.next();
 }
 
 void ConfigParser::parseFromString()
@@ -311,21 +311,21 @@ void ConfigParser::parseFromString()
 
 	config_.servers.clear();
 	tokenizer_ = ConfigTokenizer(file_string_);
-	pos = tokenizer_.Next();
+	pos_ = tokenizer_.next();
 
-	while (pos.type != ConfigToken::EndOfFile)
+	while (pos_.type != ConfigToken::EndOfFile)
 	{
-		if (pos.type == ConfigToken::Keyword && pos.value == "server")
+		if (pos_.type == ConfigToken::Keyword && pos_.value == "server")
 		{
-			pos = tokenizer_.Next();
-			if (pos.type != ConfigToken::Symbol || pos.value != "{")
+			pos_ = tokenizer_.next();
+			if (pos_.type != ConfigToken::Symbol || pos_.value != "{")
 				throw ConfigException("Expected '{' after 'server' keyword.");
-			pos = tokenizer_.Next();
+			pos_ = tokenizer_.next();
 			createServerConfig();
 		}
 		else
 		{
-			throw ConfigException("Unexpected token '" + pos.value + "' outside a 'server' block.");
+			throw ConfigException("Unexpected token '" + pos_.value + "' outside a 'server' block.");
 		}
 	}
 
