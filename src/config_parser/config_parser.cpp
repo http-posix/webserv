@@ -209,6 +209,9 @@ void	ConfigParser::createServerConfig()
 			throw ConfigException("Unexpected token '" + pos.value + "' in 'server' block.");
 		}
 	}
+	// Check if server block has necessary information to function.
+	if (server_config.hostname.empty())
+		server_config.hostname = "";
 	pos = tokenizer_.Next();
 	config_.servers.push_back(server_config);
 }
