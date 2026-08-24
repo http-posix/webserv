@@ -93,6 +93,8 @@ TEST_DEPS := $(SRC_DIR)/utils/logger/logger.cpp
 TEST_DEPS += $(SRC_DIR)/io/socket/socket.cpp
 TEST_DEPS += $(SRC_DIR)/http/parser/parser.cpp
 TEST_DEPS += $(SRC_DIR)/app/server/server.cpp
+TEST_DEPS += $(SRC_DIR)/config/parser/parser.cpp
+TEST_DEPS += $(SRC_DIR)/config/tokenizer/tokenizer.cpp
 
 # -U after -D cancels previous define
 # With FLAGS_MARKER we can call make test and then make test LOG=1
