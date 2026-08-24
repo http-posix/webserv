@@ -3,7 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <cstdint>
-#include "../config_tokenizer/config_tokenizer.hpp"
+#include "../tokenizer/tokenizer.hpp"
 
 struct LocationConfig
 {
