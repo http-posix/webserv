@@ -232,7 +232,10 @@ void ConfigParser::createLocationConfig(LocationConfig& location)
 			{
 				if (values[i] == ",")
 					continue;
-				location.allowed_methods.push_back(values[i]);
+				if (values[i] == "GET" || values[i] == "POST" || values[i] == "DELETE")
+					location.allowed_methods.push_back(values[i]);
+				else
+					throw (ConfigException(values[i] + " is not a valid method (GET/POST/DELETE)."));
 			}
 			if (location.allowed_methods.empty())
 				throw ConfigException("Empty 'methods' directive.");
