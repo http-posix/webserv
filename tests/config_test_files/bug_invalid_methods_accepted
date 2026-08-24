@@ -1,5 +1,6 @@
 server {
     listen 80;
+	hostname localhost;
     location /x {
         methods FOO BAR;
     }

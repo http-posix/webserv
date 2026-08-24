@@ -1,4 +1,6 @@
 server {
     listen 80;
+	hostname localhost;
+	listen 8080;
     error_page 99999 foo.html;
 }
