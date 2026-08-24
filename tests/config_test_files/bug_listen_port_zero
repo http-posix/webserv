@@ -1,3 +1,4 @@
 server {
     listen 0;
+	hostname localhost;
 }
