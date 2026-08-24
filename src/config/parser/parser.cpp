@@ -1,7 +1,6 @@
-#pragma once
-
-#include "../app_exception/app_exception.hpp"
-#include "../tokenizer/config_tokenizer.hpp"
+//#include "../app_exception/app_exception.hpp"
+#include "../../utils/app_exception/app_exception.hpp"
+#include "../tokenizer/tokenizer.hpp"
 #include "parser.hpp"
 #include <fstream>
 #include <sstream>
