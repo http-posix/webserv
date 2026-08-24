@@ -7,6 +7,28 @@
 #include <cctype>
 #include <cstdint>
 
+/* ========================================================================== */
+/*                          Constructors & Destructors                        */
+/* ========================================================================== */
+
+ConfigParser::ConfigParser(void) : tokenizer_("")
+{
+}
+
+ConfigParser::ConfigParser(const std::string& filename) : tokenizer_("")
+{
+	if (readFile(filename) != 0)
+		throw ConfigException("Failed to open configuration file: " + filename);
+}
+
+ConfigParser::~ConfigParser(void)
+{
+}
+
+/* ========================================================================== */
+/*                               Public Methods                               */
+/* ========================================================================== */
+
 int ConfigParser::readFile(const std::string& filename)
 {
 	std::ifstream		inputFile(filename.c_str());
@@ -338,16 +360,3 @@ const Config& ConfigParser::getConfig() const
 	return (config_);
 }
 
-ConfigParser::ConfigParser(void) : tokenizer_("")
-{
-}
-
-ConfigParser::ConfigParser(const std::string& filename) : tokenizer_("")
-{
-	if (readFile(filename) != 0)
-		throw ConfigException("Failed to open configuration file: " + filename);
-}
-
-ConfigParser::~ConfigParser(void)
-{
-}
