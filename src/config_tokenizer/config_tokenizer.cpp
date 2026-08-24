@@ -11,7 +11,7 @@ bool ConfigTokenizer::isKeyword(std::string word)
 		return (true);
 	return (false);
 }
-ConfigToken ConfigTokenizer::Next()
+ConfigToken ConfigTokenizer::next()
 {
 	// Skip Optional White Space (OWS)
 	while (pos_ < src_.size() && std::isspace(src_[pos_])) ++pos_;
