@@ -1,4 +1,5 @@
 server {
     listen 80;
+	hostname localhost;
     error_page 500 502 error_page/50x.html;
 }
