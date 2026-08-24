@@ -212,6 +212,8 @@ void	ConfigParser::createServerConfig()
 	// Check if server block has necessary information to function.
 	if (server_config.hostname.empty())
 		server_config.hostname = "";
+	if (server_config.listen_port.empty())
+		throw (ConfigException("Server block requires at least one port!"));
 	pos = tokenizer_.Next();
 	config_.servers.push_back(server_config);
 }
