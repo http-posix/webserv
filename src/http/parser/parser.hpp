@@ -34,6 +34,7 @@ class HttpParser
 		static bool ParseDecimalSize(const std::string& s, size_t* out);
 	public:
 		HttpParser(void);
+		~HttpParser(void);
 		HttpParser(const HttpParser& other) = delete;
 		HttpParser& operator=(const HttpParser& other) = delete;
 
