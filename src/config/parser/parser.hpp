@@ -16,7 +16,7 @@ struct LocationConfig
 
 	// Each return codenumber has their own redirection page
 	// Somewhat similar to error_pages
-	std::pair<int, std::string> redirections;
+	std::unordered_map<int, std::string> redirections;
 
 	// root (directory) to override default root of server
 	// If non is provided, the server's default is used
