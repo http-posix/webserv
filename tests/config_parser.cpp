@@ -142,6 +142,7 @@ TEST_CASE("Valid: server with every supported directive")
 	CHECK(loc.upload_enable == true);
 	CHECK(loc.upload_location == "./uploads");
 	CHECK(loc.redirections.at(302) == "/new_place");
+	CHECK(loc.redirections.at(309) == "/another_place");
 }
 
 TEST_CASE("Valid: server with multiple locations")
