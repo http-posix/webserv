@@ -14,5 +14,6 @@ server {
         upload_enable on;
         upload_store ./uploads;
         return 302 /new_place;
+		return 309 /another_place;
     }
 }
