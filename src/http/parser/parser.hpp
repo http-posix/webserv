@@ -35,10 +35,10 @@ class HttpParser
 	public:
 		HttpParser(void);
 		HttpParser(const HttpParser& other) = delete;
-        HttpParser& operator=(const HttpParser& other) = delete;
+		HttpParser& operator=(const HttpParser& other) = delete;
 
-        HttpParser(HttpParser&& other) noexcept = default;
-        HttpParser& operator=(HttpParser&& other) noexcept = default;
+		HttpParser(HttpParser&& other) noexcept = default;
+		HttpParser& operator=(HttpParser&& other) noexcept = default;
 
 		HttpParserState Feed(const char *str);
 
