@@ -141,8 +141,7 @@ TEST_CASE("Valid: server with every supported directive")
 	CHECK(loc.root == "./cgi/");
 	CHECK(loc.upload_enable == true);
 	CHECK(loc.upload_location == "./uploads");
-	CHECK(loc.redirections.first == 302);
-	CHECK(loc.redirections.second == "/new_place");
+	CHECK(loc.redirections.at(302) == "/new_place");
 }
 
 TEST_CASE("Valid: server with multiple locations")
@@ -169,8 +168,7 @@ TEST_CASE("Valid: server with multiple locations")
 
 	const LocationConfig& redir = c.servers[0].locations[2];
 	CHECK(redir.uri_path == "/old-page");
-	CHECK(redir.redirections.first == 301);
-	CHECK(redir.redirections.second == "/new-page");
+	CHECK(redir.redirections.at(301) == "/new-page");
 }
 
 TEST_CASE("Valid: multiple servers with multiple ports")
@@ -255,12 +253,9 @@ TEST_CASE("Valid: redirection directives")
 	Config c = parseFile("tests/config_test_files/valid_redirection");
 
 	CHECK(c.servers[0].locations.size() == 3);
-	CHECK(c.servers[0].locations[0].redirections.first == 301);
-	CHECK(c.servers[0].locations[0].redirections.second == "/new");
-	CHECK(c.servers[0].locations[1].redirections.first == 308);
-	CHECK(c.servers[0].locations[1].redirections.second == "http://www.example.com/");
-	CHECK(c.servers[0].locations[2].redirections.first == 302);
-	CHECK(c.servers[0].locations[2].redirections.second == "https://example.org/a b");
+	CHECK(c.servers[0].locations[0].redirections.at(301) == "/new");
+	CHECK(c.servers[0].locations[1].redirections.at(308) == "http://www.example.com/");
+	CHECK(c.servers[0].locations[2].redirections.at(302) == "https://example.org/a b");
 }
 
 TEST_CASE("Valid: error_page overwrites a previous entry for the same code")
@@ -333,8 +328,7 @@ TEST_CASE("Valid: nginx-style configuration")
 	CHECK(upload.autoindex == false);
 
 	const LocationConfig& redir = c.servers[0].locations[2];
-	CHECK(redir.redirections.first == 301);
-	CHECK(redir.redirections.second == "/new-page");
+	CHECK(redir.redirections.at(301) == "/new-page");
 }
 
 // ---------------------------------------------------------------------------
