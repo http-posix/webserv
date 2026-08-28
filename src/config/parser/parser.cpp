@@ -197,6 +197,7 @@ void	ConfigParser::createServerConfig()
 			expect(";");
 			server_config.client_max_body_size = result;
 		}
+
 		else if (pos_.value == "error_page")
 		{
 			pos_ = tokenizer_.next();
@@ -263,6 +264,7 @@ void ConfigParser::createLocationConfig(LocationConfig& location)
 			if (location.allowed_methods.empty())
 				throw ConfigException("Empty 'methods' directive.");
 		}
+
 		else if (pos_.value == "return")
 		{
 			pos_ = tokenizer_.next();
@@ -274,8 +276,10 @@ void ConfigParser::createLocationConfig(LocationConfig& location)
 			std::string url = join(collectUntil(";"));
 			if (url.empty())
 				throw ConfigException("Empty URL in 'return' directive.");
-			location.redirections = std::make_pair(code, url);
+			//location.redirections = std::make_pair(code, url);
+			location.redirections[code] = url;
 		}
+
 		else if (pos_.value == "root")
 		{
 			location.root = join(collectUntil(";"));
