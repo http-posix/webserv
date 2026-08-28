@@ -39,19 +39,19 @@ HttpParser::HttpParser(void)
 	chunked_ = false;
 }
 
-HttpParser::HttpParser(const HttpParser& other)
-{
-	*this = other;
-}
+//HttpParser::HttpParser(const HttpParser& other)
+//{
+//	*this = other;
+//}
 
-HttpParser& HttpParser::operator=(const HttpParser& other)
-{
-	if (this != &other)
-{
-		
-	}
-	return (*this);
-}
+// HttpParser& HttpParser::operator=(const HttpParser& other)
+// {
+// 	if (this != &other)
+// {
+// 		
+// 	}
+// 	return (*this);
+// }
 
 HttpParser::~HttpParser(void)
 {
