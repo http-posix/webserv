@@ -1,7 +1,8 @@
 #include "io/socket/socket.hpp"
-#include <unistd.h>
 #include "utils/app_exception/app_exception.hpp"
 #include "utils/logger/logger.hpp"
+
+#include <unistd.h>
 #include <fcntl.h>
 #include <cassert>
 #include <cerrno>

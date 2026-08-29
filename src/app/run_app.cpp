@@ -1,7 +1,7 @@
 #include "utils/app_exception/app_exception.hpp"
 #include "utils/logger/logger.hpp"
-#include "server/server.hpp"
-#include "event_loop/event_loop.hpp"
+#include "app/server/server.hpp"
+#include "io/event_loop/event_loop.hpp"
 
 
 #include "../tests/mock_files/mock_config.hpp"

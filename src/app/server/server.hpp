@@ -2,6 +2,7 @@
 
 #include "../tests/mock_files/mock_config.hpp"
 #include "io/socket/socket.hpp"
+
 #include <vector>
 #include <string>
 #include <cstdint>

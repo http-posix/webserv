@@ -3,9 +3,10 @@
 
 #include "app/server/server.hpp"
 #include "../tests/mock_files/mock_config.hpp"
-// #include "config/mock_config.hpp"
-#include <type_traits>
 #include "utils/app_exception/app_exception.hpp"
+// #include "config/mock_config.hpp"
+
+#include <type_traits>
 
 TEST_SUITE("Server") {
 
