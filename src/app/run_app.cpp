@@ -1,9 +1,35 @@
 #include "utils/app_exception/app_exception.hpp"
 #include "utils/logger/logger.hpp"
+#include "server/server.hpp"
+#include "event_loop/event_loop.hpp"
+
+
+#include "../tests/mock_files/mock_config.hpp"
 
 void run_app(int argc, char **argv){
 	(void)argv;
 	(void)argc;
+
 	// throw (ConfigException("test_Conf"));
-	LOG_INFO("We are runnig app!");
+	Logger::GetInstance().PrintMsg("Welcome to Webserv of the http-posix team!");
+
+	Config mock_obj = MockConfig::SingleServer("127.0.0.1", {8080});
+	std::vector<Server> listeners = CreateListeners(mock_obj);
+	EventLoop	loop(std::move(listeners));
+	loop.run();
 }
+
+
+// {
+// 	Logger::GetInstance().PrintMsg("Welcome to Webserv of the http-posix team!");
+
+// 	if (argc > 2){
+// 		throw ConfigException("Too many arguments. Maximum one configuration file is allowed");
+// 	}
+// 	const std::string config_path = (argc == 2) ? argv[1] : kDefaultConfigPath;
+
+// 	Config	config_data = ParseConfig(config_path);
+// 	std::vector<Server> listeners = CreateListeners(config_data);
+// 	EventLoop	loop(std::move(listeners));
+// 	loop.run();
+// }
