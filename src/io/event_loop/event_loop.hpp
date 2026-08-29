@@ -1,8 +1,8 @@
 #pragma once
 
-#include "server/server.hpp"
-#include "event_loop/poll_manager.hpp"
-#include "connection/connection.hpp"
+#include "app/server/server.hpp"
+#include "io/event_loop/poll_manager.hpp"
+#include "io/connection/connection.hpp"
 
 #include <cstddef>
 #include <unordered_map>

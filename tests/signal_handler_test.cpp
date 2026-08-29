@@ -1,6 +1,8 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
-#include "event_loop/signal_handler.hpp"
+
+#include "io/event_loop/signal_handler.hpp"
+
 #include <csignal>
 #include <unistd.h>
 

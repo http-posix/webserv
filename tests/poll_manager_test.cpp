@@ -1,10 +1,12 @@
-#include <sys/poll.h>
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
-#include "event_loop/poll_manager.hpp"
+
+#include "io/event_loop/poll_manager.hpp"
+#include "utils/logger/logger.hpp"
+
 #include <unistd.h>
+#include <sys/poll.h>
 #include <poll.h>
-#include "logger/logger.hpp"
 
 // ------------------------------------------------------------------
 // Watch / Unwatch / SetEvents — no real fds needed here, PollManager

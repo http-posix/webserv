@@ -1,10 +1,10 @@
 #pragma once
 
-#include "connection_state.hpp"
-#include "connection/instruction.hpp"
-#include "http_request/http_request.hpp"
-#include "http_parser/http_parser.hpp"
-#include "socket/socket.hpp"
+#include "io/connection/connection_state.hpp"
+#include "io/connection/instruction.hpp"
+#include "http/request/request.hpp"
+#include "http/parser/parser.hpp"
+#include "io/socket/socket.hpp"
 
 class Connection{
 	public:

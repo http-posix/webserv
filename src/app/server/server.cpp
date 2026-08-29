@@ -1,4 +1,7 @@
 #include "app/server/server.hpp"
+#include "utils/logger/logger.hpp"
+#include "utils/app_exception/app_exception.hpp"
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -6,8 +9,6 @@
 #include <cstring>
 #include <set>
 #include <utility>
-#include "utils/logger/logger.hpp"
-#include "utils/app_exception/app_exception.hpp"
 #include <cassert>
 
 /* ========================================================================== */

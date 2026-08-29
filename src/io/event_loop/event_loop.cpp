@@ -1,8 +1,8 @@
-#include "logger/logger.hpp"
-#include "event_loop/event_loop.hpp"
-#include "event_loop/signal_handler.hpp"
-#include "socket/socket.hpp"
-#include "connection/instruction.hpp"
+#include "utils/logger/logger.hpp"
+#include "io/event_loop/event_loop.hpp"
+#include "io/event_loop/signal_handler.hpp"
+#include "io/socket/socket.hpp"
+#include "io/connection/instruction.hpp"
 
 #include <cerrno>
 #include <cstddef>
@@ -137,7 +137,7 @@ void	EventLoop::HandleWatched(int ready_count){
 /*int accept(int socket, struct sockaddr *restrict address,
        socklen_t *restrict address_len);*/
 
-void	EventLoop::HandleListener(const pollfd poll_entry, size_t i){
+void	EventLoop::HandleListener(const pollfd poll_entry, [[maybe_unused]] size_t i){
 	// Contract 
 	assert(i < size_listeners_);
 	assert(poll_entry.fd == listeners_[i].fd());

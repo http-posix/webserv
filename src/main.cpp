@@ -1,8 +1,8 @@
 #include "utils/app_exception/app_exception.hpp"
 #include "utils/logger/logger.hpp"
-#include <iostream>
-#include "event_loop/signal_handler.hpp"
+#include "io/event_loop/signal_handler.hpp"
 
+#include <iostream>
 
 // Later on move to the Server header ?
 void run_app(int argc, char **argv);

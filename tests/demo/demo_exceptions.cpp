@@ -1,7 +1,8 @@
 #include "utils/app_exception/app_exception.hpp"
+#include "utils/logger/colors.hpp"
+
 #include <iostream>
 #include <cassert>
-#include "utils/logger/colors.hpp"
 
 
 int main() {

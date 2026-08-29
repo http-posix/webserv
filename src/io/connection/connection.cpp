@@ -1,6 +1,6 @@
-#include "connection/connection.hpp"
-#include "connection/instruction.hpp"
-#include "logger/logger.hpp"
+#include "io/connection/connection.hpp"
+#include "io/connection/instruction.hpp"
+#include "utils/logger/logger.hpp"
 
 #include "../tests/mock_files/mock_response.hpp"
 
