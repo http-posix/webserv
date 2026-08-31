@@ -2,7 +2,7 @@
 #include "io/event_loop/event_loop.hpp"
 #include "io/event_loop/signal_handler.hpp"
 #include "io/socket/socket.hpp"
-#include "io/connection/instruction.hpp"
+#include "io/instruction.hpp"
 
 #include <cerrno>
 #include <cstddef>
