@@ -36,8 +36,8 @@ class Logger {
 	#define LOG_WARN(msg) Logger::GetInstance().Log(LogLevel::WARN, msg, __FILE__, __LINE__, __func__)
 	#define LOG_ERROR(msg) Logger::GetInstance().Log(LogLevel::ERROR, msg, __FILE__, __LINE__, __func__)
 #else
-	#define LOG_DEBUG(msg)
-	#define LOG_INFO(msg)
-	#define LOG_WARN(msg)
-	#define LOG_ERROR(msg)
+	#define LOG_DEBUG(msg) ((void)0)
+	#define LOG_INFO(msg) ((void)0)
+	#define LOG_WARN(msg) ((void)0)
+	#define LOG_ERROR(msg) ((void)0)
 #endif
