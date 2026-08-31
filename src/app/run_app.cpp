@@ -13,7 +13,9 @@ void run_app(int argc, char **argv){
 	// throw (ConfigException("test_Conf"));
 	Logger::GetInstance().PrintMsg("Welcome to Webserv of the http-posix team!");
 
-	Config mock_obj = MockConfig::SingleServer("127.0.0.1", {8080});
+	// Config mock_obj = MockConfig::SingleServer("127.0.0.1", {8080}); // Create only one Server object
+	Config mock_obj = MockConfig::SingleServer("127.0.0.1", {8080, 8081}); // Creates two Server objects
+
 	std::vector<Server> listeners = CreateListeners(mock_obj);
 	EventLoop	loop(std::move(listeners));
 	loop.run();

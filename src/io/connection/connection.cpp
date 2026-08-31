@@ -1,5 +1,5 @@
 #include "io/connection/connection.hpp"
-#include "io/connection/instruction.hpp"
+#include "io/instruction.hpp"
 #include "utils/logger/logger.hpp"
 
 #include "../tests/mock_files/mock_response.hpp"

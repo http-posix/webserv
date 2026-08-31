@@ -1,7 +1,7 @@
 #pragma once
 
 #include "io/connection/connection_state.hpp"
-#include "io/connection/instruction.hpp"
+#include "io/instruction.hpp"
 #include "http/request/request.hpp"
 #include "http/parser/parser.hpp"
 #include "io/socket/socket.hpp"
