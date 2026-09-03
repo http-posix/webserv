@@ -11,11 +11,6 @@ Logger::Logger(){
 	#endif
 }
 
-Logger::~Logger(){
-	if (file_.is_open())
-		file_.close();
-}
-
 Logger&  Logger::GetInstance(){
 	static Logger instance;
 	return instance;
@@ -38,7 +33,7 @@ void Logger::InitLogFile(){
 		std::cerr << "[Logger] Cannot open log file: " << path << "\n";
 }
 
-void Logger::Log(LogLevel level, const std::string &msg, const char *file, int line, const char *func){
+/*void Logger::Log(LogLevel level, const std::string &msg, const char *file, int line){
 	const char *label = nullptr;
 	const char* color = clrs::kReset;
 	switch (level){
@@ -48,8 +43,34 @@ void Logger::Log(LogLevel level, const std::string &msg, const char *file, int l
 		case LogLevel::ERROR:	label = "--ERROR--"; color=clrs::kRed; break;
 		default: std::cerr << "[Logger] Unknown log level\n"; return;
 	}
-	std::string suffix_str = std::string(file) + ": " + "line " + std::to_string(line)
-						+ " (" + func + "): " + msg + "\n";
+	// std::string suffix_str = "";
+	// if (level != LogLevel::INFO)
+	// {
+	std::string suffix_str = std::string(file) + ":" + std::to_string(line)
+						+ ": " + clrs::kReset + msg + "\n";
+	// }
+	// else
+	// 	suffix_str = msg + "\n";
+
+	std::cerr << color << "[" << label << "] " << clrs::kReset << suffix_str;
+	#ifdef LOG_TO_FILE
+		if (use_file_)
+			file_ << "[" << label << "]" << suffix_str << std::flush;
+	#endif
+}*/
+
+void Logger::Log(LogLevel level, const std::string &msg, const char *file, int line){
+	const char *label = nullptr;
+	const char* color = clrs::kReset;
+	switch (level){
+		case LogLevel::DEBUG:	label = "--DEBUG--"; color=clrs::kCyan; break;
+		case LogLevel::INFO:	label = "--INFO---"; color=clrs::kGreen; break;
+		case LogLevel::WARN:	label = "--WARN---"; color=clrs::kYellow; break;
+		case LogLevel::ERROR:	label = "--ERROR--"; color=clrs::kRed; break;
+		default: std::cerr << "[Logger] Unknown log level\n"; return;
+	}
+	std::string suffix_str = std::string(file) + ":" + std::to_string(line)
+						+ ": " + msg + "\n";
 	std::cerr << color << "[" << label << "] " << clrs::kReset << suffix_str;
 	#ifdef LOG_TO_FILE
 		if (use_file_)
