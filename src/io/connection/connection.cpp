@@ -38,6 +38,8 @@ InstructionList	Connection::OnReadable(){
 
 	ssize_t recv_bytes = ::recv(socket_.fd(), buf, kBufSize - 1, 0);
 
+	LOG_DEBUG("Have a request on fd: " + std::to_string(socket_.fd()) + " => recv_bytes:" + std::to_string(recv_bytes));
+
 	if (recv_bytes < 0){
 		// LOG_ERROR();
 		instructions.Add(Action::CloseConnection, socket_.fd());
