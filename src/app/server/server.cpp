@@ -33,6 +33,7 @@ std::vector<Server> CreateListeners(const Config& config){
 				LOG_ERROR("Duplicate configuration detected for server: " + obj.hostname + ":" + std::to_string(port));
 				throw ServerException("Cannot bind multiple servers to the same host:port. Virtual hosts are not supported.");
 			}
+			LOG_INFO("Server build for:" + obj.host + ":" + std::to_string(port));
 			listeners.push_back(Server(obj.hostname, port));
 		}
 	}
