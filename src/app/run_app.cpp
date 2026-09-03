@@ -19,6 +19,7 @@ void run_app(int argc, char **argv){
 	std::vector<Server> listeners = CreateListeners(mock_obj);
 	EventLoop	loop(std::move(listeners));
 	loop.run();
+	Logger::GetInstance().PrintMsg("\n Server stopped. Have a good day ^_^");
 }
 
 
