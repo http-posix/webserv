@@ -111,6 +111,20 @@ TEST_CASE("Testing location file")
 	CHECK(c.servers[0].locations[0].allowed_methods[2] == "DELETE");
 }
 
+TEST_CASE("Test calling free function \'getConfig\'")
+{
+	std::string file = "tests/config_test_files/single_server_block";
+
+	//Check if file gets read correctly
+	Config c = ParseConfig(file);
+
+	CHECK(c.servers[0].hostname == "127.0.0.1");
+	CHECK(c.servers[0].listen_port[0] == 8002);
+	CHECK(c.servers[0].error_pages.at(404) == "error_pages/404.html");
+	CHECK(c.servers[0].error_pages.at(505) == "error_pages/505.html");
+	CHECK(c.servers[0].root == "docs/fusion_web/");
+}
+
 // ---------------------------------------------------------------------------
 // Valid configuration files
 // ---------------------------------------------------------------------------
