@@ -365,3 +365,17 @@ const Config& ConfigParser::getConfig() const
 	return (config_);
 }
 
+/* ========================================================================== */
+/*                               Free Functions                               */
+/* ========================================================================== */
+
+Config ParseConfig(std::string config_path)
+{
+	ConfigParser cp;
+
+	cp.readFile(config_path);
+	cp.removeComments();
+	cp.parseFromString();
+
+	return (cp.getConfig());
+}

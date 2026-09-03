@@ -68,6 +68,9 @@ struct Config
 	std::vector<struct ServerConfig> servers;
 };
 
+// FREE FUNCTION:
+Config ParseConfig(std::string config_path);
+
 class ConfigParser {
 	private:
 		Config config_;
