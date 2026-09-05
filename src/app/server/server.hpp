@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../tests/mock_files/mock_config.hpp"
+#include "config/parser/parser.hpp"
 #include "io/socket/socket.hpp"
 
 #include <vector>

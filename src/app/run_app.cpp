@@ -4,7 +4,6 @@
 #include "io/event_loop/event_loop.hpp"
 
 
-#include "../tests/mock_files/mock_config.hpp"
 
 void run_app(int argc, char **argv){
 	(void)argv;
