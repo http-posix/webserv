@@ -27,11 +27,12 @@ constexpr char kDefaultConfigPath[44] = "tests/config_test_files/single_server_b
 
 void run_app(int argc, char **argv)
 {
-	Logger::GetInstance().PrintMsg("Welcome to Webserv of the http-posix team!");
-
 	if (argc > 2){
 		throw ConfigException("Too many arguments. Maximum one configuration file is allowed");
 	}
+
+	Logger::GetInstance().PrintMsg("Welcome to Webserv of the http-posix team!");
+
 	const std::string config_path = (argc == 2) ? argv[1] : kDefaultConfigPath;
 
 	Config	config_data = ParseConfig(config_path);
