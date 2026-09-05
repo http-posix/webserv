@@ -158,7 +158,7 @@ void	ConfigParser::createServerConfig()
 				throw ConfigException("Port out of range: '" + pos_.value + "'.");
 			if (port == 0)
 				throw ConfigException("Port 0 should not be used for legitimate purposes");
-			server_config.listen_port.push_back(static_cast<uint16_t>(port));
+			server_config.listen_ports.push_back(static_cast<uint16_t>(port));
 			pos_ = tokenizer_.next();
 			expect(";");
 		}
@@ -236,7 +236,7 @@ void	ConfigParser::createServerConfig()
 	// Check if server block has necessary information to function.
 	if (server_config.hostname.empty())
 		server_config.hostname = "";
-	if (server_config.listen_port.empty())
+	if (server_config.listen_ports.empty())
 		throw (ConfigException("Server block requires at least one port!"));
 	pos_ = tokenizer_.next();
 	config_.servers.push_back(server_config);
@@ -373,7 +373,8 @@ Config ParseConfig(std::string config_path)
 {
 	ConfigParser cp;
 
-	cp.readFile(config_path);
+	if (cp.readFile(config_path) != 0)
+		throw ConfigException("Failed to open configuration file: " + config_path);
 	cp.removeComments();
 	cp.parseFromString();
 

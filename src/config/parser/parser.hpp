@@ -42,7 +42,7 @@ struct ServerConfig
 
 	// Ports to listen to. Multiple ports are allowed.
 	// Ports are like gateways; our castle can have multiple entrances.
-	std::vector<uint16_t> listen_port;
+	std::vector<uint16_t> listen_ports;
 
 	// Html error pages to return in case of specific error pages.
 	// Most browser have their own error page if non are provided,
