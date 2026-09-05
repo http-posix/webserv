@@ -28,12 +28,12 @@ std::vector<Server> CreateListeners(const Config& config){
 
 	for (const ServerConfig& obj : config.servers){
 		for (uint16_t port : obj.listen_ports){
-			[[maybe_unused]] auto [ignored_iter, insert_result] = unique_pairs.insert({obj.host, port});
+			[[maybe_unused]] auto [ignored_iter, insert_result] = unique_pairs.insert({obj.hostname, port});
 			if (!insert_result){
-				LOG_ERROR("Duplicate configuration detected for server: " + obj.host + ":" + std::to_string(port));
+				LOG_ERROR("Duplicate configuration detected for server: " + obj.hostname + ":" + std::to_string(port));
 				throw ServerException("Cannot bind multiple servers to the same host:port. Virtual hosts are not supported.");
 			}
-			listeners.push_back(Server(obj.host, port));
+			listeners.push_back(Server(obj.hostname, port));
 		}
 	}
 	return listeners;
@@ -80,6 +80,10 @@ namespace {
 		);
 
 		if (ret_code != 0){
+#include "config/parser/parser.hpp"
+#include "config/parser/parser.hpp"
+#include "config/parser/parser.hpp"
+#include "config/parser/parser.hpp"
 			LOG_ERROR("getaddrinfo() failed for " + host + ":" + std::to_string(port) + " | Error: " + std::string(::gai_strerror(ret_code)));
 			throw ServerException("Failed to resolve server address configuration");
 			}
