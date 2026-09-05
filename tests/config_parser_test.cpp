@@ -72,7 +72,7 @@ TEST_CASE("Simple Config File with single Server Block")
 	Config c = p.getConfig();
 
 	CHECK(c.servers[0].hostname == "127.0.0.1");
-	CHECK(c.servers[0].listen_port[0] == 8002);
+	CHECK(c.servers[0].listen_ports[0] == 8002);
 	CHECK(c.servers[0].error_pages.at(404) == "error_pages/404.html");
 	CHECK(c.servers[0].error_pages.at(505) == "error_pages/505.html");
 	CHECK(c.servers[0].root == "docs/fusion_web/");
@@ -89,10 +89,10 @@ TEST_CASE("Config File with two simple servers")
 	Config c = p.getConfig();
 
 	CHECK(c.servers[0].hostname == "localhost");
-	CHECK(c.servers[0].listen_port[0] == 8080);
+	CHECK(c.servers[0].listen_ports[0] == 8080);
 	CHECK(c.servers[1].hostname == "mfw.com");
-	CHECK(c.servers[1].listen_port[0] == 9090);
-	CHECK(c.servers[1].listen_port[1] == 1212);
+	CHECK(c.servers[1].listen_ports[0] == 9090);
+	CHECK(c.servers[1].listen_ports[1] == 1212);
 }
 
 TEST_CASE("Testing location file")
@@ -119,7 +119,7 @@ TEST_CASE("Test calling free function \'getConfig\'")
 	Config c = ParseConfig(file);
 
 	CHECK(c.servers[0].hostname == "127.0.0.1");
-	CHECK(c.servers[0].listen_port[0] == 8002);
+	CHECK(c.servers[0].listen_ports[0] == 8002);
 	CHECK(c.servers[0].error_pages.at(404) == "error_pages/404.html");
 	CHECK(c.servers[0].error_pages.at(505) == "error_pages/505.html");
 	CHECK(c.servers[0].root == "docs/fusion_web/");
@@ -135,8 +135,8 @@ TEST_CASE("Valid: server with every supported directive")
 
 	CHECK(c.servers.size() == 1);
 	CHECK(c.servers[0].hostname == "127.0.0.1");
-	CHECK(c.servers[0].listen_port.size() == 1);
-	CHECK(c.servers[0].listen_port[0] == 8002);
+	CHECK(c.servers[0].listen_ports.size() == 1);
+	CHECK(c.servers[0].listen_ports[0] == 8002);
 	CHECK(c.servers[0].root == "docs/fusion_web/");
 	CHECK(c.servers[0].index == "index.html");
 	CHECK(c.servers[0].client_max_body_size == 3000);
@@ -192,17 +192,17 @@ TEST_CASE("Valid: multiple servers with multiple ports")
 
 	CHECK(c.servers.size() == 3);
 	CHECK(c.servers[0].hostname == "localhost");
-	CHECK(c.servers[0].listen_port.size() == 2);
-	CHECK(c.servers[0].listen_port[0] == 8080);
-	CHECK(c.servers[0].listen_port[1] == 8081);
+	CHECK(c.servers[0].listen_ports.size() == 2);
+	CHECK(c.servers[0].listen_ports[0] == 8080);
+	CHECK(c.servers[0].listen_ports[1] == 8081);
 	CHECK(c.servers[0].error_pages.at(404) == "error_pages/404.html");
 
 	CHECK(c.servers[1].hostname == "mfw.com");
-	CHECK(c.servers[1].listen_port[0] == 9090);
+	CHECK(c.servers[1].listen_ports[0] == 9090);
 	CHECK(c.servers[1].client_max_body_size == 100000);
 
 	CHECK(c.servers[2].hostname == "third.com");
-	CHECK(c.servers[2].listen_port[0] == 1212);
+	CHECK(c.servers[2].listen_ports[0] == 1212);
 }
 
 TEST_CASE("Valid: comments are stripped")
@@ -211,7 +211,7 @@ TEST_CASE("Valid: comments are stripped")
 
 	CHECK(c.servers.size() == 1);
 	CHECK(c.servers[0].hostname == "localhost");
-	CHECK(c.servers[0].listen_port[0] == 8080);
+	CHECK(c.servers[0].listen_ports[0] == 8080);
 	CHECK(c.servers[0].client_max_body_size == 15 * 1024);
 	CHECK(c.servers[0].locations.size() == 1);
 	CHECK(c.servers[0].locations[0].allowed_methods.size() == 2);
@@ -257,7 +257,7 @@ TEST_CASE("Valid: CRLF line endings")
 	Config c = parseFile("tests/config_test_files/valid_crlf");
 
 	CHECK(c.servers[0].hostname == "127.0.0.1");
-	CHECK(c.servers[0].listen_port[0] == 80);
+	CHECK(c.servers[0].listen_ports[0] == 80);
 	CHECK(c.servers[0].locations.size() == 1);
 	CHECK(c.servers[0].locations[0].uri_path == "/");
 	CHECK(c.servers[0].locations[0].autoindex == false);
@@ -298,7 +298,7 @@ TEST_CASE("Valid: whole server on a single line")
 
 	CHECK(c.servers.size() == 1);
 	CHECK(c.servers[0].hostname == "localhost");
-	CHECK(c.servers[0].listen_port[0] == 80);
+	CHECK(c.servers[0].listen_ports[0] == 80);
 }
 
 TEST_CASE("Valid: server containing only a location")
@@ -318,7 +318,7 @@ TEST_CASE("Valid: nginx-style configuration")
 
 	CHECK(c.servers.size() == 1);
 	CHECK(c.servers[0].hostname == "localhost");
-	CHECK(c.servers[0].listen_port[0] == 80);
+	CHECK(c.servers[0].listen_ports[0] == 80);
 	CHECK(c.servers[0].root == "/var/www/");
 	CHECK(c.servers[0].index == "index.html");
 	CHECK(c.servers[0].client_max_body_size == 1 * 1024 * 1024);

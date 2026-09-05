@@ -2,11 +2,34 @@
 #include "doctest.h"
 
 #include "app/server/server.hpp"
-#include "../tests/mock_files/mock_config.hpp"
 #include "utils/app_exception/app_exception.hpp"
-// #include "config/mock_config.hpp"
+#include "config/parser/parser.hpp"
 
 #include <type_traits>
+
+namespace Cfg {
+
+inline ServerConfig MakeServer(std::string host, std::vector<uint16_t> ports) {
+	ServerConfig s;
+	s.hostname = std::move(host);
+	s.listen_ports = std::move(ports);
+	return s;
+}
+
+inline Config OneServerTwoPorts() {
+	Config c;
+	c.servers.push_back(MakeServer("127.0.0.1", {8081, 8082}));
+	return c;
+}
+
+inline Config DuplicateHostPort() {
+	Config c;
+	c.servers.push_back(MakeServer("127.0.0.1", {8083}));
+	c.servers.push_back(MakeServer("127.0.0.1", {8083}));
+	return c;
+}
+
+}
 
 TEST_SUITE("Server") {
 
@@ -85,15 +108,13 @@ TEST_SUITE("Server") {
 TEST_SUITE("CreateListeners") {
 
 	TEST_CASE("creates one listener per unique host:port pair") {
-		Config cfg = MockConfig::SingleServer("127.0.0.1", {8081, 8082});
-		std::vector<Server> listeners = CreateListeners(cfg);
+		std::vector<Server> listeners = CreateListeners(Cfg::OneServerTwoPorts());
 		CHECK(listeners.size() == 2);
 	}
 
 	// Produce LOG_ERROR("Duplicate configuration detected")
 	TEST_CASE("throws on duplicate host:port across servers") {
-		Config cfg = MockConfig::TwoServersSameSettings("127.0.0.1", 8083);
-		CHECK_THROWS_AS(CreateListeners(cfg), ServerException);
+		CHECK_THROWS_AS(CreateListeners(Cfg::DuplicateHostPort()), ServerException);
 	}
 
 	// doctest.h hasn't ASSERT_DEATH(), for this we need gtest.
