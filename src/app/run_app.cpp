@@ -33,7 +33,14 @@ void run_app(int argc, char **argv)
 
 	Logger::GetInstance().PrintMsg("Welcome to Webserv of the http-posix team!");
 
-	const std::string config_path = (argc == 2) ? argv[1] : kDefaultConfigPath;
+	std::string config_path;
+	if (argc == 1)
+	{
+		LOG_INFO("No configuration file given. Using default file: " + kDefaultConfigPath);
+		config_path = kDefaultConfigPath;
+	}
+	else
+		config_path = argv[1];
 
 	Config	config_data = ParseConfig(config_path);
 	std::vector<Server> listeners = CreateListeners(config_data);
