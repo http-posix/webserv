@@ -19,7 +19,10 @@ ConfigParser::ConfigParser(void) : tokenizer_("")
 ConfigParser::ConfigParser(const std::string& filename) : tokenizer_("")
 {
 	if (readFile(filename) != 0)
+	{
+		std::cerr << "Failed to open configuration file: " + filename << std::endl;
 		throw ConfigException("Failed to open configuration file: " + filename);
+	}
 }
 
 ConfigParser::~ConfigParser(void)
