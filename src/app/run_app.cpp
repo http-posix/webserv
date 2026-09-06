@@ -36,11 +36,12 @@ void run_app(int argc, char **argv)
 	std::string config_path;
 	if (argc == 1)
 	{
-		LOG_INFO("No configuration file given. Using default file: " + kDefaultConfigPath);
 		config_path = kDefaultConfigPath;
+		LOG_WARN("No configuration file given. Using default file.");
 	}
 	else
 		config_path = argv[1];
+	LOG_INFO("Using configuration from: " + config_path);
 
 	Config	config_data = ParseConfig(config_path);
 	std::vector<Server> listeners = CreateListeners(config_data);
