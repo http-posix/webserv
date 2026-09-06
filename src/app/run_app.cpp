@@ -23,7 +23,7 @@
 //	Logger::GetInstance().PrintMsg("\n Server stopped. Have a good day ^_^");
 //}
 
-constexpr char kDefaultConfigPath[44] = "tests/config_test_files/single_server_block";
+constexpr std::string_view kDefaultConfigPath = "config/default_config";
 
 void run_app(int argc, char **argv)
 {
