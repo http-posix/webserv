@@ -72,7 +72,7 @@ TEST_CASE("Simple Config File with single Server Block")
 	Config c = p.getConfig();
 
 	CHECK(c.servers[0].hostname == "127.0.0.1");
-	CHECK(c.servers[0].listen_ports[0] == 8002);
+	CHECK(c.servers[0].listen_ports[0] == 8080);
 	CHECK(c.servers[0].error_pages.at(404) == "error_pages/404.html");
 	CHECK(c.servers[0].error_pages.at(505) == "error_pages/505.html");
 	CHECK(c.servers[0].root == "docs/fusion_web/");
@@ -119,7 +119,7 @@ TEST_CASE("Test calling free function \'getConfig\'")
 	Config c = ParseConfig(file);
 
 	CHECK(c.servers[0].hostname == "127.0.0.1");
-	CHECK(c.servers[0].listen_ports[0] == 8002);
+	CHECK(c.servers[0].listen_ports[0] == 8080);
 	CHECK(c.servers[0].error_pages.at(404) == "error_pages/404.html");
 	CHECK(c.servers[0].error_pages.at(505) == "error_pages/505.html");
 	CHECK(c.servers[0].root == "docs/fusion_web/");
