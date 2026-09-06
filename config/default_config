@@ -1,0 +1,6 @@
+server
+{
+	hostname 127.0.0.1;
+	listen 8080;
+	listen 8081;
+}
