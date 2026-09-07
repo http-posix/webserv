@@ -1,8 +1,7 @@
 #include "io/connection/connection.hpp"
 #include "io/instruction.hpp"
 #include "utils/logger/logger.hpp"
-
-#include "../tests/mock_files/mock_response.hpp"
+#include "http/response/response.hpp"
 
 #include <sys/socket.h>
 
@@ -60,13 +59,12 @@ InstructionList	Connection::OnReadable(){
 			LOG_DEBUG("state NeedMoreData - " + std::to_string(socket_.fd()));
 			return instructions; // No instructions => fd goes through run loop again + keep StateReading
 		case HttpParserState::Complete:
-			// Send parsed data to the Router
-			// Router return RouterInstruction/State/Result/Code/etc
-			// according to the return need to decide is it CGI => 
-			// state_ = StateCgi{?, ?};
-			// instructions.Add(Action::WatchCgi, socket_.fd());
-			// else =>
-			state_ = StateWriting{BuildMockResponse(), 0};
+			// Hardcoded root directory for now.
+			// TODO(future): Get root from ServerConfig — Connection
+			//                needs to receive the config at construction.
+			state_ = StateWriting{
+				BuildResponse(http_parser_, "./www").Serialize(), 0
+			};
 			LOG_DEBUG("state Complete - " + std::to_string(socket_.fd()));
 			instructions.Add(Action::WaitWritable, socket_.fd());
 			return instructions;
