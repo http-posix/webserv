@@ -36,6 +36,5 @@ class Logger {
 #ifdef DEBUG_MODE
 	#define LOG_DEBUG(msg) Logger::GetInstance().Log(LogLevel::DEBUG, msg, __FILE__, __LINE__)
 #else
-	#define LOG_DEBUG(msg) = (void(0));
-
+	#define LOG_DEBUG(msg) (void(0))
 #endif
