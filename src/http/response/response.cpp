@@ -49,6 +49,32 @@ HttpResponse	BuildResponse(const HttpParser& parser, const std::string& root)
 	return response;
 }
 
+std::string DetermineContentType(const std::string& path)
+{
+	//find the last `.` starting from the right (reverse search).
+	//copy that part into comparison
+	const size_t pos = path.rfind('.');
+	if (pos == std::string::npos)
+		return ("text/plain");
+	const std::string extension = path.substr(pos);
+
+	static const std::unordered_map<std::string, std::string> content_types{
+		{".mp4", "video/mp4"},
+		{".mp3", "audio/mpeg"},
+		{".html", "text/html"},
+		{".png", "image/png"},
+		{".jpg", "image/jpeg"}
+	};
+	const std::unordered_map<std::string, std::string>::const_iterator got = content_types.find(extension);
+
+	if (got == content_types.end())
+	{
+		//TODO: If non found set error status.
+		return ("text/plain");
+	}
+	return (got->second);
+}
+
 HttpResponse	HandleGet(const std::string& path, const std::string& root)
 {
 	HttpResponse	response;
@@ -63,7 +89,7 @@ HttpResponse	HandleGet(const std::string& path, const std::string& root)
 
 	response.status_code = 200;
 	response.status_text = "OK";
-	response.headers["Content-Type"] = "text/html";
+	response.headers["Content-Type"] = DetermineContentType(file_path);
 	response.body = openFile(file_path);
 
 	return response;
