@@ -14,6 +14,8 @@ namespace clrs {
 	constexpr const char *kMagenta = "\033[35m";
 	constexpr const char *kBlack = "\033[30m";
 	constexpr const char *kCyan = "\033[36m";
+	constexpr const char *kDim= "\033[2m";
+
 	
 	// Formatting
 	constexpr const char *kReset = "\033[0m";
