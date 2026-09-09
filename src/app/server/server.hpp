@@ -31,13 +31,15 @@ class Server{
 		int					fd() const noexcept;
 		uint16_t			server_port() const noexcept;
 		const std::string&	server_host() const noexcept;
+		const std::string&	srv_id() const noexcept;
 
 	private:
 		Socket			socket_;
 		std::string		host_;
 		uint16_t		port_;
+		std::string		srv_id_;
 
-		void	SetServerData(const std::string& host, uint16_t port);
+		void	BuildSrvId();
 		void	SetupSocketOptions();
 		void	BindSocket(const sockaddr* ai_addr, socklen_t ai_addrlen);
 		void	ListenSocket();

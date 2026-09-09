@@ -33,8 +33,8 @@ std::vector<Server> CreateListeners(const Config& config){
 				LOG_ERROR("Duplicate configuration detected for server: " + obj.hostname + ":" + std::to_string(port));
 				throw ServerException("Cannot bind multiple servers to the same host:port. Virtual hosts are not supported.");
 			}
-			LOG_INFO("Server build for:" + obj.host + ":" + std::to_string(port));
 			listeners.push_back(Server(obj.hostname, port));
+			LOG_INFO("Server built for: " + obj.hostname + ":" + std::to_string(port));
 		}
 	}
 	return listeners;
@@ -81,10 +81,6 @@ namespace {
 		);
 
 		if (ret_code != 0){
-#include "config/parser/parser.hpp"
-#include "config/parser/parser.hpp"
-#include "config/parser/parser.hpp"
-#include "config/parser/parser.hpp"
 			LOG_ERROR("getaddrinfo() failed for " + host + ":" + std::to_string(port) + " | Error: " + std::string(::gai_strerror(ret_code)));
 			throw ServerException("Failed to resolve server address configuration");
 			}
@@ -93,16 +89,19 @@ namespace {
 }
 
 /* ========================================================================== */
-/*                               Public Methods                               */
+/*                          Constructors & Destructors                        */
 /* ========================================================================== */
 // sys_socket.h(0p), netinet_in.h(0p)
 // => I need to keep config struct to give locations for Response
-Server::Server(const std::string& host, uint16_t port){
-	SetServerData(host, port);
+Server::Server(const std::string& host, uint16_t port):
+	host_(host),
+	port_(port)
+{
 	AddrinfoGuard addr_guard = SetupAddrinfo(host, port);
 	SetupSocketOptions();
 	BindSocket(addr_guard.ptr->ai_addr, addr_guard.ptr->ai_addrlen);
 	ListenSocket();
+	BuildSrvId();
 }
 
 /* ========================================================================== */
@@ -121,14 +120,13 @@ const std::string&	Server::server_host() const noexcept{
 	return host_;
 }
 
+const std::string&	Server::srv_id() const noexcept{
+	return srv_id_;
+}
+
 /* ========================================================================== */
 /*                              Private Methods                               */
 /* ========================================================================== */
-// keep server data for debug
-void	Server::SetServerData(const std::string& host, uint16_t port){
-	host_ = host;
-	port_ = port;
-}
 
 void	Server::SetupSocketOptions(){
 	int option_value = 1;
@@ -163,6 +161,10 @@ void	Server::ListenSocket(){
 		LOG_ERROR("listen() failed on socket fd " + std::to_string(socket_.fd()) + ": " + std::string(strerror(errno)));
 		throw ServerException("Failed to put server into listening mode");
 	}
+}
+
+void	Server::BuildSrvId(){
+	srv_id_ = "[" + host_ + ":" + std::to_string(port_) + " fd=" + std::to_string(socket_.fd()) + "]";
 }
 
 // struct addrinfo {
