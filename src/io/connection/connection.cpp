@@ -16,8 +16,9 @@
 /*                          Constructors & Destructors                        */
 /* ========================================================================== */
 
-Connection::Connection(Socket socket) : 
+Connection::Connection(Socket socket, std::string srv_id) : 
 		socket_(std::move(socket)),
+		srv_id_(srv_id),
 		state_(StateReading{})
 { }
 
@@ -38,7 +39,7 @@ InstructionList	Connection::OnReadable(){
 
 	ssize_t recv_bytes = ::recv(socket_.fd(), buf, kBufSize - 1, 0);
 
-	LOG_DEBUG("Have a request on fd: " + std::to_string(socket_.fd()) + " => recv_bytes:" + std::to_string(recv_bytes));
+	LOG_DEBUG("request fd=" + std::to_string(socket_.fd()) + " recv_bytes=" + std::to_string(recv_bytes), srv_id_);
 
 	if (recv_bytes < 0){
 		// LOG_ERROR();
@@ -57,7 +58,7 @@ InstructionList	Connection::OnReadable(){
 
 	switch (status){
 		case HttpParserState::NeedMoreData:
-			LOG_DEBUG("state NeedMoreData - " + std::to_string(socket_.fd()));
+			LOG_DEBUG("state - NeedMoreData fd=" + std::to_string(socket_.fd()), srv_id_);
 			return instructions; // No instructions => fd goes through run loop again + keep StateReading
 		case HttpParserState::Complete:
 			// Send parsed data to the Router
@@ -67,11 +68,11 @@ InstructionList	Connection::OnReadable(){
 			// instructions.Add(Action::WatchCgi, socket_.fd());
 			// else =>
 			state_ = StateWriting{BuildMockResponse(), 0};
-			LOG_DEBUG("state Complete - " + std::to_string(socket_.fd()));
+			LOG_DEBUG("state - Complete fd=" + std::to_string(socket_.fd()), srv_id_);
 			instructions.Add(Action::WaitWritable, socket_.fd());
 			return instructions;
 		case HttpParserState::InvalidRequest:
-			LOG_DEBUG("state InvalidRequest - " + std::to_string(socket_.fd()));
+			LOG_DEBUG("state - InvalidRequest fd=" + std::to_string(socket_.fd()), srv_id_);
 			instructions.Add(Action::CloseConnection, socket_.fd());
 			return instructions;
 	}
@@ -118,5 +119,9 @@ InstructionList	Connection::OnCgi(){
 }
 
 /* ========================================================================== */
-/*                              Private Methods                               */
+/*                             Accessors & Mutators                           */
 /* ========================================================================== */
+
+const std::string	Connection::srv_id() const noexcept {
+	return srv_id_;
+}

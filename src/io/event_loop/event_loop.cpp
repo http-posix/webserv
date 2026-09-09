@@ -143,15 +143,13 @@ void	EventLoop::HandleListener(const pollfd poll_entry, [[maybe_unused]] size_t 
 	assert(poll_entry.fd == listeners_[i].fd());
 
 	// early return
-	if (poll_entry.revents & (POLLHUP | POLLERR | POLLNVAL)){
+		if (poll_entry.revents & (POLLHUP | POLLERR | POLLNVAL)){
 		std::string prefix;
 		if (poll_entry.revents & POLLNVAL)
-			prefix = "Listener fd invalid (bug: fd closed but still in poll set), fd: ";
+			prefix = "Listener fd invalid (bug: fd closed but still in poll set): ";
 		else
-			prefix = "Listener failure, fd: ";
-		LOG_ERROR(prefix + std::to_string(poll_entry.fd) +
-			" Host: " + listeners_[i].server_host() +
-			" Port: " + std::to_string(listeners_[i].server_port()));
+			prefix = "Listener failure: ";
+		LOG_ERROR(prefix + " poll_fd=" + std::to_string(poll_entry.fd), listeners_[i].srv_id());
 		RequestShutdown();// TODO: add ADR immediate shutdown + maybe later add drain mode
 		return ;
 	}
@@ -163,7 +161,7 @@ void	EventLoop::HandleListener(const pollfd poll_entry, [[maybe_unused]] size_t 
 	if (accepted_fd < 0){
 		if (errno == EMFILE || errno == ENFILE){
 			LOG_WARN("fd limit reached, cannot accept new connections, active: " +
-						std::to_string(connections_.size()));
+						std::to_string(connections_.size()), listeners_[i].srv_id());
 		}
 		return ;
 	}
@@ -176,14 +174,13 @@ void	EventLoop::HandleListener(const pollfd poll_entry, [[maybe_unused]] size_t 
 	// To avoid loosing data 'cause of unspecified 
 	// order of evaluation of function arguments
 	int fd = accepted_socket.fd();
-	connections_.emplace(fd, Connection(std::move(accepted_socket)));
+	connections_.emplace(fd, Connection(std::move(accepted_socket), listeners_[i].srv_id()));
 	pm_.Watch(fd, POLLIN);
 }
 
 // nullptr, nullptr - if I don't want to keep info about IP, but I want
 // type punning via a common prefix
-// prefix-based type punning
-// common-prefix type punning
+// prefix-based type punning == common-prefix type punning
 // for IPv4 & IPv6 struct starts from the same field sa_family_t sa_family
 // https://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/socket.h.html
 int	EventLoop::AcceptConnection(int listener_fd){
@@ -274,7 +271,8 @@ void	EventLoop::CloseConnection(int fd){
 		return; // Already closed
 	
 		// CGI ?
+	const std::string ctx = it->second.srv_id();
 	pm_.Unwatch(fd);
 	connections_.erase(it);
-	LOG_DEBUG("Close connection " + std::to_string(fd));
+	LOG_DEBUG("closed connection fd=" + std::to_string(fd), ctx);
 }
