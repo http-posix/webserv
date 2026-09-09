@@ -6,7 +6,7 @@
 #include <cstdio>
 #include <sys/stat.h>
 #include <chrono>
-
+#include <iomanip>
 
 namespace {
 
@@ -63,9 +63,9 @@ void Logger::InitLogFile(){
 		std::cerr << "[Logger] Cannot open log file: " << path << "\n";
 }
 
-void Logger::Log(LogLevel level, const std::string &msg, const char *file, int line){
+void Logger::Log(LogLevel level, const char *file, int line, const std::string &msg, const std::string& ctx){
 	const char *label = nullptr;
-	const char* color = clrs::kReset;
+	const char* color = nullptr;
 
 	switch (level){
 		case LogLevel::DEBUG:	label = "[--DEBUG--]"; color=clrs::kCyan; break;
@@ -73,19 +73,24 @@ void Logger::Log(LogLevel level, const std::string &msg, const char *file, int l
 		case LogLevel::WARN:	label = "[--WARN---]"; color=clrs::kYellow; break;
 		case LogLevel::ERROR:	label = "[--ERROR--]"; color=clrs::kRed; break;
 	}
+
 	std::string file_short = std::string(file);
 	size_t i = file_short.find_last_of('/');
+	std::string location = file_short.substr(i+1) + ":" + std::to_string(line) + ": ";
+	std::string time = CurrentTime();
 
-	std::string location  = file_short.substr(i+1) + ":" + std::to_string(line) + ": ";
-	std::string location_bold = std::string(clrs::kBold) + location + clrs::kReset + msg + "\n";
-	std::string str = (level != LogLevel::INFO) ? location_bold : msg + "\n";
-	
-	std::cerr <<  CurrentTime() << " " << color << label << " " << clrs::kReset << str;
+	std::cerr	<< time << ' '
+				<< color << label << ' ' << clrs::kReset
+				<< clrs::kBold << std::left << std::setw(20) << location << clrs::kReset
+				<< clrs::kDim << ctx << clrs::kReset << ' '
+				<< msg << '\n';
 
 	#ifdef LOG_TO_FILE
 		if (use_file_){
-			str = (level != LogLevel::INFO) ? location + msg + "\n": msg + "\n";
-			file_ << CurrentTime() << " " <<  label << " " << str;
+			file_	<< time << ' ' << label << ' '
+					<< std::left << std::setw(20) << location
+					<< ctx << ' ' 
+					<< msg << '\n';
 			if (level == LogLevel::WARN || level == LogLevel::ERROR)
 				file_ << std::flush;
 		}

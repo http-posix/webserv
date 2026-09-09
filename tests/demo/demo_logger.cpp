@@ -3,22 +3,20 @@
 
 #include <iostream>
 
-void inner_function(){
-	std::cerr << "\n";
-	Logger::PrintMsg("This is inside inner_function:");
-	LOG_DEBUG("DEBUG macro tested");
-	LOG_INFO("INFO macro tested");
-	LOG_WARN("WARN macro tested");
-	LOG_ERROR("ERROR macro tested");
-}
-
 int main(){
 	std::cout << clrs::kMagenta << "=== Logger demo ===\n\n" << clrs::kReset;
-	Logger::PrintMsg("Log levels for Webserv:");
-	LOG_DEBUG("DEBUG macro tested");
-	LOG_INFO("INFO macro tested");
-	LOG_WARN("WARN macro tested");
-	LOG_ERROR("ERROR macro tested");
-	inner_function();
+	Logger::PrintMsg("Log levels for Webserv with context:");
+
+	LOG_DEBUG("Sample message");
+	LOG_INFO("Sample message");
+	LOG_WARN("Sample message");
+	LOG_ERROR("Sample message");
+
+	Logger::PrintMsg("\nLog levels for Webserv with server context:");
+	const char* ctx = "[127.0.0.1:8080 fd=4]";
+	LOG_DEBUG("Sample message", ctx);
+	LOG_INFO("Sample message", ctx);
+	LOG_WARN("Sample message", ctx);
+	LOG_ERROR("Sample message", ctx);
 	return 0;
 }

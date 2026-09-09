@@ -14,9 +14,11 @@ enum class LogLevel {
 class Logger {
 	public:
 		static Logger& GetInstance();
+
 		Logger(const Logger&) 				= delete;
 		Logger& operator=(const Logger&)	= delete;
-		void Log(LogLevel level, const std::string& msg, const char *file, int line);
+
+		void Log(LogLevel level, const char* file, int line, const std::string& msg, const std::string& ctx="");
 		static void PrintMsg(const std::string& msg);
 
 	private:
@@ -29,12 +31,12 @@ class Logger {
 
 };
 
-#define LOG_INFO(msg) Logger::GetInstance().Log(LogLevel::INFO, msg, __FILE__, __LINE__)
-#define LOG_WARN(msg) Logger::GetInstance().Log(LogLevel::WARN, msg, __FILE__, __LINE__)
-#define LOG_ERROR(msg) Logger::GetInstance().Log(LogLevel::ERROR, msg, __FILE__, __LINE__)
+#define LOG_INFO(...) Logger::GetInstance().Log(LogLevel::INFO, __FILE__, __LINE__, __VA_ARGS__)
+#define LOG_WARN(...) Logger::GetInstance().Log(LogLevel::WARN, __FILE__, __LINE__, __VA_ARGS__)
+#define LOG_ERROR(...) Logger::GetInstance().Log(LogLevel::ERROR, __FILE__, __LINE__, __VA_ARGS__)
 
 #ifdef DEBUG_MODE
-	#define LOG_DEBUG(msg) Logger::GetInstance().Log(LogLevel::DEBUG, msg, __FILE__, __LINE__)
+	#define LOG_DEBUG(...) Logger::GetInstance().Log(LogLevel::DEBUG, __FILE__, __LINE__, __VA_ARGS__)
 #else
-	#define LOG_DEBUG(msg) (void(0))
+	#define LOG_DEBUG(...) (void(0))
 #endif
