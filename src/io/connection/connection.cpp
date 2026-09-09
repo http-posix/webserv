@@ -89,17 +89,21 @@ InstructionList	Connection::OnWritable(){
 	const char*		data = w.buffer.data() + w.offset;
 	size_t			len = w.buffer.size() - w.offset;
 	ssize_t			send_bytes = ::send(socket_.fd(), data, len, 0);
+	LOG_DEBUG("On Writable: Socket (" + std::to_string(socket_.fd()));
+	LOG_DEBUG(std::string("Sending: ") + std::to_string( send_bytes));
+	LOG_DEBUG(std::string("Data size: ") + std::to_string(w.buffer.size()));
 	if (send_bytes < 0)
 	{
 		// Track an error
 		// can't use errno, so just close conenction
-		// LOG_ERROR();
+		LOG_ERROR("send_bytes < 0");
 		instructions.Add(Action::CloseConnection, socket_.fd());
 		return instructions;
 	}
 	w.offset += send_bytes;
 	if (w.offset == w.buffer.size()){
 		instructions.Add(Action::CloseConnection, socket_.fd());
+		LOG_DEBUG("w.offset == w.buffer.size");
 		// when keep alive logic will be implemented
 		// state_ = StateReading{};
 		// instructions.Add(Action::WaitReadable, socket_.fd());
