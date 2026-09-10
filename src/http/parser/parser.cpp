@@ -1,4 +1,5 @@
 #include "http/parser/parser.hpp"
+#include "http/request/request.hpp"
 #include <iostream>
 #include <vector>
 
@@ -399,7 +400,19 @@ int HttpParser::ParseRequestLine()
 	return (0);	
 }
 
-HttpParserIntState HttpParser::GetInternalState()
+HttpRequest HttpParser::GetRequest()
+{
+	HttpRequest result;
+
+	result.method_ = this->method_;
+	result.path_ = this->path_;
+	result.version_ = this->version_;
+	result.headers_ = this->headers_;
+	result.body_ = this->body_;
+
+	return (result);
+}
+
 HttpParserIntState HttpParser::GetInternalState() const
 {
 	return (this->state_);

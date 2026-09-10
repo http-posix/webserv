@@ -43,6 +43,8 @@ class HttpParser
 
 		HttpParserState Feed(const char *str);
 
+		HttpRequest GetRequest();
+
 		//Getters for Testing, ResponseGen and Good Practice
 		HttpParserIntState GetInternalState() const;
 		HttpParserState GetExternalState() const;
