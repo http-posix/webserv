@@ -29,23 +29,26 @@ inline Config DuplicateHostPort() {
 	return c;
 }
 
+// Server doesn't build from config fail, so it
+inline const ServerConfig kDummyConfig{};
+
 }
 
 TEST_SUITE("Server") {
 
 	TEST_CASE("constructs successfully on loopback with ephemeral port") {
 		// port 0 -> OS will choose free port
-		CHECK_NOTHROW(Server srv("127.0.0.1", 0));
+		CHECK_NOTHROW(Server srv("127.0.0.1", 0, Cfg::kDummyConfig));
 	}
 
 	TEST_CASE("fd() returns a valid (non-negative) descriptor") {
-		Server srv("127.0.0.1", 0);
+		Server srv("127.0.0.1", 0, Cfg::kDummyConfig);
 		CHECK(srv.fd() >= 0);
 	}
 
 	TEST_CASE("two servers can bind to two different ephemeral ports") {
-		Server srv1("127.0.0.1", 0);
-		Server srv2("127.0.0.1", 0);
+		Server srv1("127.0.0.1", 0, Cfg::kDummyConfig);
+		Server srv2("127.0.0.1", 0, Cfg::kDummyConfig);
 		CHECK(srv1.fd() != srv2.fd());
 	}
 
@@ -54,14 +57,14 @@ TEST_SUITE("Server") {
 	TEST_CASE("binding the same fixed port twice throws (EADDRINUSE)") {
 		const uint16_t test_port = 54321;
 
-		Server first("127.0.0.1", test_port);
-		CHECK_THROWS_AS(Server second("127.0.0.1", test_port), ServerException);
+		Server first("127.0.0.1", test_port, Cfg::kDummyConfig);
+		CHECK_THROWS_AS(Server second("127.0.0.1", test_port, Cfg::kDummyConfig), ServerException);
 	}
 
 	// produce LOG_ERROR("getaddrinfo()")
 	TEST_CASE("invalid/unresolvable host throws via getaddrinfo failure") {
 		CHECK_THROWS_AS(
-			Server srv("this.host.does.not.resolve.invalid", 8080),
+			Server srv("this.host.does.not.resolve.invalid", 8080, Cfg::kDummyConfig),
 			ServerException
 		);
 	}
@@ -84,7 +87,7 @@ TEST_SUITE("Server") {
 	}
 
 	TEST_CASE("moved-from Server transfers fd ownership without double-close") {
-		Server srv1("127.0.0.1", 0);
+		Server srv1("127.0.0.1", 0, Cfg::kDummyConfig);
 		int original_fd = srv1.fd();
 
 		Server srv2(std::move(srv1));
@@ -94,13 +97,13 @@ TEST_SUITE("Server") {
 	}
 
 	TEST_CASE("server_host() returns the host passed to constructor") {
-		Server srv("127.0.0.1", 0);
+		Server srv("127.0.0.1", 0, Cfg::kDummyConfig);
 		CHECK(srv.server_host() == "127.0.0.1");
 	}
 
 	TEST_CASE("server_port() returns the port passed to constructor") {
 		const uint16_t test_port = 54322;
-		Server srv("127.0.0.1", test_port);
+		Server srv("127.0.0.1", test_port, Cfg::kDummyConfig);
 		CHECK(srv.server_port() == test_port);
 	}
 }
