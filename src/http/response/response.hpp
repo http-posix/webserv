@@ -6,21 +6,25 @@
 
 // Simple response abstraction. Grows to support error pages,
 // redirections, autoindex, CGI etc.
-struct HttpResponse
+class HttpResponse
 {
-	int			status_code;
-	std::string status_text;
-	std::map<std::string, std::string>	headers;
-	std::string	body;
+	private :
+	int			status_code_;
+	std::string status_text_;
+	std::map<std::string, std::string>	headers_;
+	std::string	body_;
 
+	std::string OpenFile(std::string filename);
+	std::string DetermineContentType(const std::string& path);
+	void SetStatusOK();
+
+	void HandleGet(HttpRequest& req, ServerConfig& cfg);
+	//void HandlePost(HttpRequest& req, ServerConfig& cfg);
+	//void HandleDelete(HttpRequest& req, ServerConfig& cfg);
+
+
+
+	HttpResponse(HttpRequest req, ServerConfig& cfg);
 	// Serializes the response into a raw HTTP/1.1 wire format string
 	std::string	Serialize() const;
 };
-
-// Dispatcher: decides which handler to run based on the request method.
-// Grows into a Router (takes config, per-location settings, etc.)
-HttpResponse	BuildResponse(const HttpParser& parser, const std::string& root);
-
-// Individual HTTP method handlers.
-HttpResponse	HandleGet(const std::string& path, const std::string& root);
-// TODO(future): HandlePost, HandleDelete — POST uploads + deleted handling
