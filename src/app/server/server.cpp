@@ -93,10 +93,10 @@ namespace {
 /* ========================================================================== */
 // sys_socket.h(0p), netinet_in.h(0p)
 // => I need to keep config struct to give locations for Response
-Server::Server(const std::string& host, uint16_t port, const ServerConfig& config):
+Server::Server(const std::string& host, uint16_t port, const ServerConfig& server_config):
 	host_(host),
 	port_(port),
-	config_(&config)
+	server_config_(&server_config)
 {
 	AddrinfoGuard addr_guard = SetupAddrinfo(host, port);
 	SetupSocketOptions();
@@ -125,8 +125,8 @@ const std::string&	Server::srv_id() const noexcept{
 	return srv_id_;
 }
 
-const ServerConfig& Server::config() const noexcept{
-	return *config_;
+const ServerConfig& Server::server_config() const noexcept{
+	return *server_config_;
 }
 
 /* ========================================================================== */

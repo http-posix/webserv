@@ -174,7 +174,8 @@ void	EventLoop::HandleListener(const pollfd poll_entry, [[maybe_unused]] size_t 
 	// To avoid loosing data 'cause of unspecified 
 	// order of evaluation of function arguments
 	int fd = accepted_socket.fd();
-	connections_.emplace(fd, Connection(std::move(accepted_socket), listeners_[i].srv_id(), listeners_[i].config()));
+	const Server& l = listeners_[i];
+	connections_.emplace(fd, Connection(std::move(accepted_socket), l.srv_id(), l.server_config()));
 	pm_.Watch(fd, POLLIN);
 }
 
@@ -211,6 +212,7 @@ void	EventLoop::HandleConnectionEvent(const pollfd entry){
 	else if (entry.revents & POLLOUT)
 		instructions = connection.OnWritable();
 	else {
+		LOG_DEBUG("error branch in connection", connection.srv_id());
 		// TODO: proper POLLERR/POLLHUP/POLLNVAL handling (different for cgi pipe vs client fd)
 		CloseConnection(owner_fd);
 		return ;

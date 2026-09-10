@@ -16,7 +16,7 @@
 class Server{
 	public:
 		Server() = delete;
-		Server(const std::string& host, uint16_t port, const ServerConfig& config);
+		Server(const std::string& host, uint16_t port, const ServerConfig& cfg);
 		~Server() noexcept = default;
 
 		// Copy
@@ -32,14 +32,14 @@ class Server{
 		uint16_t			server_port() const noexcept;
 		const std::string&	server_host() const noexcept;
 		const std::string&	srv_id() const noexcept;
-		const ServerConfig& config() const noexcept;
+		const ServerConfig& server_config() const noexcept;
 
 
 	private:
 		Socket				socket_;
 		std::string			host_;
 		uint16_t			port_;
-		const ServerConfig*	config_;
+		const ServerConfig*	server_config_;
 		std::string			srv_id_;
 
 		void	BuildSrvId();
