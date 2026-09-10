@@ -62,7 +62,7 @@ InstructionList	Connection::OnReadable(){
 			LOG_DEBUG("state - NeedMoreData fd=" + std::to_string(socket_.fd()), srv_id_);
 			return instructions; // No instructions => fd goes through run loop again + keep StateReading
 		case HttpParserState::Complete:
-			{
+		{
 			#ifdef DEBUG_MODE
 			std::string	ports;
 			for (uint16_t port : server_config_->listen_ports)
@@ -71,18 +71,15 @@ InstructionList	Connection::OnReadable(){
 				+ " ports: " + ports,
 				srv_id_);
 			#endif
-
-			// Send parsed data to the Router
-			// Router return RouterInstruction/State/Result/Code/etc
-			// according to the return need to decide is it CGI => 
-			// state_ = StateCgi{?, ?};
-			// instructions.Add(Action::WatchCgi, socket_.fd());
-			// else =>
-			state_ = StateWriting{BuildMockResponse(), 0};
-			LOG_DEBUG("state - Complete fd=" + std::to_string(socket_.fd()), srv_id_);
+			HttpResponse response(http_parser_.GetRequest(), server_config_);
+			state_ = StateWriting{
+				response.Serialize(), 0
+			};
+			LOG_DEBUG("state Complete - " + std::to_string(socket_.fd()));
 			instructions.Add(Action::WaitWritable, socket_.fd());
 			return instructions;
-			}
+		}
+>>>>>>> a665b73 (fix(connection): updated Response serialization to new Response Object)
 		case HttpParserState::InvalidRequest:
 			LOG_DEBUG("state - InvalidRequest fd=" + std::to_string(socket_.fd()), srv_id_);
 			instructions.Add(Action::CloseConnection, socket_.fd());
