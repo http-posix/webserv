@@ -4,10 +4,9 @@
 
 #include "http/response/response.hpp"
 #include "http/parser/parser.hpp"
-
 #include "utils/logger/logger.hpp"
 
-std::string	openFile(std::string filename)
+std::string	HttpResponse::OpenFile(std::string filename)
 {
 	std::ifstream		inputFile(filename.c_str());
 	std::stringstream	buffer;
@@ -15,9 +14,11 @@ std::string	openFile(std::string filename)
 
 	if (!inputFile.is_open())
 	{
-		return ("");
+		LOG_DEBUG("Couldn't find file: " + filename);
+		throw (HttpResponseException(FileNotFound));
 	}
 	buffer << inputFile.rdbuf();
+	inputFile.close();
 	result = buffer.str();
 	if (result.empty())
 	{
@@ -26,31 +27,7 @@ std::string	openFile(std::string filename)
 	return (result);
 }
 
-HttpResponse	BuildResponse(const HttpParser& parser, const std::string& root)
-{
-	switch (parser.GetMethod())
-	{
-		case Get:
-			return HandleGet(parser.GetPath(), root);
-		// TODO(future): Implement POST and DELETE handlers
-		case Post:
-			LOG_WARN("POST not implemented yet");
-			break;
-		case Delete:
-			LOG_WARN("DELETE not implemented yet");
-			break;
-		case None:
-			break;
-	}
-	HttpResponse	response;
-	response.status_code = 501;
-	response.status_text = "Not Implemented";
-	response.headers["Content-Type"] = "text/plain";
-	response.body = "501 Not Implemented";
-	return response;
-}
-
-std::string DetermineContentType(const std::string& path)
+std::string HttpResponse::DetermineContentType(const std::string& path)
 {
 	//find the last `.` starting from the right (reverse search).
 	//copy that part into comparison
@@ -69,43 +46,73 @@ std::string DetermineContentType(const std::string& path)
 	const std::unordered_map<std::string, std::string>::const_iterator got = content_types.find(extension);
 
 	if (got == content_types.end())
-	{
-		//TODO: If non found set error status.
-		return ("text/plain");
-	}
+		throw (HttpResponseException(UnsupportedMediaType));
+
 	return (got->second);
 }
 
-HttpResponse	HandleGet(const std::string& path, const std::string& root)
+void HttpResponse::HandleGet(HttpRequest& req, ServerConfig& cfg)
 {
-	HttpResponse	response;
-	std::string		file_path = root;
+	std::string file_path;
+	
+	//For comp error;
+	(void)cfg;
 
-	// TODO(future): Path resolution against config locations,
-	//                redirections, index/autoindex, etc.
-	if (path == "/" || path.empty())
+	// TODO: set to server root.
+	// Current implementation is hardcoded 0_o
+	file_path = "www";
+	if (req.path_ == "/" || req.path_.empty())
 		file_path += "/index.html";
 	else
-		file_path += path;
+		file_path += req.path_;
 
-	response.status_code = 200;
-	response.status_text = "OK";
-	response.headers["Content-Type"] = DetermineContentType(file_path);
-	response.body = openFile(file_path);
+	// If Unsupported Media Type function will throw 415
+	headers_["Content-Type"] = DetermineContentType(file_path);
 
-	return response;
+	// If file cannot read, OpenFile will throw 404
+	body_ = OpenFile(file_path);
 }
 
 std::string	HttpResponse::Serialize() const
 {
-	std::string	result = "HTTP/1.1 " + std::to_string(status_code)
-		+ " " + status_text + "\r\n";
+	std::string	result = "HTTP/1.1 " + std::to_string(status_code_)
+		+ " " + status_text_ + "\r\n";
 
-	for (const auto& [name, value] : headers)
+	for (const auto& [name, value] : headers_)
 		result += name + ": " + value + "\r\n";
-	result += "Content-Length: " + std::to_string(body.size()) + "\r\n";
+	result += "Content-Length: " + std::to_string(body_.size()) + "\r\n";
 	result += "Connection: close\r\n";
-	result += "\r\n" + body;
+	result += "\r\n" + body_;
 
-	return result;
+	return (result);
 }
+
+void HttpResponse::SetStatusOK()
+{
+	status_code_ = 200;
+	status_text_ = "OK";
+}
+
+HttpResponse::HttpResponse(HttpRequest req, ServerConfig& cfg)
+{
+	try {
+		switch (req.method_)
+		{
+			case (Get) :
+			{
+				HandleGet(req, cfg);
+				break ;
+			}
+			default :
+				throw (HttpResponseException(BadRequest));
+		}
+		SetStatusOK();
+	}
+	catch (HttpResponseException& e)
+	{
+		status_code_ = e.GetErrorCode();
+		LOG_DEBUG("Invalid Request resulted in Code: " + std::to_string(status_code_));
+		// TODO:
+		// Handle error page
+	}
+};
