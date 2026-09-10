@@ -2,7 +2,15 @@
 #include <string>
 #include <map>
 
-#include "http/parser/parser.hpp"
+#include "config/parser/parser.hpp"
+#include "http/request/request.hpp"
+
+enum ResponseStatusCode
+{
+	BadRequest = 400,
+	FileNotFound = 404,
+	UnsupportedMediaType = 415,
+};
 
 // Simple response abstraction. Grows to support error pages,
 // redirections, autoindex, CGI etc.
@@ -22,6 +30,15 @@ class HttpResponse
 	//void HandlePost(HttpRequest& req, ServerConfig& cfg);
 	//void HandleDelete(HttpRequest& req, ServerConfig& cfg);
 
+	public :
+
+	class HttpResponseException : public std::exception {
+		private :
+			int error_code_;
+		public :
+			HttpResponseException(int code) throw() : error_code_(code) {};
+			int GetErrorCode() { return (error_code_); };
+	};
 
 
 	HttpResponse(HttpRequest req, ServerConfig& cfg);
