@@ -400,46 +400,47 @@ int HttpParser::ParseRequestLine()
 }
 
 HttpParserIntState HttpParser::GetInternalState()
+HttpParserIntState HttpParser::GetInternalState() const
 {
 	return (this->state_);
 }
 
-HttpParserState HttpParser::GetExternalState()
+HttpParserState HttpParser::GetExternalState() const
 {
 	return (this->external_state_);
 }
 
-HttpMethod HttpParser::GetMethod()
+HttpMethod HttpParser::GetMethod() const
 {
 	return (this->method_);
 }
 
-std::string HttpParser::GetPath()
+std::string HttpParser::GetPath() const
 {
 	return (this->path_);
 }
 
-std::string HttpParser::GetVersion()
+std::string HttpParser::GetVersion() const
 {
 	return (this->version_);
 }
 
-std::map<std::string, std::string> HttpParser::GetHeaders()
+std::map<std::string, std::string> HttpParser::GetHeaders() const
 {
 	return (this->headers_);
 }
 
-std::string HttpParser::GetBody()
+std::string HttpParser::GetBody() const
 {
 	return (this->body_);
 }
 
-size_t HttpParser::GetBodyExpectedLength()
+size_t HttpParser::GetBodyExpectedLength() const
 {
 	return (this->body_expected_len_);
 }
 
-bool HttpParser::GetChunked()
+bool HttpParser::GetChunked() const
 {
 	return (this->chunked_);
 }
