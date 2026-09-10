@@ -14,7 +14,7 @@ std::string	HttpResponse::OpenFile(std::string filename)
 
 	if (!inputFile.is_open())
 	{
-		LOG_DEBUG("Couldn't find file: " + filename);
+		LOG_WARN("Couldn't find file: " + filename);
 		throw (HttpResponseException(FileNotFound));
 	}
 	buffer << inputFile.rdbuf();
@@ -66,6 +66,7 @@ void HttpResponse::HandleGet(HttpRequest& req, ServerConfig& cfg)
 	else
 		file_path += req.path_;
 
+	LOG_DEBUG("GET Request for file: " + file_path);
 	// If Unsupported Media Type function will throw 415
 	headers_["Content-Type"] = DetermineContentType(file_path);
 
