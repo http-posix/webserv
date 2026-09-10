@@ -43,7 +43,7 @@ void run_app(int argc, char **argv)
 		config_path = argv[1];
 	LOG_INFO("Using configuration from: " + config_path);
 
-	Config	config_data = ParseConfig(config_path);
+	const Config	config_data = ParseConfig(config_path);
 	std::vector<Server> listeners = CreateListeners(config_data);
 	EventLoop	loop(std::move(listeners));
 	loop.run();

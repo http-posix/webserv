@@ -16,9 +16,10 @@
 /*                          Constructors & Destructors                        */
 /* ========================================================================== */
 
-Connection::Connection(Socket socket, std::string srv_id) : 
+Connection::Connection(Socket socket, std::string srv_id, const ServerConfig& server_config) : 
 		socket_(std::move(socket)),
 		srv_id_(srv_id),
+		server_config_(&server_config),
 		state_(StateReading{})
 { }
 
@@ -61,6 +62,16 @@ InstructionList	Connection::OnReadable(){
 			LOG_DEBUG("state - NeedMoreData fd=" + std::to_string(socket_.fd()), srv_id_);
 			return instructions; // No instructions => fd goes through run loop again + keep StateReading
 		case HttpParserState::Complete:
+			{
+			#ifdef DEBUG_MODE
+			std::string	ports;
+			for (uint16_t port : server_config_->listen_ports)
+				ports += std::to_string(port) + " ";
+			LOG_DEBUG("ServerStruct contents: hostname: " + server_config_->hostname
+				+ " ports: " + ports,
+				srv_id_);
+			#endif
+
 			// Send parsed data to the Router
 			// Router return RouterInstruction/State/Result/Code/etc
 			// according to the return need to decide is it CGI => 
@@ -71,6 +82,7 @@ InstructionList	Connection::OnReadable(){
 			LOG_DEBUG("state - Complete fd=" + std::to_string(socket_.fd()), srv_id_);
 			instructions.Add(Action::WaitWritable, socket_.fd());
 			return instructions;
+			}
 		case HttpParserState::InvalidRequest:
 			LOG_DEBUG("state - InvalidRequest fd=" + std::to_string(socket_.fd()), srv_id_);
 			instructions.Add(Action::CloseConnection, socket_.fd());

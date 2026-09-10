@@ -5,11 +5,12 @@
 #include "http/request/request.hpp"
 #include "http/parser/parser.hpp"
 #include "io/socket/socket.hpp"
+#include "config/parser/parser.hpp"
 
 class Connection{
 	public:
 		Connection() = delete;
-		Connection(Socket socket, std::string srv_id);
+		Connection(Socket socket, std::string srv_id, const ServerConfig& server_config);
 		~Connection() = default;
 
 		// copy
@@ -26,11 +27,12 @@ class Connection{
 		InstructionList	OnCgi();
 
 		const std::string	srv_id() const noexcept;
-
+		// const ServerConfig&	server_config() const noexcept;
 
 	private:
 		Socket				socket_;
 		std::string			srv_id_;
+		const ServerConfig*	server_config_;
 		ConnectionState		state_; // Should I be consistent and set state_ in ctor or better here, `cause this is always initial state?
 		HttpParser			http_parser_; // Not in StateReadable to keep buffer with 2 dif requests
 		
