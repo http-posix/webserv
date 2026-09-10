@@ -32,7 +32,8 @@ class Connection{
 	private:
 		Socket				socket_;
 		std::string			srv_id_;
-		const ServerConfig*	server_config_;
+		// Used by response building (WIP); remove [[maybe_unused]] once wired
+		[[maybe_unused]] const ServerConfig*	server_config_;
 		ConnectionState		state_; // Should I be consistent and set state_ in ctor or better here, `cause this is always initial state?
 		HttpParser			http_parser_; // Not in StateReadable to keep buffer with 2 dif requests
 		

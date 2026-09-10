@@ -137,3 +137,7 @@ InstructionList	Connection::OnCgi(){
 const std::string	Connection::srv_id() const noexcept {
 	return srv_id_;
 }
+
+// const ServerConfig&	Connection::server_config() const noexcept{
+// 	return *server_config_;
+// }
