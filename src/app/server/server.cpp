@@ -16,24 +16,24 @@
 /* ========================================================================== */
 
 // https://cplusplus.com/reference/set/set/insert/
-std::vector<Server> CreateListeners(const Config& config){
+std::vector<Server> CreateListeners(const Config& configs){
 
 	// Trust Boundary
 	// don't need to check is config.empty() - Separation of Concerns - parser responsibility
 	// Design by contract
-	assert(!config.servers.empty() && "Parser allowed an empty server list, which violates the contract.");
+	assert(!configs.servers.empty() && "Parser allowed an empty server list, which violates the contract.");
 
 	std::vector<Server>	listeners;
 	std::set<std::pair<std::string, uint16_t>> unique_pairs;
 
-	for (const ServerConfig& obj : config.servers){
+	for (const ServerConfig& obj : configs.servers){
 		for (uint16_t port : obj.listen_ports){
 			[[maybe_unused]] auto [ignored_iter, insert_result] = unique_pairs.insert({obj.hostname, port});
 			if (!insert_result){
 				LOG_ERROR("Duplicate configuration detected for server: " + obj.hostname + ":" + std::to_string(port));
 				throw ServerException("Cannot bind multiple servers to the same host:port. Virtual hosts are not supported.");
 			}
-			listeners.push_back(Server(obj.hostname, port));
+			listeners.push_back(Server(obj.hostname, port, obj));
 			LOG_INFO("Server built for: " + obj.hostname + ":" + std::to_string(port));
 		}
 	}
@@ -93,9 +93,10 @@ namespace {
 /* ========================================================================== */
 // sys_socket.h(0p), netinet_in.h(0p)
 // => I need to keep config struct to give locations for Response
-Server::Server(const std::string& host, uint16_t port):
+Server::Server(const std::string& host, uint16_t port, const ServerConfig& config):
 	host_(host),
-	port_(port)
+	port_(port),
+	config_(&config)
 {
 	AddrinfoGuard addr_guard = SetupAddrinfo(host, port);
 	SetupSocketOptions();
@@ -122,6 +123,10 @@ const std::string&	Server::server_host() const noexcept{
 
 const std::string&	Server::srv_id() const noexcept{
 	return srv_id_;
+}
+
+const ServerConfig& Server::config() const noexcept{
+	return *config_;
 }
 
 /* ========================================================================== */

@@ -174,7 +174,7 @@ void	EventLoop::HandleListener(const pollfd poll_entry, [[maybe_unused]] size_t 
 	// To avoid loosing data 'cause of unspecified 
 	// order of evaluation of function arguments
 	int fd = accepted_socket.fd();
-	connections_.emplace(fd, Connection(std::move(accepted_socket), listeners_[i].srv_id()));
+	connections_.emplace(fd, Connection(std::move(accepted_socket), listeners_[i].srv_id(), listeners_[i].config()));
 	pm_.Watch(fd, POLLIN);
 }
 

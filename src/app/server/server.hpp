@@ -16,7 +16,7 @@
 class Server{
 	public:
 		Server() = delete;
-		Server(const std::string& host, uint16_t port);
+		Server(const std::string& host, uint16_t port, const ServerConfig& config);
 		~Server() noexcept = default;
 
 		// Copy
@@ -32,12 +32,15 @@ class Server{
 		uint16_t			server_port() const noexcept;
 		const std::string&	server_host() const noexcept;
 		const std::string&	srv_id() const noexcept;
+		const ServerConfig& config() const noexcept;
+
 
 	private:
-		Socket			socket_;
-		std::string		host_;
-		uint16_t		port_;
-		std::string		srv_id_;
+		Socket				socket_;
+		std::string			host_;
+		uint16_t			port_;
+		const ServerConfig*	config_;
+		std::string			srv_id_;
 
 		void	BuildSrvId();
 		void	SetupSocketOptions();
@@ -46,4 +49,4 @@ class Server{
 };
 
 //namespace a bit overkill for project scale
-	std::vector<Server> CreateListeners(const Config& config);
+	std::vector<Server> CreateListeners(const Config& configs);
