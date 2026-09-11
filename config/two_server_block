@@ -1,0 +1,12 @@
+server
+{
+	hostname 127.0.0.1;
+	root www;
+	listen 8080;
+}
+server
+{
+	hostname 127.1.0.1;
+	root temp;
+	listen 8081;
+}
