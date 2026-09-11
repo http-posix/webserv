@@ -79,7 +79,6 @@ InstructionList	Connection::OnReadable(){
 			instructions.Add(Action::WaitWritable, socket_.fd());
 			return instructions;
 		}
->>>>>>> a665b73 (fix(connection): updated Response serialization to new Response Object)
 		case HttpParserState::InvalidRequest:
 			LOG_DEBUG("state - InvalidRequest fd=" + std::to_string(socket_.fd()), srv_id_);
 			instructions.Add(Action::CloseConnection, socket_.fd());
