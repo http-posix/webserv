@@ -78,9 +78,19 @@ std::string HttpResponse::DetermineContentType(const std::string& path)
 void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* cfg)
 {
 	std::string file_path;
+	const LocationConfig* location;
 
-	file_path = cfg->root;
-	if (req.path_ == "/" || req.path_.empty())
+	location = FindLocation(req.path_, cfg->locations);
+
+	if (location != NULL)
+	{
+		// Throw error if invalid method.
+		// HandleAllowedMethods(allowedmethods);
+		LOG_DEBUG("Location: " + location->uri_path + " accessed for: " + req.path_);
+		if (!location->root.empty())
+			file_path += location->root;
+		// Add custom index.html if location has this setting.
+	}
 		file_path += "/index.html";
 	else
 		file_path += req.path_;
