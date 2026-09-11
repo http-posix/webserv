@@ -54,13 +54,8 @@ std::string HttpResponse::DetermineContentType(const std::string& path)
 void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* cfg)
 {
 	std::string file_path;
-	
-	//For comp error;
-	(void)cfg;
 
-	// TODO: set to server root.
-	// Current implementation is hardcoded 0_o
-	file_path = "www";
+	file_path = cfg->root;
 	if (req.path_ == "/" || req.path_.empty())
 		file_path += "/index.html";
 	else
