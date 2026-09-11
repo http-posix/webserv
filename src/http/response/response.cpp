@@ -65,8 +65,11 @@ std::string HttpResponse::DetermineContentType(const std::string& path)
 		{".mp3", "audio/mpeg"},
 		{".html", "text/html"},
 		{".png", "image/png"},
-		{".jpg", "image/jpeg"}
+		{".jpg", "image/jpeg"},
+		{".gif", "image/gif"},
+		{".css", "text/css"}
 	};
+
 	const std::unordered_map<std::string, std::string>::const_iterator got = content_types.find(extension);
 
 	if (got == content_types.end())
