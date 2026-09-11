@@ -27,6 +27,30 @@ std::string	HttpResponse::OpenFile(std::string filename)
 	return (result);
 }
 
+const LocationConfig* HttpResponse::FindLocation(const std::string& path,
+		const std::vector<LocationConfig>& locations)
+{
+	const LocationConfig* result = NULL;
+	size_t longest_match = 0;
+
+	// Iterate over the entire vector.
+	for (std::vector<LocationConfig>::const_iterator i = locations.begin();
+			i != locations.end(); i++)
+	{
+		// If we find the uri_path of the location
+		// at the start of the filepath it means we have a match
+		if (path.find(i->uri_path) == 0)
+		{
+			if (path.length() > longest_match)
+			{
+				longest_match = path.length();
+				result = &(*i);
+			}
+		}
+	}
+	return (result);
+}
+
 std::string HttpResponse::DetermineContentType(const std::string& path)
 {
 	//find the last `.` starting from the right (reverse search).
