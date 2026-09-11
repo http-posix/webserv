@@ -51,7 +51,7 @@ std::string HttpResponse::DetermineContentType(const std::string& path)
 	return (got->second);
 }
 
-void HttpResponse::HandleGet(HttpRequest& req, ServerConfig& cfg)
+void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* cfg)
 {
 	std::string file_path;
 	
@@ -94,7 +94,7 @@ void HttpResponse::SetStatusOK()
 	status_text_ = "OK";
 }
 
-HttpResponse::HttpResponse(HttpRequest req, ServerConfig& cfg)
+HttpResponse::HttpResponse(HttpRequest req, const ServerConfig* cfg)
 {
 	try {
 		switch (req.method_)

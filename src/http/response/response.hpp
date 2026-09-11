@@ -26,7 +26,7 @@ class HttpResponse
 	std::string DetermineContentType(const std::string& path);
 	void SetStatusOK();
 
-	void HandleGet(HttpRequest& req, ServerConfig& cfg);
+	void HandleGet(HttpRequest& req, const ServerConfig* cfg);
 	//void HandlePost(HttpRequest& req, ServerConfig& cfg);
 	//void HandleDelete(HttpRequest& req, ServerConfig& cfg);
 
@@ -41,7 +41,7 @@ class HttpResponse
 	};
 
 
-	HttpResponse(HttpRequest req, ServerConfig& cfg);
+	HttpResponse(HttpRequest req, const ServerConfig* cfg);
 	// Serializes the response into a raw HTTP/1.1 wire format string
 	std::string	Serialize() const;
 };
