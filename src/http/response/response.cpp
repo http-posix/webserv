@@ -91,7 +91,16 @@ void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* cfg)
 			file_path += location->root;
 		// Add custom index.html if location has this setting.
 	}
+	else
+	{
+		file_path = cfg->root;
+	}
+	// Append custom index if path is a directory.
+	if (req.path_[req.path_.size() - 1] == '/' || req.path_.empty())
+	{
+		// TODO: Check if server has root.
 		file_path += "/index.html";
+	}
 	else
 		file_path += req.path_;
 
