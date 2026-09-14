@@ -9,6 +9,7 @@ enum ResponseStatusCode
 {
 	BadRequest = 400,
 	FileNotFound = 404,
+	MethodNotAllowed = 405,
 	UnsupportedMediaType = 415,
 };
 
@@ -27,6 +28,7 @@ class HttpResponse
 	void SetStatusOK();
 	const LocationConfig* FindLocation(const std::string& req_path,
 			const std::vector<LocationConfig>& locations);
+	void HandleLocationMethod(enum HttpMethod &req_method, const LocationConfig* loc);
 
 	void HandleGet(HttpRequest& req, const ServerConfig* cfg);
 	//void HandlePost(HttpRequest& req, ServerConfig& cfg);
