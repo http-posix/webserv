@@ -97,6 +97,27 @@ std::string HttpResponse::DetermineContentType(const std::string& path)
 	return (got->second);
 }
 
+void HttpResponse::HandleLocationMethod(enum HttpMethod &req_method, const LocationConfig* loc)
+{
+	std::string req_method_str;
+
+	switch (req_method)
+	{
+		case (Get) : req_method_str = "GET"; break;
+		case (Post) : req_method_str = "POST"; break;
+		case (Delete) : req_method_str = "DELETE"; break;
+		default : req_method_str = "none";
+	}
+
+	for (size_t i = 0; i < loc->allowed_methods.size(); i++)
+	{
+		if (req_method_str == loc->allowed_methods[i])
+			return ;
+	}
+	throw (HttpResponseException(MethodNotAllowed));
+}
+
+
 void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* cfg)
 {
 	std::string file_path;
@@ -106,9 +127,8 @@ void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* cfg)
 
 	if (location != NULL)
 	{
-		// Throw error if invalid method.
-		// HandleAllowedMethods(allowedmethods);
 		LOG_DEBUG("Location: " + location->uri_path + " accessed for: " + req.path_);
+		HandleLocationMethod(req.method_, location);
 		if (!location->root.empty())
 			file_path += location->root;
 		// Add custom index.html if location has this setting.
