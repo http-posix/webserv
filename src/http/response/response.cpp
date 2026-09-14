@@ -27,24 +27,43 @@ std::string	HttpResponse::OpenFile(std::string filename)
 	return (result);
 }
 
-const LocationConfig* HttpResponse::FindLocation(const std::string& path,
+const LocationConfig* HttpResponse::FindLocation(const std::string& req_path,
 		const std::vector<LocationConfig>& locations)
 {
 	const LocationConfig* result = NULL;
 	size_t longest_match = 0;
 
-	// Iterate over the entire vector.
-	for (std::vector<LocationConfig>::const_iterator i = locations.begin();
-			i != locations.end(); i++)
+	for (size_t i = 0; i < locations.size(); i++)
 	{
-		// If we find the uri_path of the location
-		// at the start of the filepath it means we have a match
-		if (path.find(i->uri_path) == 0)
+		std::string loc_path = locations[i].uri_path;
+		size_t loc_len = loc_path.size();
+
+		// Check if we find the location EXACTLY
+		// at the start of the requested path.
+		LOG_DEBUG(std::to_string(req_path.compare(0, loc_len, loc_path)));
+		if (req_path.compare(0, loc_len, loc_path) == 0)
 		{
-			if (path.length() > longest_match)
+			// If exact match we are dealing with
+			// a directory request, still it is a valid request.
+			bool exact_match = (req_path == loc_path);
+
+			// A request `/data/images/picture1.jpq` with location `/data`
+			// will correctly return `/data` as location since
+			// it found a `/` after `/data` in the request path.
+			bool req_has_slash = (req_path.size() > loc_len && req_path[loc_len] == '/');
+
+			// If the request was `/data/images` and location is `/data/` it is
+			// not an exact match but still a match, nor will we find a `/` at
+			// req_path[loc_len] since it will one char too far.
+			bool loc_ends_in_slash = (loc_len > 0 && loc_path[loc_len - 1] == '/');
+			
+			if (exact_match || loc_ends_in_slash || req_has_slash)
 			{
-				longest_match = path.length();
-				result = &(*i);
+				if (loc_len > longest_match || result == NULL)
+				{
+					longest_match = loc_len;
+					result = &locations[i];
+				}
 			}
 		}
 	}
