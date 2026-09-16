@@ -119,6 +119,29 @@ void HttpResponse::HandleLocationMethod(enum HttpMethod &req_method, const Locat
 
 
 void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* cfg)
+
+std::string HttpResponse::AppendIndex(std::string uri, const ConfigStruct* cfg)
+{
+	struct stat stat_buf;
+	std::string result = uri;
+
+	if (stat(uri.c_str(), &stat_buf) == 0)
+	{
+		if (S_ISDIR(stat_buf.st_mode))
+		{
+			if (!(uri[uri.size() - 1] == '/'))
+				result += "/";
+			if (cfg != NULL)
+			{
+				if (!cfg->index.empty())
+					return (result + cfg->index);
+			}
+			LOG_DEBUG("Requested file is directory, but no index element is found in config.");
+			return (result + "index.html");
+		}
+	}
+	return (result);
+}
 {
 	std::string file_path;
 	const LocationConfig* location;
