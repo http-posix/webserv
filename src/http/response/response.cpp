@@ -1,6 +1,7 @@
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
+#include <sys/stat.h>
 
 #include "http/response/response.hpp"
 #include "http/parser/parser.hpp"
@@ -40,7 +41,6 @@ const LocationConfig* HttpResponse::FindLocation(const std::string& req_path,
 
 		// Check if we find the location EXACTLY
 		// at the start of the requested path.
-		LOG_DEBUG(std::to_string(req_path.compare(0, loc_len, loc_path)));
 		if (req_path.compare(0, loc_len, loc_path) == 0)
 		{
 			// If exact match we are dealing with
@@ -121,7 +121,6 @@ std::string HttpResponse::PrefixRoot(std::string uri, const ConfigStruct* cfg)
 {
 	std::string result;
 
-void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* cfg)
 	if (cfg != NULL)
 	{
 		if (cfg->root.empty())
@@ -155,33 +154,26 @@ std::string HttpResponse::AppendIndex(std::string uri, const ConfigStruct* cfg)
 	}
 	return (result);
 }
+
+void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* serv_cfg)
 {
 	std::string file_path;
 	const LocationConfig* location;
 
-	location = FindLocation(req.path_, cfg->locations);
-
+	//HandleLocation.
+	location = FindLocation(req.path_, serv_cfg->locations);
 	if (location != NULL)
 	{
 		LOG_DEBUG("Location: " + location->uri_path + " accessed for: " + req.path_);
 		HandleLocationMethod(req.method_, location);
-		if (!location->root.empty())
-			file_path += location->root;
-		// Add custom index.html if location has this setting.
+		file_path = PrefixRoot(req.path_, location);
+		file_path = AppendIndex(file_path, location);
 	}
 	else
 	{
-		file_path = cfg->root;
+		file_path = PrefixRoot(req.path_, serv_cfg);
+		file_path = AppendIndex(file_path, serv_cfg);
 	}
-	// Append custom index if path is a directory.
-	if (req.path_[req.path_.size() - 1] == '/' || req.path_.empty())
-	{
-		// TODO: Check if server has root.
-		file_path += "/index.html";
-	}
-	else
-		file_path += req.path_;
-
 	LOG_DEBUG("GET Request for file: " + file_path);
 	// If Unsupported Media Type function will throw 415
 	headers_["Content-Type"] = DetermineContentType(file_path);
