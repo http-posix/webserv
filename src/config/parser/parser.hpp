@@ -5,7 +5,14 @@
 #include <cstdint>
 #include "../tokenizer/tokenizer.hpp"
 
-struct LocationConfig
+struct ConfigStruct {
+	// root (directory) to override default root of server or location
+	std::string root;
+	std::string index;
+	virtual ~ConfigStruct() = default;
+};
+
+struct LocationConfig : public ConfigStruct
 {
 	// URI: Uniform Resource Identifier -> path to the location
 	std::string uri_path;
@@ -17,10 +24,6 @@ struct LocationConfig
 	// Each return codenumber has their own redirection page
 	// Somewhat similar to error_pages
 	std::unordered_map<int, std::string> redirections;
-
-	// root (directory) to override default root of server
-	// If non is provided, the server's default is used
-	std::string root;
 
 	// Default index file to serve inside this location
 	std::string index;
@@ -35,7 +38,7 @@ struct LocationConfig
 	std::string upload_location;
 };
 
-struct ServerConfig
+struct ServerConfig : public ConfigStruct
 {
 	// Non-virtual so we only have one hostname (ip adress)
 	std::string hostname;
@@ -48,13 +51,6 @@ struct ServerConfig
 	// Most browser have their own error page if non are provided,
 	// however, subject defines we must give our own error_pages.
 	std::unordered_map<int, std::string> error_pages;
-
-	// Default root (directory) used by every location that does not
-	// provide its own.
-	std::string root;
-
-	// Default index file used by every location that does not provide its own.
-	std::string index;
 
 	// Settings for a specific location/directory
 	std::vector<struct LocationConfig> locations;
