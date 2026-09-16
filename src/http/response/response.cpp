@@ -117,8 +117,21 @@ void HttpResponse::HandleLocationMethod(enum HttpMethod &req_method, const Locat
 	throw (HttpResponseException(MethodNotAllowed));
 }
 
+std::string HttpResponse::PrefixRoot(std::string uri, const ConfigStruct* cfg)
+{
+	std::string result;
 
 void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* cfg)
+	if (cfg != NULL)
+	{
+		if (cfg->root.empty())
+			LOG_DEBUG("Accessing server/location structure without root");
+		else
+			result += cfg->root;
+	}
+	result += uri;
+	return (result);
+}
 
 std::string HttpResponse::AppendIndex(std::string uri, const ConfigStruct* cfg)
 {
