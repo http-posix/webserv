@@ -25,9 +25,6 @@ struct LocationConfig : public ConfigStruct
 	// Somewhat similar to error_pages
 	std::unordered_map<int, std::string> redirections;
 
-	// Default index file to serve inside this location
-	std::string index;
-
 	// Whether to generate a directory listing when no index is present
 	bool autoindex = false;
 
