@@ -9,7 +9,6 @@ struct ConfigStruct {
 	// root (directory) to override default root of server or location
 	std::string root;
 	std::string index;
-	virtual ~ConfigStruct() = default;
 };
 
 struct LocationConfig : public ConfigStruct
