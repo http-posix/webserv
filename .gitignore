@@ -46,6 +46,7 @@ webserv
 **/build/
 tests/build/
 echo_server
+buckets
 
 #clangd configuration
 compile_flags.txt
