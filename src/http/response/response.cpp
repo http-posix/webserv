@@ -216,6 +216,39 @@ void HttpResponse::SetStatus(int status_code)
 	}
 }
 
+void HttpResponse::HardcodeErrorPage()
+{
+	std::string description;
+	std::string title = std::to_string(status_code_) + " " + status_text_;
+
+	switch (status_code_)
+	{
+		case (BadRequest) :
+			description = "Your request was invalid. There are numerous explanations.";
+			break ;
+		case (FileNotFound) :
+			description = "The file you tried to access could not be found or openend.";
+			break ;
+		case (MethodNotAllowed) :
+			description = "You tried to either GET/POST/DELETE in a location that does not allow it.";
+			break ;
+		case (UnsupportedMediaType) :
+			description = "The requested file has an extension that we do not support. (fe. .java)";
+			break ;
+		default :
+			description = "Something went wrong. But we don't know what.";
+			break ;
+	}
+	body_.clear();
+	body_ += "<!DOCTYPE html>\n<html>\n";
+	body_ +=  "<title>" + title + "</title>\n";
+	body_ += "<body>\n";
+	body_ += "<h1>" + title + "</h1>\n";
+	body_ += "<p>" + description + "</p>\n";
+	body_ += "</body>\n";
+	body_ += "</html>";
+}
+
 HttpResponse::HttpResponse(HttpRequest req, const ServerConfig* cfg)
 {
 	try {
