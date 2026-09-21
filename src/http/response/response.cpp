@@ -249,14 +249,33 @@ void HttpResponse::HardcodeErrorPage()
 	body_ += "</html>";
 }
 
-void HttpResponse::HandleErrorPage(int status_code)
+void HttpResponse::HandleErrorPage(int status_code, const ServerConfig* cfg)
 {
 	SetStatus(status_code);
 	headers_["Content-Type"] = "text/html";
 	// In case some error occured while building the body, we need to clear it.
 	// body_.clear();
 	
-	// TODO: Check if config has error pages.
+	if (cfg != NULL && !cfg->error_pages.empty())
+	{
+		// .find() function returns an iterator specific to our unordered_map.
+		//  It is easier to use auto instead of
+		//  std::unordered_map<int, std::string>::iterator
+		auto it = cfg->error_pages.find(status_code);
+		// If we have a custom error page, try to open it.
+		if (it != cfg->error_pages.end())
+		{
+			try
+			{
+				body_ = OpenFile(it->second);
+				return ;
+			}
+			catch (HttpResponseException& e)
+			{
+				LOG_WARN("Custom Error Page cannot be opened; Falling back on built-in page.");
+			}
+		}
+	}
 	HardcodeErrorPage();
 }
 
@@ -281,6 +300,6 @@ HttpResponse::HttpResponse(HttpRequest req, const ServerConfig* cfg)
 		LOG_DEBUG("Invalid Request resulted in Code: " + std::to_string(e.GetErrorCode()));
 		// TODO:
 		// Handle error page
-		HandleErrorPage(e.GetErrorCode());
+		HandleErrorPage(e.GetErrorCode(), cfg);
 	}
 };
