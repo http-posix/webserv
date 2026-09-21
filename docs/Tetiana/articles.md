@@ -74,6 +74,9 @@
 - CGI / Common Gateway Interface
 	- [OReilly (openbook): CGI Programming on the World Wide Web](https://www.oreilly.com/openbook/cgi/)
 	- [RFC 3875: The Common Gateway Interface (CGI) Version 1.1](https://www.rfc-editor.org/info/rfc3875)
+	- [Purdue university CS: Intro CGI](https://www.cs.purdue.edu/homes/cs290w/perlLecs/PerlIntroCGI.html)
+	- [Dev.to: What is Common Gateway Interface(CGI)](https://dev.to/nitindahiyadev/what-is-common-gateway-interfacecgi-415m)
+	- [Apache: Module mod_cgi](https://httpd.apache.org/docs/current/mod/mod_cgi.html)
 
 - RFC
 	- [RFC 9112: STD 99: HTTP/1.1](https://www.rfc-editor.org/info/rfc9112/)
