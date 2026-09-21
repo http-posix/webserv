@@ -202,6 +202,20 @@ void HttpResponse::SetStatusOK()
 	status_text_ = "OK";
 }
 
+void HttpResponse::SetStatus(int status_code)
+{
+	status_code_ = status_code;
+	switch (status_code)
+	{
+		case (OK) :	status_text_ = "OK"; break ;
+		case (BadRequest) : status_text_ = "Bad Request"; break ;
+		case (FileNotFound) : status_text_ = "Not Found"; break ;
+		case (MethodNotAllowed) : status_text_ = "Method Not Allowed"; break ;
+		case (UnsupportedMediaType) : status_text_ = "Unsupported Media Type"; break ;
+		default : status_text_ = "Unknown Error"; break;
+	}
+}
+
 HttpResponse::HttpResponse(HttpRequest req, const ServerConfig* cfg)
 {
 	try {

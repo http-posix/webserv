@@ -25,6 +25,7 @@ class HttpResponse
 
 		std::string OpenFile(std::string filename);
 		std::string DetermineContentType(const std::string& path);
+		void SetStatus(int status_code);
 		void SetStatusOK();
 		const LocationConfig* FindLocation(const std::string& req_path,
 				const std::vector<LocationConfig>& locations);
