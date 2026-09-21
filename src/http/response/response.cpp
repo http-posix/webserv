@@ -278,9 +278,9 @@ HttpResponse::HttpResponse(HttpRequest req, const ServerConfig* cfg)
 	}
 	catch (HttpResponseException& e)
 	{
-		status_code_ = e.GetErrorCode();
-		LOG_DEBUG("Invalid Request resulted in Code: " + std::to_string(status_code_));
+		LOG_DEBUG("Invalid Request resulted in Code: " + std::to_string(e.GetErrorCode()));
 		// TODO:
 		// Handle error page
+		HandleErrorPage(e.GetErrorCode());
 	}
 };
