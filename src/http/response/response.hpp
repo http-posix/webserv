@@ -32,6 +32,7 @@ class HttpResponse
 		void HandleLocationMethod(enum HttpMethod  &req_method, const LocationConfig* loc);
 		std::string PrefixRoot(std::string uri, const ConfigStruct* cfg);
 		std::string AppendIndex(std::string uri, const ConfigStruct* cfg);
+		void HardcodeErrorPage();
 
 		void HandleGet(HttpRequest& req, const ServerConfig* cfg);
 		//void HandlePost(HttpRequest& req, ServerConfig& cfg);
