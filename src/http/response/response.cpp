@@ -249,6 +249,18 @@ void HttpResponse::HardcodeErrorPage()
 	body_ += "</html>";
 }
 
+void HttpResponse::HandleErrorPage(int status_code)
+{
+	SetStatus(status_code);
+	headers_["Content-Type"] = "text/html";
+	// In case some error occured while building the body, we need to clear it.
+	// body_.clear();
+	
+	// TODO: Check if config has error pages.
+	HardcodeErrorPage();
+}
+
+
 HttpResponse::HttpResponse(HttpRequest req, const ServerConfig* cfg)
 {
 	try {
