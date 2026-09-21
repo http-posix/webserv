@@ -1,6 +1,7 @@
 # ADR [NNN]: [Short title — noun phrase]
 
 **Date:** YYYY-MM-DD
+**Recorded:** YYYY-MM-DD  <!-- only if written later -->
 **Deciders:** <!-- who made this call -->
 
 ---
