@@ -7,6 +7,7 @@
 
 enum ResponseStatusCode
 {
+	OK = 200,
 	BadRequest = 400,
 	FileNotFound = 404,
 	MethodNotAllowed = 405,
