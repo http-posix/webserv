@@ -279,7 +279,6 @@ void HttpResponse::HandleErrorPage(int status_code, const ServerConfig* cfg)
 	HardcodeErrorPage();
 }
 
-
 HttpResponse::HttpResponse(HttpRequest req, const ServerConfig* cfg)
 {
 	try {
