@@ -22,7 +22,7 @@ struct LocationConfig : public ConfigStruct
 
 	// Each return codenumber has their own redirection page
 	// Somewhat similar to error_pages
-	std::unordered_map<int, std::string> redirections;
+	std::pair<int, std::string> redirection;
 
 	// Whether to generate a directory listing when no index is present
 	bool autoindex = false;
