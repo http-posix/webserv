@@ -34,7 +34,7 @@ class HttpResponse
 		std::string PrefixRoot(std::string uri, const ConfigStruct* cfg);
 		std::string AppendIndex(std::string uri, const ConfigStruct* cfg);
 		void HardcodeErrorPage();
-		void HandleErrorPage(int status_code);
+		void HandleErrorPage(int status_code, const ServerConfig* cfg);
 
 		void HandleGet(HttpRequest& req, const ServerConfig* cfg);
 		//void HandlePost(HttpRequest& req, ServerConfig& cfg);
