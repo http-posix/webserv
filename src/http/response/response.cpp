@@ -167,22 +167,19 @@ void HttpResponse::HandleLocationRedirection(const LocationConfig* loc)
 		return ;
 	switch (loc->redirection.first)
 	{
-		case (MovedPermanently) :
-		{
-			LOG_DEBUG("Returning location: " + loc->redirection.second);
-			headers_["Location"] = loc->redirection.second;
-			throw (HttpResponseException(loc->redirection.first));
-		}
-		case (PermanentRedirect) :
-		{
-			headers_["Location"] = loc->redirection.second;
-			throw (HttpResponseException(loc->redirection.first));
-		}
+		case (MovedPermanently) : break ;
+		case (TemporaryRedirect) : break ;
 		default :
+		{
 			LOG_WARN("Redirection setting for location: " + loc->uri_path + 
 					" has unrecognized return value: " + 
 					std::to_string(loc->redirection.first) + ". Ignoring redirection.");
+			return ;
+		}
 	}
+	LOG_DEBUG("Returning location: " + loc->redirection.second);
+	headers_["Location"] = loc->redirection.second;
+	throw (HttpResponseException(loc->redirection.first));
 }
 
 void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* serv_cfg)
@@ -240,7 +237,9 @@ void HttpResponse::SetStatus(int status_code)
 	{
 		case (OK) :	status_text_ = "OK"; break ;
 		case (MovedPermanently) : status_text_ = "Moved Permanently"; break ;
+		case (Found) : status_text_ = "Found"; break ;
 		case (PermanentRedirect): status_text_ = "Permanent Redirect"; break ;
+		case (TemporaryRedirect): status_text_ = "Temporary Redirect"; break ;
 		case (BadRequest) : status_text_ = "Bad Request"; break ;
 		case (FileNotFound) : status_text_ = "Not Found"; break ;
 		case (MethodNotAllowed) : status_text_ = "Method Not Allowed"; break ;
