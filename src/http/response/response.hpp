@@ -8,6 +8,8 @@
 enum ResponseStatusCode
 {
 	OK = 200,
+	MovedPermanently = 301,
+	PermanentRedirect = 308,
 	BadRequest = 400,
 	FileNotFound = 404,
 	MethodNotAllowed = 405,
@@ -30,6 +32,7 @@ class HttpResponse
 		void SetStatusOK();
 		const LocationConfig* FindLocation(const std::string& req_path,
 				const std::vector<LocationConfig>& locations);
+		void HandleLocationRedirection(const LocationConfig* loc);
 		void HandleLocationMethod(enum HttpMethod  &req_method, const LocationConfig* loc);
 		std::string PrefixRoot(std::string uri, const ConfigStruct* cfg);
 		std::string AppendIndex(std::string uri, const ConfigStruct* cfg);
