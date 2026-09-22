@@ -168,7 +168,9 @@ void HttpResponse::HandleLocationRedirection(const LocationConfig* loc)
 	switch (loc->redirection.first)
 	{
 		case (MovedPermanently) : break ;
+		case (Found) : break ;
 		case (TemporaryRedirect) : break ;
+		case (PermanentRedirect) : break ;
 		default :
 		{
 			LOG_WARN("Redirection setting for location: " + loc->uri_path + 

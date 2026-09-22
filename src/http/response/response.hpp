@@ -9,6 +9,8 @@ enum ResponseStatusCode
 {
 	OK = 200,
 	MovedPermanently = 301,
+	Found = 302,
+	TemporaryRedirect = 307,
 	PermanentRedirect = 308,
 	BadRequest = 400,
 	FileNotFound = 404,
