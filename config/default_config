@@ -4,8 +4,8 @@ server
 	root www;
 	listen 8080;
 	error_page 404 error_pages/404.html;
-	location /redir
+	location /google
 	{
-		return 301 docs/PROJECT_CONVENTIONS.md;
+		return 302 https://google.com/;
 	}
 }
