@@ -155,6 +155,36 @@ std::string HttpResponse::AppendIndex(std::string uri, const ConfigStruct* cfg)
 	return (result);
 }
 
+void HttpResponse::HandleLocationRedirection(const LocationConfig* loc)
+{
+	// Config parser checks that redirection numbers can only
+	// be between 300 and 399. Thus this check is mainly to see
+	// whether a redirection has been initialized (since the
+	// default constructor initializes numbers to zero.)
+	// Thus, if it is indeed 0, we know redirection is not
+	// initialized.
+	if (loc->redirection.first == 0)
+		return ;
+	switch (loc->redirection.first)
+	{
+		case (MovedPermanently) :
+		{
+			LOG_DEBUG("Returning location: " + loc->redirection.second);
+			headers_["Location"] = loc->redirection.second;
+			throw (HttpResponseException(loc->redirection.first));
+		}
+		case (PermanentRedirect) :
+		{
+			headers_["Location"] = loc->redirection.second;
+			throw (HttpResponseException(loc->redirection.first));
+		}
+		default :
+			LOG_WARN("Redirection setting for location: " + loc->uri_path + 
+					" has unrecognized return value: " + 
+					std::to_string(loc->redirection.first) + ". Ignoring redirection.");
+	}
+}
+
 void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* serv_cfg)
 {
 	std::string file_path;
@@ -165,6 +195,7 @@ void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* serv_cfg)
 	if (location != NULL)
 	{
 		LOG_DEBUG("Location: " + location->uri_path + " accessed for: " + req.path_);
+		HandleLocationRedirection(location);
 		HandleLocationMethod(req.method_, location);
 		file_path = PrefixRoot(req.path_, location);
 		file_path = AppendIndex(file_path, location);
@@ -184,7 +215,7 @@ void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* serv_cfg)
 
 std::string	HttpResponse::Serialize() const
 {
-	std::string	result = "HTTP/1.1 " + std::to_string(status_code_)
+	std::string	result = "HTTP/1.0 " + std::to_string(status_code_)
 		+ " " + status_text_ + "\r\n";
 
 	for (const auto& [name, value] : headers_)
@@ -208,11 +239,17 @@ void HttpResponse::SetStatus(int status_code)
 	switch (status_code)
 	{
 		case (OK) :	status_text_ = "OK"; break ;
+		case (MovedPermanently) : status_text_ = "Moved Permanently"; break ;
+		case (PermanentRedirect): status_text_ = "Permanent Redirect"; break ;
 		case (BadRequest) : status_text_ = "Bad Request"; break ;
 		case (FileNotFound) : status_text_ = "Not Found"; break ;
 		case (MethodNotAllowed) : status_text_ = "Method Not Allowed"; break ;
 		case (UnsupportedMediaType) : status_text_ = "Unsupported Media Type"; break ;
-		default : status_text_ = "Unknown Error"; break;
+		default :
+			{
+				LOG_WARN("Error code: \'" + std::to_string(status_code) + "\' has not been implemented (yet)!");
+				status_text_ = "Unknown Error"; break;
+			}
 	}
 }
 
@@ -296,9 +333,13 @@ HttpResponse::HttpResponse(HttpRequest req, const ServerConfig* cfg)
 	}
 	catch (HttpResponseException& e)
 	{
-		LOG_DEBUG("Invalid Request resulted in Code: " + std::to_string(e.GetErrorCode()));
-		// TODO:
+		int status_code = e.GetErrorCode();
+		LOG_DEBUG("Request resulted in Code: " + std::to_string(status_code));
+		//Handle redirection
+		if (status_code > 299 && status_code < 400)
+			SetStatus(status_code);
 		// Handle error page
-		HandleErrorPage(e.GetErrorCode(), cfg);
+		else if (status_code > 399 && status_code < 500)
+			HandleErrorPage(e.GetErrorCode(), cfg);
 	}
 };
