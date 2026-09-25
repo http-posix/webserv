@@ -1,4 +1,4 @@
-# ADR [101]: Configuration Structures for Location and Server Settings
+# ADR 202: Configuration Structures for Location and Server Settings
 
 **Date:** 2026-09-03
 **Recorded:** 2026-09-25
