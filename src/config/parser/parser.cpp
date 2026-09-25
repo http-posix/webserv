@@ -279,8 +279,7 @@ void ConfigParser::createLocationConfig(LocationConfig& location)
 			std::string url = join(collectUntil(";"));
 			if (url.empty())
 				throw ConfigException("Empty URL in 'return' directive.");
-			//location.redirections = std::make_pair(code, url);
-			location.redirections[code] = url;
+			location.redirection = std::make_pair(code, url);
 		}
 
 		else if (pos_.value == "root")
