@@ -240,7 +240,7 @@ void	ConfigParser::createServerConfig()
 	if (server_config.hostname.empty())
 		throw (ConfigException("Server block requires a hostname! (hostname <ipv4>;)"));
 	if (server_config.listen_ports.empty())
-		throw (ConfigException("Server block requires at least one port!"));
+		throw (ConfigException("Server block requires at least one port! (listen <nbr>;)"));
 	pos_ = tokenizer_.next();
 	config_.servers.push_back(server_config);
 }
