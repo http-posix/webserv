@@ -382,7 +382,6 @@ Config ParseConfig(std::string config_path)
 
 	if (cp.readFile(config_path) != 0)
 		throw ConfigException("Failed to open configuration file: " + config_path);
-	cp.removeComments();
 	cp.parseFromString();
 
 	return (cp.getConfig());
