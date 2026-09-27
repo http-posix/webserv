@@ -67,6 +67,7 @@
 	- [Dev.to: Unions in C](https://dev.to/pauljlucas/unions-in-c-1ojj)
 	- [Cppreference: Order of evaluation](https://en.cppreference.com/cpp/language/eval_order)
 	- [Cppscripts: Introduction to C++ Performance](https://cppscripts.com/category/performance)
+	- [Bjarne Stroustrup && Herb Sutter: C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines)
 
 - performance
 	- [johnnysswlab: Virtual functions - true price](https://johnnysswlab.com/the-true-price-of-virtual-functions-in-c/)
