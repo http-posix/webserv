@@ -10,7 +10,7 @@
 class Connection{
 	public:
 		Connection() = delete;
-		Connection(Socket socket, std::string srv_id, const ServerConfig& server_config);
+		Connection(Socket socket, const std::string& addr, const std::string& srv_id, const ServerConfig& server_config);
 		~Connection() = default;
 
 		// copy
@@ -33,10 +33,14 @@ class Connection{
 
 	private:
 		Socket				socket_;
+		[[maybe_unused]] std::string			addr_; //remove [[maybe_unused]] once CGI wired
 		std::string			srv_id_;
+
 		// Used by response building (WIP); remove [[maybe_unused]] once wired
 		[[maybe_unused]] const ServerConfig*	server_config_;
-		ConnectionState		state_; // Should I be consistent and set state_ in ctor or better here, `cause this is always initial state?
+
+		ConnectionState		state_ = StateReading{};
+
 		HttpParser			http_parser_; // Not in StateReadable to keep buffer with 2 dif requests
 		
 		// HttpRequest		http_request_;
