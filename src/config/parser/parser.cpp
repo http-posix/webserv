@@ -1,6 +1,7 @@
 //#include "../app_exception/app_exception.hpp"
 #include "../../utils/app_exception/app_exception.hpp"
 #include "../tokenizer/tokenizer.hpp"
+#include "../../utils/logger/logger.hpp"
 #include "parser.hpp"
 #include <fstream>
 #include <sstream>
