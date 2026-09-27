@@ -238,7 +238,7 @@ void	ConfigParser::createServerConfig()
 	}
 	// Check if server block has necessary information to function.
 	if (server_config.hostname.empty())
-		server_config.hostname = "";
+		throw (ConfigException("Server block requires a hostname! (hostname <ipv4>;)"));
 	if (server_config.listen_ports.empty())
 		throw (ConfigException("Server block requires at least one port!"));
 	pos_ = tokenizer_.next();
