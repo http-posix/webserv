@@ -16,11 +16,11 @@
 /*                          Constructors & Destructors                        */
 /* ========================================================================== */
 
-Connection::Connection(Socket socket, std::string srv_id, const ServerConfig& server_config) : 
+Connection::Connection(Socket socket, const std::string& addr, const std::string& srv_id, const ServerConfig& server_config) : 
 		socket_(std::move(socket)),
+		addr_(addr),
 		srv_id_(srv_id),
-		server_config_(&server_config),
-		state_(StateReading{})
+		server_config_(&server_config)
 { }
 
 /* ========================================================================== */

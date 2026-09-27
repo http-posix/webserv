@@ -7,8 +7,6 @@
 #include <cstddef>
 #include <unordered_map>
 
-/// Need to give locations from config to response
-
 class EventLoop{
 	public:
 		EventLoop() = delete;
@@ -33,11 +31,11 @@ class EventLoop{
 
 		// methods
 		Severity	HandlePollError();
-		void		HandleWatched(int ready_count);//finished
-		void		HandleListener(pollfd poll_entry, size_t i);//still need to check error behavior
+		void		HandleWatched(int ready_count);
+		void		HandleListener(pollfd poll_entry, size_t i);
 		void		HandleConnectionEvent(const pollfd poll_entry);
 		int			HandleCGI();
-		int			AcceptConnection(int listener);
+		void		AcceptConnection(int fd, const Server& l);
 		void		RequestShutdown();
 		void		CloseConnection(int fd);
 		int			FindOwner(int fd);
