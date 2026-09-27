@@ -241,6 +241,11 @@ void	ConfigParser::createServerConfig()
 		throw (ConfigException("Server block requires a hostname! (hostname <ipv4>;)"));
 	if (server_config.listen_ports.empty())
 		throw (ConfigException("Server block requires at least one port! (listen <nbr>;)"));
+	if (server_config.root.empty())
+	{
+		LOG_WARN("No root defined for server block; using `www` as default.");
+		server_config.root = "www";
+	}
 	pos_ = tokenizer_.next();
 	config_.servers.push_back(server_config);
 }
