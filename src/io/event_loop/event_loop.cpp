@@ -9,30 +9,23 @@
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <cstring>
+#include <arpa/inet.h>
+// #include <netinet/in.h>
 
-/* 
-POLLIN
-The file descriptor is ready for reading data other than high-priority data.
-POLLRDNORM
-The file descriptor is ready for reading normal data.
-POLLRDBAND
-The file descriptor is ready for reading priority data.
-POLLPRI
-The file descriptor is ready for reading high-priority data.
-POLLOUT
-The file descriptor is ready for writing normal data.
-POLLWRNORM
-Equivalent to POLLOUT.
-POLLWRBAND
-The file descriptor is ready for writing priority data.
-POLLERR
-An error condition is present on the file descriptor. All error conditions that arise solely from the state of the object underlying the open file description and would be diagnosed by a return of -1 from a read() or write() call on the file descriptor shall be reported as a POLLERR event. This flag is only valid in the revents bitmask; it shall be ignored in the events member.
-POLLHUP
-A device has been disconnected, or a pipe or FIFO has been closed by the last process that had it open for writing. Once set, the hangup state of a FIFO shall persist until some process opens the FIFO for writing or until all read-only file descriptors for the FIFO are closed. This event and POLLOUT are mutually-exclusive. However, this event and POLLIN, POLLRDNORM, POLLRDBAND, or POLLPRI are not mutually-exclusive. This flag is only valid in the revents bitmask; it shall be ignored in the events member.
-POLLNVAL
-The specified fd value is not an open file descriptor. This flag is only valid in the revents member; it shall be ignored in the events member.
-*/
+/* ========================================================================== */
+/*                             Anonymous Namespace                            */
+/* ========================================================================== */
 
+namespace {
+	std::string AddrToStr(const in_addr_t& addr){
+		uint32_t ip = ntohl(addr);
+		std::string	str = std::to_string(ip >> 24 & 0xFF) + '.'
+						+ std::to_string(ip >> 16 & 0xFF) + '.'
+						+ std::to_string(ip >> 8 & 0xFF) + '.'
+						+ std::to_string(ip & 0xFF);
+		return str;
+	}
+}
 
 /* ========================================================================== */
 /*                          Constructors & Destructors                        */
@@ -47,24 +40,6 @@ EventLoop::EventLoop(std::vector<Server>&& listeners):
 	}
 }
 
-
-
-/*
-ERRORS
-The poll() and ppoll() functions shall fail if:
-
-[EAGAIN]
-The allocation of internal data structures failed but a subsequent request may succeed.
-[EINTR]
-A signal was caught during poll() or ppoll().
-[EINVAL]
-The nfds argument is greater than {OPEN_MAX}.
-The ppoll() function shall fail if:
-
-[EINVAL]
-An invalid timeout interval was specified.
-*/
-
 /* ========================================================================== */
 /*                               Public Methods                               */
 /* ========================================================================== */
@@ -77,7 +52,7 @@ void	EventLoop::run(){
 
 		// early return for readability & branch prediction make it cheap
 		if (ready_count < 0 /*&& !timeout?*/){
-			if (HandlePollError() == Severity::Critical) // просто заглушка, треба рефактор
+			if (HandlePollError() == Severity::Critical) // just mock, needs check
 				break;
 			continue;
 		}
@@ -142,6 +117,8 @@ void	EventLoop::HandleListener(const pollfd poll_entry, [[maybe_unused]] size_t 
 	assert(i < size_listeners_);
 	assert(poll_entry.fd == listeners_[i].fd());
 
+	const Server& l = listeners_[i];
+
 	// early return
 		if (poll_entry.revents & (POLLHUP | POLLERR | POLLNVAL)){
 		std::string prefix;
@@ -149,47 +126,41 @@ void	EventLoop::HandleListener(const pollfd poll_entry, [[maybe_unused]] size_t 
 			prefix = "Listener fd invalid (bug: fd closed but still in poll set): ";
 		else
 			prefix = "Listener failure: ";
-		LOG_ERROR(prefix + " poll_fd=" + std::to_string(poll_entry.fd), listeners_[i].srv_id());
+		LOG_ERROR(prefix + " poll_fd=" + std::to_string(poll_entry.fd), l.srv_id());
 		RequestShutdown();// TODO: add ADR immediate shutdown + maybe later add drain mode
 		return ;
 	}
 
 	// Happy path
-	int accepted_fd = AcceptConnection(poll_entry.fd);
+	AcceptConnection(poll_entry.fd, l);
+}
+
+void	EventLoop::AcceptConnection(int entry_fd, const Server& l){
+	sockaddr_in		addr{};
+	socklen_t		addr_len = sizeof(addr);
+
+	int accepted_fd = ::accept(entry_fd, reinterpret_cast<sockaddr*>(&addr), &addr_len);
 
 	// https://man7.org/linux/man-pages/man2/accept.2.html
 	if (accepted_fd < 0){
 		if (errno == EMFILE || errno == ENFILE){
 			LOG_WARN("fd limit reached, cannot accept new connections, active: " +
-						std::to_string(connections_.size()), listeners_[i].srv_id());
+						std::to_string(connections_.size()), l.srv_id());
 		}
 		return ;
 	}
+	
 	Socket	accepted_socket = Socket::adopt(accepted_fd);
 	if (accepted_socket.fd() < 0){
+		LOG_WARN("Failed to adopt accepted client fd", l.srv_id());
 		return ;// fd was closed in adopt() in case of fail
 	}
-	// HttpParser should have move ctor too
 
-	// To avoid loosing data 'cause of unspecified 
-	// order of evaluation of function arguments
 	int fd = accepted_socket.fd();
-	const Server& l = listeners_[i];
-	connections_.emplace(fd, Connection(std::move(accepted_socket), l.srv_id(), l.server_config()));
+	std::string address = AddrToStr(addr.sin_addr.s_addr);
+	connections_.emplace(fd, 
+				Connection(std::move(accepted_socket), address, l.srv_id(), l.server_config()));
 	pm_.Watch(fd, POLLIN);
-}
-
-// nullptr, nullptr - if I don't want to keep info about IP, but I want
-// type punning via a common prefix
-// prefix-based type punning == common-prefix type punning
-// for IPv4 & IPv6 struct starts from the same field sa_family_t sa_family
-// https://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/socket.h.html
-int	EventLoop::AcceptConnection(int listener_fd){
-	sockaddr_storage	addr{};
-	socklen_t			addr_len = sizeof(addr);
-
-	int fd = ::accept(listener_fd, reinterpret_cast<sockaddr*>(&addr), &addr_len);
-	return fd;
 }
 
 void	EventLoop::HandleConnectionEvent(const pollfd entry){
