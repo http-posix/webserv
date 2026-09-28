@@ -1,24 +1,30 @@
 server {
+	hostname 127.0.0.1;
     listen 80;
     client_max_body_size 15K;
 }
 server {
     listen 81;
+	hostname 127.0.0.1;
     client_max_body_size 2M;
 }
 server {
     listen 82;
     client_max_body_size 1g;
+	hostname 127.0.0.1;
 }
 server {
     listen 83;
     client_max_body_size 100kb;
+	hostname 127.0.0.1;
 }
 server {
     listen 84;
+	hostname 127.0.0.1;
     client_max_body_size 1mb;
 }
 server {
     listen 85;
     client_max_body_size 1024;
+	hostname 127.0.0.1;
 }

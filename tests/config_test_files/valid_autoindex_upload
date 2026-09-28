@@ -1,5 +1,6 @@
 server {
     listen 80;
+	hostname 127.0.0.1;
     location / {
         autoindex on;
         upload_enable on;
