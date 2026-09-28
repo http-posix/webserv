@@ -1,5 +1,6 @@
 server {
     listen 80;
+	hostname 127.0.0.1;
     location /old {
         return 301 /new;
     }
