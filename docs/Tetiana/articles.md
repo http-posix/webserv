@@ -55,6 +55,7 @@
 	- [GNU Make](https://www.gnu.org/software/make/manual/html_node/index.html)
 	- [for make Version 3.73 Beta. April 1995](https://www.math.utah.edu/docs/info/make_toc.html#SEC12)
 	- [BashGuide](https://mywiki.wooledge.org/BashGuide)
+	- [O'Reilly: Managing Projects with GNU Make, Third Edition by Robert Mecklenburg](https://www.oreilly.com/openbook/make3/book/)
 
 - time / Logger
 	- [Stackoverflow: using std::chrono](https://stackoverflow.com/questions/17223096/outputting-date-and-time-in-c-using-stdchrono)
