@@ -59,3 +59,7 @@ test/.DS_Store
 
 # IDE setup
 .vscode/
+
+# temporary files
+adr/200-config-cgi.md
+src/cgi/
