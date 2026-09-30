@@ -62,4 +62,3 @@ test/.DS_Store
 
 # temporary files
 adr/200-config-cgi.md
-src/cgi/
