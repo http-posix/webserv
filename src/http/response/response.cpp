@@ -195,7 +195,8 @@ void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* serv_cfg)
 	{
 		LOG_DEBUG("Location: " + location->uri_path + " accessed for: " + req.path_);
 		HandleLocationRedirection(location);
-		HandleLocationMethod(req.method_, location);
+		if (!location->allowed_methods.empty())
+				HandleLocationMethod(req.method_, location);
 		file_path = PrefixRoot(req.path_, location);
 		file_path = AppendIndex(file_path, location);
 	}
