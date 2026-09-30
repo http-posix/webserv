@@ -284,7 +284,7 @@ void HttpResponse::HardcodeErrorPage()
 	body_ += "<h1>" + title + "</h1>\n";
 	body_ += "<p>" + description + "</p>\n";
 	body_ += "</body>\n";
-	body_ += "</html>";
+	body_ += "</html>\n";
 }
 
 void HttpResponse::HandleErrorPage(int status_code, const ServerConfig* cfg)
