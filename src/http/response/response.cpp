@@ -376,11 +376,11 @@ HttpResponse::HttpResponse(HttpRequest req, const ServerConfig* cfg)
 	{
 		int status_code = e.GetErrorCode();
 		LOG_DEBUG("Request resulted in Code: " + std::to_string(status_code));
-		//Handle redirection
-		if (status_code > 299 && status_code < 400)
-			SetStatus(status_code);
 		// Handle error page
-		else if (status_code > 399 && status_code < 500)
+		if (status_code > 399 && status_code < 500)
 			HandleErrorPage(e.GetErrorCode(), cfg);
+		// Handle other status_codes
+		else
+			SetStatus(status_code);
 	}
 };
