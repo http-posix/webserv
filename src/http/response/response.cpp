@@ -150,22 +150,20 @@ bool HttpResponse::IsDir(std::string path)
 	throw (HttpResponseException(InternalServerError));
 }
 
+std::string HttpResponse::AppendIndex(std::string uri, const ConfigStruct* cfg)
+{
 	std::string result = uri;
 
-	if (stat(uri.c_str(), &stat_buf) == 0)
+	if (IsDir(uri) == true)
 	{
-		if (S_ISDIR(stat_buf.st_mode))
+		if (!(uri[uri.size() - 1] == '/'))
+			result += "/";
+		if (cfg != NULL)
 		{
-			if (!(uri[uri.size() - 1] == '/'))
-				result += "/";
-			if (cfg != NULL)
-			{
-				if (!cfg->index.empty())
-					return (result + cfg->index);
-			}
-			LOG_DEBUG("Requested file is directory, but no index element is found in config.");
-			return (result + "index.html");
+			if (!cfg->index.empty())
+				return (result + cfg->index);
 		}
+		LOG_DEBUG("Requested file is directory, but no index element is found in config.");
 	}
 	return (result);
 }
