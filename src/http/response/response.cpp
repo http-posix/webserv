@@ -132,9 +132,24 @@ std::string HttpResponse::PrefixRoot(std::string uri, const ConfigStruct* cfg)
 	return (result);
 }
 
-std::string HttpResponse::AppendIndex(std::string uri, const ConfigStruct* cfg)
+bool HttpResponse::IsDir(std::string path)
 {
 	struct stat stat_buf;
+	
+	if (stat(path.c_str(), &stat_buf) == 0)
+	{
+		if (S_ISDIR(stat_buf.st_mode))
+			return (true);
+		return (false);
+	}
+	// TODO: Should probably find a better way around this.
+	// if stat fails, we want to see if we can open the file. OpenFile can throw 404 Not Found
+	OpenFile(path);
+	// Something went wrong with checking the file path.
+	LOG_WARN("`stat` call failed to open: " + path);
+	throw (HttpResponseException(InternalServerError));
+}
+
 	std::string result = uri;
 
 	if (stat(uri.c_str(), &stat_buf) == 0)
