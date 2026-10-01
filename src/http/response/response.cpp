@@ -2,6 +2,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <sys/stat.h>
+#include <filesystem>
 
 #include "http/response/response.hpp"
 #include "http/parser/parser.hpp"
