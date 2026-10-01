@@ -40,8 +40,10 @@ class HttpResponse
 		void HandleLocationMethod(enum HttpMethod  &req_method, const LocationConfig* loc);
 		std::string PrefixRoot(std::string uri, const ConfigStruct* cfg);
 		std::string AppendIndex(std::string uri, const ConfigStruct* cfg);
+		bool IsDir(std::string path);
 		void HardcodeErrorPage();
 		void HandleErrorPage(int status_code, const ServerConfig* cfg);
+		void HandleAutoIndex(std::string file_path);
 
 		void HandleGet(HttpRequest& req, const ServerConfig* cfg);
 		//void HandlePost(HttpRequest& req, ServerConfig& cfg);
