@@ -197,6 +197,18 @@ void HttpResponse::HandleLocationRedirection(const LocationConfig* loc)
 	throw (HttpResponseException(loc->redirection.first));
 }
 
+void HttpResponse::HandleAutoIndex(std::string file_path)
+{
+	body_ += "<html><body><ul>";
+	for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(file_path))
+	{
+		std::string name = entry.path().filename();
+		body_ += "<li>" + name + "</li>";
+		LOG_DEBUG("Found: " + name);
+	}
+	body_ += "</ul></body></html>\n";
+}
+
 void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* serv_cfg)
 {
 	std::string file_path;
