@@ -202,6 +202,7 @@ void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* serv_cfg)
 	std::string file_path;
 	const LocationConfig* location;
 
+	// TODO: I should rewrite this messy 'if-else' statement. Either function calling or switch-cases.
 	//HandleLocation.
 	location = FindLocation(req.path_, serv_cfg->locations);
 	if (location != NULL)
@@ -210,20 +211,45 @@ void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* serv_cfg)
 		HandleLocationRedirection(location);
 		if (!location->allowed_methods.empty())
 				HandleLocationMethod(req.method_, location);
-		file_path = PrefixRoot(req.path_, location);
-		file_path = AppendIndex(file_path, location);
+		// If location has root, append custom root. Otherwise use server root.
+		if (location->root.empty())
+			file_path = PrefixRoot(req.path_, serv_cfg);
+		else
+			file_path = PrefixRoot(req.path_, location);
+		if (IsDir(file_path) == true)
+		{
+			// If no index element is found, try to check if autoindex is on. Otherwise throw 403 Forbidden
+			if (location->index.empty())
+			{
+				if (location->autoindex == true)
+				{
+					LOG_DEBUG("Autoindex for: " + file_path);
+					HandleAutoIndex(file_path);
+				}
+			}
+			else
+			{
+				file_path = AppendIndex(file_path, location);
+				headers_["Content-Type"] = DetermineContentType(file_path);
+				body_ = OpenFile(file_path);
+				LOG_DEBUG("GET Request for file: " + file_path);
+			}
+		}
+		else
+		{
+			headers_["Content-Type"] = DetermineContentType(file_path);
+			body_ = OpenFile(file_path);
+			LOG_DEBUG("GET Request for file: " + file_path);
+		}
 	}
 	else
 	{
 		file_path = PrefixRoot(req.path_, serv_cfg);
 		file_path = AppendIndex(file_path, serv_cfg);
+		headers_["Content-Type"] = DetermineContentType(file_path);
+		body_ = OpenFile(file_path);
+		LOG_DEBUG("GET Request for file: " + file_path);
 	}
-	LOG_DEBUG("GET Request for file: " + file_path);
-	// If Unsupported Media Type function will throw 415
-	headers_["Content-Type"] = DetermineContentType(file_path);
-
-	// If file cannot read, OpenFile will throw 404
-	body_ = OpenFile(file_path);
 }
 
 std::string	HttpResponse::Serialize() const
