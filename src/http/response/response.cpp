@@ -298,6 +298,7 @@ void HttpResponse::SetStatus(int status_code)
 		case (PermanentRedirect): status_text_ = "Permanent Redirect"; break ;
 		case (TemporaryRedirect): status_text_ = "Temporary Redirect"; break ;
 		case (BadRequest) : status_text_ = "Bad Request"; break ;
+		case (Forbidden) : status_text_ = "Forbidden"; break;
 		case (FileNotFound) : status_text_ = "Not Found"; break ;
 		case (MethodNotAllowed) : status_text_ = "Method Not Allowed"; break ;
 		case (UnsupportedMediaType) : status_text_ = "Unsupported Media Type"; break ;
@@ -319,6 +320,8 @@ void HttpResponse::HardcodeErrorPage()
 		case (BadRequest) :
 			description = "Your request was invalid. There are numerous explanations.";
 			break ;
+		case (Forbidden) :
+			description = "We understand what you want, but we refuse to process it.";
 		case (FileNotFound) :
 			description = "The file you tried to access could not be found or openend.";
 			break ;
