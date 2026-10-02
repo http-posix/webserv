@@ -239,6 +239,8 @@ void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* serv_cfg)
 					LOG_DEBUG("Autoindex for: " + file_path);
 					HandleAutoIndex(file_path);
 				}
+				else
+					throw (HttpResponseException(Forbidden));
 			}
 			else
 			{
