@@ -200,12 +200,12 @@ void HttpResponse::HandleLocationRedirection(const LocationConfig* loc)
 
 void HttpResponse::HandleAutoIndex(std::string file_path)
 {
-	body_ += "<html><body><ul>";
+	body_ += "<!DOCTYPE HTML><html><body>";
+	body_ += "<h3> Directory Listing for: " + file_path + "</h3><ul>";
 	for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(file_path))
 	{
 		std::string name = entry.path().filename();
 		body_ += "<li>" + name + "</li>";
-		LOG_DEBUG("Found: " + name);
 	}
 	body_ += "</ul></body></html>\n";
 }
