@@ -40,53 +40,62 @@ InstructionList	Connection::OnReadable(){
 
 	ssize_t recv_bytes = ::recv(socket_.fd(), buf, kBufSize - 1, 0);
 
-	LOG_DEBUG("request fd=" + std::to_string(socket_.fd()) + " recv_bytes=" + std::to_string(recv_bytes), srv_id_);
-
 	if (recv_bytes < 0){
-		// LOG_ERROR();
+		LOG_WARN("reading: recv failed, closing fd=" + std::to_string(socket_.fd()), srv_id_);
 		instructions.Add(Action::CloseConnection, socket_.fd());
 		return instructions;
 	}
-	else if (recv_bytes == 0){
+	if (recv_bytes == 0){
+		LOG_DEBUG("reading: client closed connection, closing fd=" + std::to_string(socket_.fd()), srv_id_);
 		instructions.Add(Action::CloseConnection, socket_.fd());
 		return instructions;
 	}
-	// Happy path
-	buf[recv_bytes] = '\0';
-	// LOG_DEBUG("recv bytes=" + std::to_string(recv_bytes));
 
+	LOG_DEBUG("reading: recv fd=" + std::to_string(socket_.fd())
+		+ " recv_bytes=" + std::to_string(recv_bytes), srv_id_);
+	buf[recv_bytes] = '\0';
+	return ProcessReceivedBytes(buf);
+}
+
+InstructionList Connection::ProcessReceivedBytes(const char* buf){
+	InstructionList		instructions;
 	HttpParserState	status = http_parser_.Feed(buf);
 
 	switch (status){
 		case HttpParserState::NeedMoreData:
-			LOG_DEBUG("state - NeedMoreData fd=" + std::to_string(socket_.fd()), srv_id_);
-			return instructions; // No instructions => fd goes through run loop again + keep StateReading
+			LOG_DEBUG("reading: request incomplete, waiting for more data fd="
+				+ std::to_string(socket_.fd()), srv_id_);
+			break; // No instructions => fd goes through run loop again + keep StateReading
 		case HttpParserState::Complete:
-		{
-			#ifdef DEBUG_MODE
-			std::string	ports;
-			for (uint16_t port : server_config_->listen_ports)
-				ports += std::to_string(port) + " ";
-			LOG_DEBUG("ServerStruct contents: hostname: " + server_config_->hostname
-				+ " ports: " + ports,
-				srv_id_);
-			#endif
-			HttpResponse response(http_parser_.GetRequest(), server_config_);
-			state_ = StateWriting{
-				response.Serialize(), 0
-			};
-			LOG_DEBUG("state Complete fd=" + std::to_string(socket_.fd()), srv_id_);
-			instructions.Add(Action::WaitWritable, socket_.fd());
-			return instructions;
-		}
+			instructions = HandleCompleteRequest();
+			break;
 		case HttpParserState::InvalidRequest:
-			LOG_DEBUG("state - InvalidRequest fd=" + std::to_string(socket_.fd()), srv_id_);
+			LOG_DEBUG("reading: invalid request, closing fd=" + std::to_string(socket_.fd()), srv_id_);
 			instructions.Add(Action::CloseConnection, socket_.fd());
-			return instructions;
+			break;
 	}
 	return instructions;
 }
 
+InstructionList	Connection::HandleCompleteRequest(){
+	InstructionList			instructions;
+	const HttpRequest&		request = http_parser_.GetRequest();
+	HttpResponse			response(request, server_config_);
+
+	// if (CGI == true){
+	// 	Cgi	cgi(request, response, server_config_, srv_id_);
+	// 	instructions.Add(Action::WatchCgi, cgi.pipe_fd());
+	// 	state_ = StateCGI{cgi.pipe_fd(), cgi.process_num()};
+		// LOG_DEBUG("reading: request parsed -> cgi fd=" + std::to_string(socket_.fd()), srv_id_);
+	// }
+	// else{
+		instructions.Add(Action::WaitWritable, socket_.fd());
+		state_ = StateWriting{response.Serialize(), 0};
+		LOG_DEBUG("reading: request parsed -> writing fd=" + std::to_string(socket_.fd()), srv_id_);
+	// }
+
+	return instructions;
+}
 
 // ssize_t send(size_t size;
                     //   int sockfd, const void buf[size], size_t size,
@@ -103,20 +112,20 @@ InstructionList	Connection::OnWritable(){
 	{
 		// Track an error
 		// can't use errno, so just close conenction
-		LOG_ERROR("send_bytes < 0, fd=" + std::to_string(socket_.fd()), srv_id_);
+		LOG_ERROR("writing: send_bytes < 0, fd=" + std::to_string(socket_.fd()), srv_id_);
 		instructions.Add(Action::CloseConnection, socket_.fd());
 		return instructions;
 	}
 
 	w.offset += send_bytes;
-	LOG_DEBUG("On Writable: fd=" + std::to_string(socket_.fd())
+	LOG_DEBUG("writing: send fd=" + std::to_string(socket_.fd())
 			+ " send_bytes=" + std::to_string(send_bytes)
 			+ " progress=" + std::to_string(w.offset)
 			+ "/" + std::to_string(w.buffer.size()),
 			srv_id_);
 
 	if (w.offset == w.buffer.size()){
-		LOG_DEBUG("Response fully sent, closing fd=" + std::to_string(socket_.fd()), srv_id_);
+		LOG_DEBUG("writing: response fully sent, closing fd=" + std::to_string(socket_.fd()), srv_id_);
 		instructions.Add(Action::CloseConnection, socket_.fd());
 		// when keep alive logic will be implemented
 		// state_ = StateReading{};

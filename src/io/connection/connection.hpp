@@ -25,6 +25,8 @@ class Connection{
 		InstructionList	OnReadable();
 		InstructionList	OnWritable();
 		InstructionList	OnCgi();
+		InstructionList ProcessReceivedBytes(const char* buf);
+		InstructionList	HandleCompleteRequest();
 
 		const std::string	srv_id() const noexcept;
 		// const ServerConfig&	server_config() const noexcept;
