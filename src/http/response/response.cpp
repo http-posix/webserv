@@ -330,6 +330,7 @@ void HttpResponse::HardcodeErrorPage()
 			break ;
 		case (Forbidden) :
 			description = "We understand what you want, but we refuse to process it.";
+			break ;
 		case (FileNotFound) :
 			description = "The file you tried to access could not be found or openend.";
 			break ;
