@@ -247,6 +247,11 @@ void	ConfigParser::createServerConfig()
 		LOG_WARN("No root defined for server block; using `www` as default.");
 		server_config.root = "www";
 	}
+	if (server_config.index.empty())
+	{
+		LOG_WARN("No index set for a server block. Using 'index.html' as default");
+		server_config.index = "index.html";
+	}
 	pos_ = tokenizer_.next();
 	config_.servers.push_back(server_config);
 }
