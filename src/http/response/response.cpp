@@ -404,7 +404,7 @@ HttpResponse::HttpResponse(HttpRequest req, const ServerConfig* cfg)
 		int status_code = e.GetErrorCode();
 		LOG_DEBUG("Request resulted in Code: " + std::to_string(status_code));
 		// Handle error page
-		if (status_code > 399 && status_code < 500)
+		if (status_code > 399)
 			HandleErrorPage(e.GetErrorCode(), cfg);
 		// Handle other status_codes
 		else
