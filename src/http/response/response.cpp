@@ -202,12 +202,18 @@ void HttpResponse::HandleAutoIndex(std::string file_path)
 {
 	body_ += "<!DOCTYPE HTML><html><body>";
 	body_ += "<h3> Directory Listing for: " + file_path + "</h3><ul>";
+    if (file_path != "/")
+      body_ += "<li><a href='../'>../</a></li>";
 	try
 	{
+        if (!file_path.empty() && file_path.back() != '/')
+			file_path += "/";
 		for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(file_path))
 		{
-			std::string name = entry.path().filename();
-			body_ += "<li>" + name + "</li>";
+			std::string name = entry.path().filename().string();
+			if (entry.is_directory())
+				name += "/";
+			body_ += "<li><a href=\"" + name +"\">" + name + "</a></li>";
 		}
 	}
 	catch (std::filesystem::filesystem_error& e)
