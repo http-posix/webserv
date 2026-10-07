@@ -16,9 +16,9 @@
 /*                          Constructors & Destructors                        */
 /* ========================================================================== */
 
-Connection::Connection(Socket socket, const std::string& addr, const std::string& srv_id, const ServerConfig& server_config) : 
+Connection::Connection(Socket socket, const ConnInfo& conn_info, const std::string& srv_id, const ServerConfig& server_config) : 
 		socket_(std::move(socket)),
-		addr_(addr),
+		conn_info_(conn_info),
 		srv_id_(srv_id),
 		server_config_(&server_config)
 { }
@@ -83,7 +83,8 @@ InstructionList	Connection::HandleCompleteRequest(){
 	HttpResponse			response(request, server_config_);
 
 	// if (CGI == true){
-	// 	Cgi	cgi(request, response, server_config_, srv_id_);
+	// 	Cgi	cgi(conn_info_, request, response, server_config_, srv_id_);
+	// 	cgi.Start();
 	// 	instructions.Add(Action::WatchCgi, cgi.pipe_fd());
 	// 	state_ = StateCGI{cgi.pipe_fd(), cgi.process_num()};
 		// LOG_DEBUG("reading: request parsed -> cgi fd=" + std::to_string(socket_.fd()), srv_id_);
