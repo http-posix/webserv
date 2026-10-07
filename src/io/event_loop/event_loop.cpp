@@ -25,6 +25,17 @@ namespace {
 						+ std::to_string(ip & 0xFF);
 		return str;
 	}
+
+	std::string	ResolveServerAddr(int fd, const std::string& fallback){
+		sockaddr_in	local{};
+		socklen_t	local_len = sizeof(local);
+
+		if (::getsockname(fd, reinterpret_cast<sockaddr*>(&local), &local_len) == 0){
+			return AddrToStr(local.sin_addr.s_addr);
+		}
+		LOG_WARN("getsockname failed, using configured host");
+		return fallback;
+	}
 }
 
 /* ========================================================================== */
@@ -158,7 +169,7 @@ void	EventLoop::AcceptConnection(int entry_fd, const Server& l){
 
 	int fd = accepted_socket.fd();
 	ConnInfo info{AddrToStr(addr.sin_addr.s_addr),
-					l.server_host(),
+					ResolveServerAddr(fd, l.server_host())
 					std::to_string(l.server_port())
 				};
 	connections_.emplace(fd, 
