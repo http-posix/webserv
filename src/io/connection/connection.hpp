@@ -1,6 +1,7 @@
 #pragma once
 
 #include "io/connection/connection_state.hpp"
+#include "io/connection/connection_info.hpp"
 #include "io/instruction.hpp"
 #include "http/request/request.hpp"
 #include "http/parser/parser.hpp"
@@ -10,7 +11,7 @@
 class Connection{
 	public:
 		Connection() = delete;
-		Connection(Socket socket, const std::string& addr, const std::string& srv_id, const ServerConfig& server_config);
+		Connection(Socket socket, const ConnInfo& conn_info, const std::string& srv_id, const ServerConfig& server_config);
 		~Connection() = default;
 
 		// copy
@@ -33,11 +34,9 @@ class Connection{
 
 	private:
 		Socket				socket_;
-		[[maybe_unused]] std::string			addr_; //remove [[maybe_unused]] once CGI wired
+		[[maybe_unused]] ConnInfo			conn_info_; // remove [[maybe_unused]] once CGI wired
 		std::string			srv_id_;
-
-		// Used by response building (WIP); remove [[maybe_unused]] once wired
-		[[maybe_unused]] const ServerConfig*	server_config_;
+		const ServerConfig*	server_config_;
 
 		ConnectionState		state_ = StateReading{};
 

@@ -157,9 +157,12 @@ void	EventLoop::AcceptConnection(int entry_fd, const Server& l){
 	}
 
 	int fd = accepted_socket.fd();
-	std::string address = AddrToStr(addr.sin_addr.s_addr);
+	ConnInfo info{AddrToStr(addr.sin_addr.s_addr),
+					l.server_host(),
+					std::to_string(l.server_port())
+				};
 	connections_.emplace(fd, 
-				Connection(std::move(accepted_socket), address, l.srv_id(), l.server_config()));
+				Connection(std::move(accepted_socket), info, l.srv_id(), l.server_config()));
 	pm_.Watch(fd, POLLIN);
 }
 
