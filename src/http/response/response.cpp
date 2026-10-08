@@ -224,6 +224,16 @@ void HttpResponse::HandleAutoIndex(std::string file_path)
 	body_ += "</ul></body></html>\n";
 }
 
+std::string HttpResponse::ReplaceRoot(std::string uri, const LocationConfig* loc)
+{
+	size_t pos = uri.find(loc->uri_path);
+	std::string new_file_path = uri;
+
+	if (pos != std::string::npos)
+		new_file_path.replace(pos, loc->uri_path.size(), loc->root);
+	return (new_file_path);
+}
+
 void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* serv_cfg)
 {
 	std::string file_path;
