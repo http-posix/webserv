@@ -252,7 +252,7 @@ void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* serv_cfg)
 		if (location->root.empty())
 			file_path = PrefixRoot(req.path_, serv_cfg);
 		else
-			file_path = PrefixRoot(req.path_, location);
+			file_path = ReplaceRoot(req.path_, location);
 		if (IsDir(file_path) == true)
 		{
 			// If no index element is found, try to check if autoindex is on. Otherwise throw 403 Forbidden
