@@ -3,6 +3,7 @@
 #include "utils/logger/logger.hpp"
 #include "http/response/response.hpp"
 #include "config/parser/parser.hpp"
+#include "cgi/info.hpp"
 
 #include <sys/socket.h>
 
@@ -81,9 +82,16 @@ InstructionList	Connection::HandleCompleteRequest(){
 	InstructionList			instructions;
 	const HttpRequest&		request = http_parser_.GetRequest();
 	HttpResponse			response(request, server_config_);
+	CgiInfo					cgi_info;
+
+	cgi_info.interpreter = "/usr/bin/python3";
+	cgi_info.script_name = "/cgi-bin/hello.py";
+	cgi_info.path_info = "";
+	cgi_info.query_string = "";
+	cgi_info.script_filename = "./www/cgi-bin/hello.py";
 
 	// if (CGI == true){
-	// 	Cgi	cgi(conn_info_, request, response, server_config_, srv_id_);
+	// 	Cgi	cgi(conn_info_, request, cgi_info, server_config_, srv_id_);
 	// 	cgi.Start();
 	// 	instructions.Add(Action::WatchCgi, cgi.pipe_fd());
 	// 	state_ = StateCGI{cgi.pipe_fd(), cgi.process_num()};
