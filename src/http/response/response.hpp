@@ -38,6 +38,7 @@ class HttpResponse
 				const std::vector<LocationConfig>& locations);
 		void HandleLocationRedirection(const LocationConfig* loc);
 		void HandleLocationMethod(enum HttpMethod  &req_method, const LocationConfig* loc);
+		std::string ReplaceRoot(std::string uri, const LocationConfig* loc);
 		std::string PrefixRoot(std::string uri, const ConfigStruct* cfg);
 		std::string AppendIndex(std::string uri, const ConfigStruct* cfg);
 		bool IsDir(std::string path);
