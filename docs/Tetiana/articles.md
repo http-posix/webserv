@@ -84,3 +84,8 @@
 - RFC
 	- [RFC 9112: STD 99: HTTP/1.1](https://www.rfc-editor.org/info/rfc9112/)
 	- [RFC 9110: STD 97: HTTP Semantics](https://www.rfc-editor.org/info/rfc9110/)
+
+- HTTP
+	- [HTTP Request Smuggling](https://www.imperva.com/learn/application-security/http-request-smuggling/)
+	- [Wikipedia: HTTP Request Smuggling](https://en.wikipedia.org/wiki/HTTP_request_smuggling)
+	
