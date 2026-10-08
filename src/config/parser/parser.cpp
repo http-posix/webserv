@@ -298,6 +298,8 @@ void ConfigParser::createLocationConfig(LocationConfig& location)
 			location.root = join(collectUntil(";"));
 			if (location.root.empty())
 				throw ConfigException("Empty 'root' directive in location '" + location.uri_path + "'.");
+			if (location.root.back() != '/')
+				location.root += "/";
 		}
 		else if (pos_.value == "index")
 		{
