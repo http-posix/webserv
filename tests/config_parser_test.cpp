@@ -177,7 +177,7 @@ TEST_CASE("Valid: server with multiple locations")
 	CHECK(upload.allowed_methods.size() == 3);
 	CHECK(upload.upload_enable == true);
 	CHECK(upload.upload_location == "www/uploads");
-	CHECK(upload.root == "www");
+	CHECK(upload.root == "www/");
 	CHECK(upload.index == "upload.html");
 
 	const LocationConfig& redir = c.servers[0].locations[2];
@@ -237,7 +237,7 @@ TEST_CASE("Valid: quoted values")
 
 	CHECK(c.servers[0].hostname == "foo.bar");
 	CHECK(c.servers[0].index == "index.html");
-	CHECK(c.servers[0].locations[0].root == "/tmp root");
+	CHECK(c.servers[0].locations[0].root == "/tmp root/");
 	CHECK(c.servers[0].locations[0].index == "my index.html");
 }
 
