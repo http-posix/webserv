@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "config/tokenizer/tokenizer.hpp"
+#include "config/structures.hpp"
 
 // FREE FUNCTION:
 Config ParseConfig(std::string config_path);
