@@ -1,7 +1,9 @@
 #include "http/parser/parser.hpp"
 #include "http/request/request.hpp"
+
 #include <iostream>
 #include <vector>
+#include <limits>
 
 static bool is_token_char(unsigned char c)
 {
@@ -413,7 +415,7 @@ HttpRequest HttpParser::GetRequest()
 	return (result);
 }
 
-HttpParserIntState HttpParser::GetInternalState() const
+int HttpParser::GetInternalState() const
 {
 	return (this->state_);
 }
