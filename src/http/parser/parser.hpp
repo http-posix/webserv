@@ -5,6 +5,13 @@
 #include <limits>
 #include "http/request/request.hpp"
 
+enum HttpParserState
+{
+	NeedMoreData,
+	Complete,
+	InvalidRequest
+};
+
 class HttpParser
 {
 	private:
