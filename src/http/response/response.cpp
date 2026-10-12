@@ -8,6 +8,7 @@
 #include "utils/logger/logger.hpp"
 #include "config/structures.hpp"
 #include "http/http_status_code.hpp"
+#include "http/request.hpp"
 
 std::string	HttpResponse::OpenFile(std::string filename)
 {
