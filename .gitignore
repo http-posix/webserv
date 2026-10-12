@@ -50,6 +50,7 @@ echo_server
 #clangd configuration
 compile_flags.txt
 .clangd
+compile_commands.json
 
 # macOS System files
 .DS_Store
