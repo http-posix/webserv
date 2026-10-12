@@ -5,7 +5,6 @@
 #include "config/structures.hpp"
 #include "http/request.hpp"
 #include "config/parser/parser.hpp"
-#include "http/request/request.hpp"
 
 // Simple response abstraction. Grows to support error pages,
 // redirections, autoindex, CGI etc.
