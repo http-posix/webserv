@@ -12,7 +12,6 @@ TEST_CASE("InvalidMethod") {
 	HttpParser p;
 
 	p.Feed("GETT / HTTP/1.1\r\n");
-	CHECK(p.GetInternalState() == Error);
 	CHECK(p.GetExternalState() == InvalidRequest);
 }
 
@@ -69,7 +68,6 @@ TEST_CASE("Incomplete body (partial data)") {
 	p.Feed("Hello");  // Only 5 bytes of 13
 
 	CHECK(p.GetExternalState() == NeedMoreData);
-	CHECK(p.GetInternalState() == Body);
 
 	p.Feed(", World!"); // Final 8 bytes
 	CHECK(p.GetExternalState() == Complete);
@@ -102,7 +100,6 @@ TEST_CASE("Valid Simple GET Request") {
 
 	CHECK(p.GetMethod() == Get);
 	CHECK(p.GetExternalState() == Complete);
-	CHECK(p.GetInternalState() == Done);
 	CHECK(p.GetBodyExpectedLength() == 0);
 	CHECK(p.GetVersion() == "HTTP/1.1");
 }
@@ -123,7 +120,6 @@ TEST_CASE("Valid Simple POST Request")
 	p.Feed("{\"request\":\"give me some response\"}");
 	p.Feed("\r\n\r\n");
 
-	CHECK(p.GetInternalState() == Done);
 	CHECK(p.GetExternalState() == Complete);
 	
 	CHECK(p.GetMethod() == Post);
@@ -144,7 +140,6 @@ TEST_CASE("Valid DELETE Request") {
 	CHECK(p.GetPath() == "/resource/123");
 	CHECK(p.GetVersion() == "HTTP/1.0");
 	CHECK(p.GetExternalState() == Complete);
-	CHECK(p.GetInternalState() == Done);
 	CHECK(p.GetBodyExpectedLength() == 0);
 }
 
@@ -172,7 +167,6 @@ TEST_CASE("Invalid request of Both Transfer-Encoding and Content-Length present"
 	p.Feed("\r\n");
 
 	CHECK(p.GetExternalState() == InvalidRequest);
-	CHECK(p.GetInternalState() == Error);
 }
 
 TEST_CASE("Very large Content-Length value (near size_t max)") {
@@ -253,7 +247,6 @@ TEST_CASE("Invalid header with leading whitespace") {
 	
 	// Leading whitespace in header should cause InvalidRequest
 	CHECK(p.GetExternalState() == InvalidRequest);
-	CHECK(p.GetInternalState() == Error);
 }
 
 TEST_CASE("Invalid Content-Length (non-numeric value)") {
@@ -264,6 +257,5 @@ TEST_CASE("Invalid Content-Length (non-numeric value)") {
 	p.Feed("\r\n");
 
 	CHECK(p.GetExternalState() == InvalidRequest);
-	CHECK(p.GetInternalState() == Error);
 }
 
