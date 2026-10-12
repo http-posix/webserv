@@ -3,7 +3,7 @@
 #include <map>
 
 #include "config/structures.hpp"
-#include "http/request/request.hpp"
+#include "http/request.hpp"
 
 // Simple response abstraction. Grows to support error pages,
 // redirections, autoindex, CGI etc.
