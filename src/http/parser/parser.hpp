@@ -2,7 +2,6 @@
 #include <string>
 #include <map>
 #include <cstddef>
-#include <limits>
 #include "http/request/request.hpp"
 
 enum HttpParserState
@@ -15,9 +14,18 @@ enum HttpParserState
 class HttpParser
 {
 	private:
+		enum IntState
+		{
+			Error,
+			RequestLine,
+			Header,
+			Body,
+			Done
+		};
+
 		std::string input_buffer_;
 		size_t input_i_;
-		HttpParserIntState state_;
+		IntState state_;
 		HttpParserState external_state_;
 		
 		HttpMethod method_;
@@ -27,7 +35,7 @@ class HttpParser
 		std::string body_;
 		size_t body_expected_len_;
 		bool chunked_;
-		
+
 		int ParseRequestLine();
 		int ParseMethod(std::string str);
 		int ParseVersion(std::string str);
@@ -53,7 +61,7 @@ class HttpParser
 		HttpRequest GetRequest();
 
 		//Getters for Testing, ResponseGen and Good Practice
-		HttpParserIntState GetInternalState() const;
+		int GetInternalState() const;
 		HttpParserState GetExternalState() const;
 		HttpMethod GetMethod() const;
 		std::string GetPath() const;
