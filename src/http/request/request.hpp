@@ -20,13 +20,6 @@ enum HttpParserIntState
 	Done
 };
 
-enum HttpParserState
-{
-	NeedMoreData,
-	Complete,
-	InvalidRequest
-};
-
 struct	HttpRequest
 {
 		enum HttpMethod method_;
