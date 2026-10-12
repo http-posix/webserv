@@ -2,7 +2,7 @@
 #include "../../utils/app_exception/app_exception.hpp"
 #include "../tokenizer/tokenizer.hpp"
 #include "../../utils/logger/logger.hpp"
-#include "parser.hpp"
+#include "config/parser/parser.hpp"
 #include "config/structures.hpp"
 
 #include <fstream>
