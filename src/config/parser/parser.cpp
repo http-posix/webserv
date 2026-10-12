@@ -3,7 +3,7 @@
 #include "../tokenizer/tokenizer.hpp"
 #include "../../utils/logger/logger.hpp"
 #include "parser.hpp"
-#include "config/config_structures.hpp"
+#include "config/structures.hpp"
 
 #include <fstream>
 #include <sstream>
