@@ -1,64 +1,6 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <unordered_map>
-#include <cstdint>
-#include "../tokenizer/tokenizer.hpp"
-
-struct ConfigStruct {
-	// root (directory) to override default root of server or location
-	std::string root;
-	std::string index;
-};
-
-struct LocationConfig : public ConfigStruct
-{
-	// URI: Uniform Resource Identifier -> path to the location
-	std::string uri_path;
-
-	// What methods are allowed in the (sub)directory
-	// GET, POST, DELETE
-	std::vector<std::string> allowed_methods;
-
-	// Each return codenumber has their own redirection page
-	// Somewhat similar to error_pages
-	std::pair<int, std::string> redirection;
-
-	// Whether to generate a directory listing when no index is present
-	bool autoindex = false;
-
-	// Whether file uploads are allowed in this location
-	bool upload_enable = false;
-
-	// Location where uploaded files while be uploaded.
-	std::string upload_location;
-};
-
-struct ServerConfig : public ConfigStruct
-{
-	// Non-virtual so we only have one hostname (ip adress)
-	std::string hostname;
-
-	// Ports to listen to. Multiple ports are allowed.
-	// Ports are like gateways; our castle can have multiple entrances.
-	std::vector<uint16_t> listen_ports;
-
-	// Html error pages to return in case of specific error pages.
-	// Most browser have their own error page if non are provided,
-	// however, subject defines we must give our own error_pages.
-	std::unordered_map<int, std::string> error_pages;
-
-	// Settings for a specific location/directory
-	std::vector<struct LocationConfig> locations;
-
-	// Defines what the maximum size of a request should be.
-	size_t client_max_body_size = 0;
-};
-
-struct Config
-{
-	std::vector<struct ServerConfig> servers;
-};
 
 // FREE FUNCTION:
 Config ParseConfig(std::string config_path);
