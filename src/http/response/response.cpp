@@ -5,8 +5,9 @@
 #include <filesystem>
 
 #include "http/response/response.hpp"
-#include "http/parser/parser.hpp"
 #include "utils/logger/logger.hpp"
+#include "config/structures.hpp"
+#include "http/http_status_code.hpp"
 
 std::string	HttpResponse::OpenFile(std::string filename)
 {
