@@ -11,7 +11,7 @@
 class HttpResponse
 {
 	private :
-		int			status_code_;
+		int			status_code_ = -1;
 		std::string status_text_;
 		std::map<std::string, std::string>	headers_;
 		std::string	body_;
