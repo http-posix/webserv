@@ -307,12 +307,6 @@ std::string	HttpResponse::Serialize() const
 	return (result);
 }
 
-void HttpResponse::SetStatusOK()
-{
-	status_code_ = 200;
-	status_text_ = "OK";
-}
-
 void HttpResponse::SetStatus(int status_code)
 {
 	status_code_ = status_code;
@@ -415,7 +409,7 @@ HttpResponse::HttpResponse(HttpRequest req, const ServerConfig* cfg)
 			default :
 				throw (HttpResponseException(BadRequest));
 		}
-		SetStatusOK();
+		SetStatus(OK);
 	}
 	catch (HttpResponseException& e)
 	{
