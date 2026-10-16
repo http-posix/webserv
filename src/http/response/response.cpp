@@ -95,7 +95,17 @@ std::string HttpResponse::DetermineContentType(const std::string& path)
 	const std::unordered_map<std::string, std::string>::const_iterator got = content_types.find(extension);
 
 	if (got == content_types.end())
-		throw (HttpResponseException(UnsupportedMediaType));
+	{
+		std::string filename;
+		const size_t temp_pos = path.rfind('/');
+		if (temp_pos == std::string::npos)
+			filename = path;
+		else
+			filename = path.substr(pos);
+		headers_["Content-Disposition"] = "attachment";
+		headers_["filename"] = "\"" + filename + "\"";
+		return ("text/plain");
+	}
 
 	return (got->second);
 }
