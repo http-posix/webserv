@@ -1,3 +1,46 @@
+#include "http/router/router.hpp"
+
+const LocationConfig* HttpRouter::FindLocation(const std::string& req_path,
+		const std::vector<LocationConfig>& locations)
+{
+	const LocationConfig* result = nullptr;
+	size_t longest_match = 0;
+
+	for (size_t i = 0; i < locations.size(); i++)
+	{
+		std::string loc_path = locations[i].uri_path;
+		size_t loc_len = loc_path.size();
+
+		// Check if we find the location EXACTLY
+		// at the start of the requested path.
+		if (req_path.compare(0, loc_len, loc_path) == 0)
+		{
+			// If exact match we are dealing with
+			// a directory request, still it is a valid request.
+			bool exact_match = (req_path == loc_path);
+
+			// A request `/data/images/picture1.jpq` with location `/data`
+			// will correctly return `/data` as location since
+			// it found a `/` after `/data` in the request path.
+			bool req_has_slash = (req_path.size() > loc_len && req_path[loc_len] == '/');
+
+			// If the request was `/data/images` and location is `/data/` it is
+			// not an exact match but still a match, nor will we find a `/` at
+			// req_path[loc_len] since it will one char too far.
+			bool loc_ends_in_slash = (loc_len > 0 && loc_path[loc_len - 1] == '/');
+			
+			if (exact_match || loc_ends_in_slash || req_has_slash)
+			{
+				if (loc_len > longest_match || result == NULL)
+				{
+					longest_match = loc_len;
+					result = &locations[i];
+				}
+			}
+		}
+	}
+	return (result);
+}
 
 HttpRouter::HttpRouter(const HttpRequest& req, const ServerConfig& cfg) :
 	req_(req), srv_cfg_(cfg), loc_(FindLocation(req.path_, cfg.locations))
