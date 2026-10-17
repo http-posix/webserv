@@ -104,6 +104,8 @@ TEST_DEPS += $(SRC_DIR)/io/event_loop/poll_manager.cpp
 TEST_DEPS += $(SRC_DIR)/io/event_loop/signal_handler.cpp
 TEST_DEPS += $(SRC_DIR)/config/parser/parser.cpp
 TEST_DEPS += $(SRC_DIR)/config/tokenizer/tokenizer.cpp
+TEST_DEPS += $(SRC_DIR)/cgi/cgi.cpp
+TEST_DEPS += $(SRC_DIR)/cgi/env.cpp
 
 # -U after -D cancels previous define
 # With FLAGS_MARKER we can call make test and then make test LOG=1
