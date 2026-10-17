@@ -42,6 +42,7 @@
 	- [Developerhelp: Introduction to TCP/IP (Part 4) - Sockets and Ports](https://developerhelp.microchip.com/xwiki/bin/view/applications/tcp-ip/sockets-ports/)
 	- [Microsoft: Protocol Basics: Listen, Connect, Accept](https://learn.microsoft.com/en-us/windows/win32/winsock/protocol-basics-listen-connect-accept-2)
 	- [dartmouth: CS 60 Computer Networks - Socket Programming](https://www.cs.dartmouth.edu/~campbell/cs60/socketprogramming.html)
+	- [Code(Quoi); Sockets and Network Programming in C](https://www.codequoi.com/en/sockets-and-network-programming-in-c/#preparing-sockets)
 
 
 - version contorl
@@ -70,6 +71,7 @@
 	- [Cppscripts: Introduction to C++ Performance](https://cppscripts.com/category/performance)
 	- [Bjarne Stroustrup && Herb Sutter: C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines)
 	- [Bealy the C++: A blog talking about (usually bad) practices in C++](https://belaycpp.com/)
+	- [Cppreference: Structured binding](https://en.cppreference.com/cpp/language/structured_binding)
 
 - performance
 	- [johnnysswlab: Virtual functions - true price](https://johnnysswlab.com/the-true-price-of-virtual-functions-in-c/)
