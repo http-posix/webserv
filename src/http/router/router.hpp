@@ -3,6 +3,24 @@
 #include "config/structures.hpp"
 #include "http/request.hpp"
 
+#include <string>
+
+/*
+ * Think I need a structure that the Router can create
+ * similar to a request but this time updated depending
+ * on the location and server configuration.
+ *
+ * It also keeps track of whether CGI or a regular response
+ * handling is needed.
+
+struct RoutedRequest
+{
+	int status_code = -1;
+	enum method;
+		
+	std::string uri;
+*/
+
 // Router follows the request to proper response handling. 
 // It looks at the following:
 // 	- Location handling/routing
@@ -15,11 +33,18 @@
 class HttpRouter
 {
 	private :
-		HttpRequest& _req;
-		ServerConfig& _cfg_srv;
-		LocationConfig& loc;
+		// References for easy access in Helper functions
+		const HttpRequest& req_;
+		const ServerConfig& srv_cfg_;
+		const LocationConfig* loc_;
 
 
+		// Private Variables that the Router will change.
+		// Key Variables the Router creates.
+		std::string rerouted_filepath_;
+		bool autoindex_ = false;
+		bool cgi_ = false;
+		int http_status_code_;
 		
 		// The two main handling of the router.
 		void HandleLocation();
