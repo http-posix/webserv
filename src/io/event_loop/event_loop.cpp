@@ -169,7 +169,7 @@ void	EventLoop::AcceptConnection(int entry_fd, const Server& l){
 
 	int fd = accepted_socket.fd();
 	ConnInfo info{AddrToStr(addr.sin_addr.s_addr),
-					ResolveServerAddr(fd, l.server_host())
+					ResolveServerAddr(fd, l.server_host()),
 					std::to_string(l.server_port())
 				};
 	connections_.emplace(fd, 
