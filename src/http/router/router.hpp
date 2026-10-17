@@ -21,11 +21,20 @@ class HttpRouter
 
 
 		
+		// The two main handling of the router.
+		void HandleLocation();
+		void HandleNoLocation();
+
+		// Two main creators for response generation. 
+		// Depending on whether cgi is needed or not.
+		void BuildCgiRequest();
+		void BuildRoutedRequest();
+
 		// Location specific helper functions
 		const LocationConfig* FindLocation(const std::string& req_path,
 				const std::vector<LocationConfig>& locations);
-		void HandleLocationRedirection(const LocationConfig* loc);
-		void HandleLocationMethod(enum HttpMethod  &req_method, const LocationConfig* loc);
+		void HandleLocationRedirection();
+		void HandleLocationMethod();
 
 		// ReRouting FilePath with respect to configuration.
 		std::string ReplaceRoot(std::string uri, const ConfigStruct* cfg);
@@ -33,7 +42,7 @@ class HttpRouter
 		std::string AppendIndex(std::string uri, const ConfigStruct* cfg);
 
 	public :
-		HttpRouter(HttpRequest& req, ServerConfig& cfg);
+		HttpRouter(const HttpRequest& req, const ServerConfig& cfg);
 
 		class HttpStatusException : public std::exception {
 			private :
