@@ -24,7 +24,7 @@ RFC -> "must if"
 
 #pragma once
 
-#include "http/request/request.hpp"
+#include "http/request.hpp"
 #include "http/response/response.hpp"
 #include "config/parser/parser.hpp"
 #include "io/connection/connection_info.hpp"
@@ -51,11 +51,11 @@ struct CgiEnv {
 	static constexpr const char*	kServerSoftware = "webserv";
 
 	std::vector<std::string>	env;
+	std::vector<char*>			envp;
 
 	// methods
 	void	AddToEnv(const std::string& key, const std::string& value);
 	void	AddHttpHeaders(const std::map<std::string, std::string>& headers);
-
-	std::vector<char*>			BuildEnvCharP();
+	void	BuildEnvp();
+	char**	Envp();
 };
-
