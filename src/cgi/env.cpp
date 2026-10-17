@@ -66,6 +66,7 @@ CgiEnv::CgiEnv(const ConnInfo& info,
 
 	if (!cgi_info.path_info.empty())
 		AddToEnv("PATH_INFO", cgi_info.path_info);
+	BuildEnvp();
 }
 
 /* ========================================================================== */
@@ -87,12 +88,13 @@ void	CgiEnv::AddHttpHeaders(const std::map<std::string, std::string>& headers){
 	}
 }
 
-std::vector<char*>	CgiEnv::BuildEnvCharP(){
-	std::vector<char*>	envp;
-
+void	CgiEnv::BuildEnvp(){
 	envp.reserve(env.size() + 1);
 	for (std::string& s : env)
 		envp.push_back(s.data());
 	envp.push_back(nullptr);
-	return envp;
+}
+
+char** CgiEnv::Envp(){
+	return envp.data();
 }
