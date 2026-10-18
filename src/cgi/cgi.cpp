@@ -48,32 +48,32 @@ Cgi::Cgi(const ConnInfo& info,
 
 HttpStatusCode	Cgi::SpawnChild(){
 	
-	if (::pipe(pipe_fd_.data()) == kInvalidValue){
+	if (::pipe(pipe_fds_.data()) == posix::kSyscallError){
 		LOG_ERROR("Failed pipe() ", srv_id_);
 		return HttpStatusCode::InternalServerError;
 	}
 	pid_ = ::fork();
-	if (pid_ == kInvalidValue){
+	if (pid_ == posix::kInvalidPid){
 		LOG_ERROR("Failed fork() ", srv_id_);
 		ClosePipeFds();
 		return HttpStatusCode::InternalServerError;
 	}
-// who check access to script - here or in http parser?
-// TODO: access(F_OK) -> 404, access(R_OK) -> 403. Do it BEFORE pipe() (here or router), otherwise missing script = 502
-	if (pid_ == kChildProc){
-		if (dup2(pipe_fd_[1], STDOUT_FILENO) == kInvalidValue){
+	// who check access to script - here or in http parser?
+	// TODO: access(F_OK) -> 404, access(R_OK) -> 403. Do it BEFORE pipe() (here or router), otherwise missing script = 502
+	if (pid_ == posix::kForkChild){
+		if (dup2(pipe_fds_[1], STDOUT_FILENO) == posix::kSyscallError){
 			LOG_ERROR("dup2() failed",  srv_id_);
 			std::_Exit(1);
 		}
 		CloseInheritedFds();
-		if (chdir(script_dir_.c_str()) == kInvalidValue)
+		if (chdir(script_dir_.c_str()) == posix::kSyscallError)
 			std::_Exit(1);
 		Signal::SetupDefaultSignals();
 		execve(interpreter_.c_str(), argv_, cgi_env_.Envp());
 		std::_Exit(127);
 	}
-	CloseFd(pipe_fd_[1]);
-	if (!SetPipeFd(pipe_fd_[0])){
+	CloseFd(pipe_fds_[1]);
+	if (!SetPipeFd(pipe_fds_[0])){
 		kill(pid_, SIGKILL);
 		waitpid(pid_, nullptr, 0);
 		ClosePipeFds();
@@ -86,11 +86,11 @@ HttpStatusCode	Cgi::SpawnChild(){
 /*                             Accessors & Mutators                           */
 /* ========================================================================== */
 
-const std::array<int, 2>&	Cgi::pipe_fd() const noexcept{
-	return pipe_fd_;
+int	Cgi::pipe_read_fd() const noexcept{
+	return pipe_fds_[0];
 }
 
-const pid_t&	Cgi::process_num() const noexcept{
+pid_t	Cgi::child_pid() const noexcept{
 	return pid_;
 }
 
@@ -108,12 +108,12 @@ void	Cgi::BuildArgv(const std::string& script_filename){
 
 void	Cgi::CloseFd(int& fd){
 	::close(fd);
-	fd = kInvalidValue;
+	fd = posix::kInvalidFd;
 }
 
 void	Cgi::ClosePipeFds(){
-	for (int& fd : pipe_fd_){
-		if (fd != kInvalidValue)
+	for (int& fd : pipe_fds_){
+		if (fd != posix::kInvalidFd)
 			CloseFd(fd);
 	}
 }
@@ -124,9 +124,11 @@ void	Cgi::CloseInheritedFds(){
 }
 
 bool	Cgi::SetPipeFd(int& fd){
-	int ret_code = ::fcntl(fd, F_SETFL, O_NONBLOCK);
-	if (ret_code == kInvalidValue){
-		LOG_ERROR("fcntl(F_SETFL) failed on pipe fd " + std::to_string(fd) + ": " + std::string(strerror(errno)), srv_id_);
+	if (::fcntl(fd, F_SETFL, O_NONBLOCK) == posix::kSyscallError){
+		LOG_ERROR("fcntl(F_SETFL) failed on pipe fd "
+			+ std::to_string(fd) + ": "
+			+ std::string(strerror(errno)),
+			srv_id_);
 		return false;
 	}
 	return true;

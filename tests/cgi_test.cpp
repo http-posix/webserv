@@ -67,8 +67,8 @@ TEST_SUITE("Cgi") {
 		Cgi	cgi(conn, MakeRequest(), MakeInfo(kPython, "env.py"), cfg, "test");
 		REQUIRE(cgi.SpawnChild() == HttpStatusCode::OK);
 
-		ChildResult	r = ReadUntilEof(cgi.pipe_fd()[0], cgi.process_num());
-		CHECK(r.eof);	// false -> parent kept pipe_fd_[1] open
+		ChildResult	r = ReadUntilEof(cgi.pipe_read_fd(), cgi.child_pid());
+		CHECK(r.eof);	// false -> parent kept pipe_fds_[1] open
 		CHECK_FALSE(r.output.empty());
 		CHECK(WIFEXITED(r.status));
 		CHECK(WEXITSTATUS(r.status) == 0);
@@ -78,15 +78,15 @@ TEST_SUITE("Cgi") {
 		Cgi	cgi(conn, MakeRequest(), MakeInfo(kPython, "env.py"), cfg, "test");
 		REQUIRE(cgi.SpawnChild() == HttpStatusCode::OK);
 
-		CHECK((::fcntl(cgi.pipe_fd()[0], F_GETFL) & O_NONBLOCK) != 0);
-		ReadUntilEof(cgi.pipe_fd()[0], cgi.process_num());
+		CHECK((::fcntl(cgi.pipe_read_fd(), F_GETFL) & O_NONBLOCK) != 0);
+		ReadUntilEof(cgi.pipe_read_fd(), cgi.child_pid());
 	}
 
 	TEST_CASE("Environment and unsafe headers") {
 		Cgi	cgi(conn, MakeRequest(), MakeInfo(kPython, "env.py", "a=1"), cfg, "test");
 		REQUIRE(cgi.SpawnChild() == HttpStatusCode::OK);
 
-		std::string out = ReadUntilEof(cgi.pipe_fd()[0], cgi.process_num()).output;
+		std::string out = ReadUntilEof(cgi.pipe_read_fd(), cgi.child_pid()).output;
 		CHECK(HasLine(out, "GATEWAY_INTERFACE=CGI/1.1"));
 		CHECK(HasLine(out, "REQUEST_METHOD=GET"));
 		CHECK(HasLine(out, "QUERY_STRING=a=1"));
@@ -101,7 +101,7 @@ TEST_SUITE("Cgi") {
 		Cgi	cgi(conn, MakeRequest(), MakeInfo(kPython, "env.py"), cfg, "test");
 		REQUIRE(cgi.SpawnChild() == HttpStatusCode::OK);
 
-		std::string out = ReadUntilEof(cgi.pipe_fd()[0], cgi.process_num()).output;
+		std::string out = ReadUntilEof(cgi.pipe_read_fd(), cgi.child_pid()).output;
 		CHECK(out.find("tests/mock_files/cgi\n") != std::string::npos);
 	}
 
@@ -112,7 +112,7 @@ TEST_SUITE("Cgi") {
 		Cgi	cgi(conn, MakeRequest(), MakeInfo(kPython, "fd_check.py", std::to_string(extra)), cfg, "test");
 		REQUIRE(cgi.SpawnChild() == HttpStatusCode::OK);
 
-		std::string out = ReadUntilEof(cgi.pipe_fd()[0], cgi.process_num()).output;
+		std::string out = ReadUntilEof(cgi.pipe_read_fd(), cgi.child_pid()).output;
 		CHECK(out == "closed\n");
 		::close(extra);
 	}
@@ -121,7 +121,7 @@ TEST_SUITE("Cgi") {
 		Cgi	cgi(conn, MakeRequest(), MakeInfo(kPython, "nope.py"), cfg, "test");
 		REQUIRE(cgi.SpawnChild() == HttpStatusCode::OK);
 
-		ChildResult	r = ReadUntilEof(cgi.pipe_fd()[0], cgi.process_num());
+		ChildResult	r = ReadUntilEof(cgi.pipe_read_fd(), cgi.child_pid());
 		CHECK(r.eof);
 		CHECK(r.output.empty());
 		CHECK(WEXITSTATUS(r.status) != 0);
@@ -131,7 +131,7 @@ TEST_SUITE("Cgi") {
 		Cgi	cgi(conn, MakeRequest(), MakeInfo("/no/such/python", "env.py"), cfg, "test");
 		REQUIRE(cgi.SpawnChild() == HttpStatusCode::OK);
 
-		ChildResult	r = ReadUntilEof(cgi.pipe_fd()[0], cgi.process_num());
+		ChildResult	r = ReadUntilEof(cgi.pipe_read_fd(), cgi.child_pid());
 		CHECK(r.eof);
 		CHECK(r.output.empty());
 		CHECK(WEXITSTATUS(r.status) == 127);
