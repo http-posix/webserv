@@ -3,8 +3,6 @@
 #include "io/event_loop/signal_handler.hpp"
 
 #include <unistd.h>
-#include <sys/wait.h>
-#include <csignal>
 #include <cstdlib>
 
 /* ========================================================================== */
@@ -49,6 +47,10 @@ HttpStatusCode	Cgi::SpawnChild(){
 		LOG_ERROR("Failed pipe() ", srv_id_);
 		return HttpStatusCode::InternalServerError;
 	}
+	if (!posix::SetNonBlockingMode(pipe_fds_[0], "pipe fd", srv_id_)){
+		ClosePipeFds();
+		return HttpStatusCode::InternalServerError;
+	}
 	pid_ = ::fork();
 	if (pid_ == posix::kInvalidPid){
 		LOG_ERROR("Failed fork() ", srv_id_);
@@ -70,12 +72,6 @@ HttpStatusCode	Cgi::SpawnChild(){
 		std::_Exit(127);
 	}
 	CloseFd(pipe_fds_[1]);
-	if (!posix::SetNonBlockingMode(pipe_fds_[0], "pipe fd", srv_id_)){
-		kill(pid_, SIGKILL);
-		waitpid(pid_, nullptr, 0);
-		ClosePipeFds();
-		return HttpStatusCode::InternalServerError;
-	}
 	return HttpStatusCode::OK;
 }
 
