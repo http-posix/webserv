@@ -1,5 +1,7 @@
 #pragma once
 
+#include "utils/posix_const.hpp"
+
 #include <sys/socket.h>
 
 // RAII wrapper for a POSIX file descriptor (socket).
@@ -31,12 +33,11 @@ class Socket{
 		int fd() const;
 
 	private:
-		constexpr static int kInvalidFd = -1;
 		constexpr static int default_domain = AF_INET;
 		constexpr static int default_type = SOCK_STREAM;
 		constexpr static int default_protocol = 0;
 
-		int	sockfd_ = kInvalidFd;
+		int			sockfd_ = posix::kInvalidFd;
 		explicit Socket(int fd);
-		int	SetNonBlockingMode();
+		bool		SetNonBlockingMode();
 };
