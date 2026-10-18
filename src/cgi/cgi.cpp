@@ -3,11 +3,8 @@
 #include "io/event_loop/signal_handler.hpp"
 
 #include <unistd.h>
-#include <fcntl.h>
-#include <cerrno>
 #include <sys/wait.h>
 #include <csignal>
-#include <cstring>
 #include <cstdlib>
 
 /* ========================================================================== */
@@ -73,7 +70,7 @@ HttpStatusCode	Cgi::SpawnChild(){
 		std::_Exit(127);
 	}
 	CloseFd(pipe_fds_[1]);
-	if (!SetPipeFd(pipe_fds_[0])){
+	if (!posix::SetNonBlockingMode(pipe_fds_[0], "pipe fd", srv_id_)){
 		kill(pid_, SIGKILL);
 		waitpid(pid_, nullptr, 0);
 		ClosePipeFds();
@@ -119,17 +116,6 @@ void	Cgi::ClosePipeFds(){
 }
 
 void	Cgi::CloseInheritedFds(){
-	for (int fd = 3; fd < kMaxFd; fd++)
+	for (int fd = 3; fd < kAssumedMaxFds; fd++)
 		::close(fd);
-}
-
-bool	Cgi::SetPipeFd(int& fd){
-	if (::fcntl(fd, F_SETFL, O_NONBLOCK) == posix::kSyscallError){
-		LOG_ERROR("fcntl(F_SETFL) failed on pipe fd "
-			+ std::to_string(fd) + ": "
-			+ std::string(strerror(errno)),
-			srv_id_);
-		return false;
-	}
-	return true;
 }

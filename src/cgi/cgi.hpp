@@ -3,7 +3,7 @@
 #include "cgi/env.hpp"
 #include "cgi/info.hpp"
 #include "http/http_status_code.hpp"
-#include "utils/posix_const.hpp"
+#include "utils/posix/posix.hpp"
 
 #include <string>
 #include <sys/types.h>
@@ -26,11 +26,11 @@ class Cgi{
 
 		// methods
 		HttpStatusCode		SpawnChild();
-		pid_t		child_pid() const noexcept;
-		int			pipe_read_fd() const noexcept;
+		pid_t				child_pid() const noexcept;
+		int					pipe_read_fd() const noexcept;
 
 	private:
-		constexpr static int	kMaxFd = 1024;
+		constexpr static int	kAssumedMaxFds = 1024;
 
 		std::array<int, 2>		pipe_fds_ = {posix::kInvalidFd, posix::kInvalidFd};
 		pid_t					pid_ = posix::kInvalidPid;
@@ -45,7 +45,6 @@ class Cgi{
 
 		//methods
 		void	BuildArgv(const std::string& script_filename);
-		bool	SetPipeFd(int& fd);
 		void	ClosePipeFds();
 		void	CloseFd(int& fd);
 		void	CloseInheritedFds();
