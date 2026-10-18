@@ -1,6 +1,7 @@
 #include "app/server/server.hpp"
 #include "utils/logger/logger.hpp"
 #include "utils/app_exception/app_exception.hpp"
+#include "utils/posix_const.hpp"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -80,7 +81,7 @@ namespace {
 			&res
 		);
 
-		if (ret_code != 0){
+		if (ret_code != posix::kSuccess){
 			LOG_ERROR("getaddrinfo() failed for " + host + ":" + std::to_string(port) + " | Error: " + std::string(::gai_strerror(ret_code)));
 			throw ServerException("Failed to resolve server address configuration");
 			}
@@ -142,7 +143,7 @@ void	Server::SetupSocketOptions(){
 		&option_value,
 		sizeof(option_value)
 	);
-	if (ret_code == -1){
+	if (ret_code == posix::kSyscallError){
 		LOG_ERROR("setsockopt() failed to set SO_REUSEADDR: " + std::string(strerror(errno)));
 		throw ServerException("Failed to configure socket options");
 	}
@@ -154,7 +155,7 @@ void	Server::BindSocket(const sockaddr* ai_addr, socklen_t ai_addrlen){
 		ai_addr,
 		ai_addrlen
 	);
-	if (ret_code == -1){
+	if (ret_code == posix::kSyscallError){
 		LOG_ERROR("bind() failed for " + host_ + ":" + std::to_string(port_) + ": " + std::string(strerror(errno)));
 		throw ServerException("Failed to bind socket to address");
 	}
@@ -162,7 +163,7 @@ void	Server::BindSocket(const sockaddr* ai_addr, socklen_t ai_addrlen){
 
 void	Server::ListenSocket(){
 	int ret_code = ::listen(socket_.fd(), SOMAXCONN);
-	if (ret_code == -1){
+	if (ret_code == posix::kSyscallError){
 		LOG_ERROR("listen() failed on socket fd " + std::to_string(socket_.fd()) + ": " + std::string(strerror(errno)));
 		throw ServerException("Failed to put server into listening mode");
 	}
@@ -171,6 +172,13 @@ void	Server::ListenSocket(){
 void	Server::BuildSrvId(){
 	srv_id_ = "[" + host_ + ":" + std::to_string(port_) + " fd=" + std::to_string(socket_.fd()) + "]";
 }
+
+// int getaddrinfo(
+// 	const char*			node,
+// 	const char*			service,
+// 	const addrinfo*		hints,
+// 	addrinfo**			res
+// );
 
 // struct addrinfo {
 // 	int              ai_flags;
@@ -182,10 +190,3 @@ void	Server::BuildSrvId(){
 // 	char            *ai_canonname;
 // 	struct addrinfo *ai_next;
 // };
-
-// int getaddrinfo(
-// 	const char*			node,
-// 	const char*			service,
-// 	const addrinfo*		hints,
-// 	addrinfo**			res
-// );
