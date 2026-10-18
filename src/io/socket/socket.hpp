@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils/posix_const.hpp"
+#include "utils/posix/posix.hpp"
 
 #include <sys/socket.h>
 
@@ -39,5 +39,4 @@ class Socket{
 
 		int			sockfd_ = posix::kInvalidFd;
 		explicit Socket(int fd);
-		bool		SetNonBlockingMode();
 };

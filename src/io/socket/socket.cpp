@@ -3,13 +3,9 @@
 #include "utils/logger/logger.hpp"
 
 #include <unistd.h>
-#include <fcntl.h>
 #include <cassert>
-#include <cerrno>
-#include <cstring>
 
 // sockfd = socket(int socket_family, int socket_type, int protocol);
-// global scope resolution for syscalls
 
 // Used for Server socket
 Socket::Socket(){
@@ -18,7 +14,7 @@ Socket::Socket(){
 		LOG_ERROR("Socket constructor");
 		throw  ServerException("Socket fails");
 	}
-	if (!SetNonBlockingMode()){
+	if (!posix::SetNonBlockingMode(sockfd_, "socket fd")){
 		// LOG_ERROR() happened in SetNonBlockingMode()
 		::close(sockfd_);
 		throw  ServerException("Failed to set socket into non-blocking mode");
@@ -64,29 +60,8 @@ Socket& Socket::operator=(Socket&& other) noexcept{
 // used after accept() for connections
 Socket::Socket(int fd) {
 	sockfd_ = fd;
-	if (!SetNonBlockingMode()){
+	if (!posix::SetNonBlockingMode(sockfd_, "socket fd")){
 		::close(sockfd_);
 		sockfd_ = posix::kInvalidFd;
 	}
-}
-
-bool	Socket::SetNonBlockingMode() {
-// read-modify-write pattern is a best practice in POSIX
-// but flag F_GETFL isn't allowed in this project
-// in this particular project this is ok, 'cause we set flags on just created socket wich hasn't any other flags
-/* 
-	int flags = ::fcntl(sockfd_, F_GETFL, 0);
-	if (flags == -1)
-	{
-		LOG_ERROR("fcntl(F_GETFL) failed on socket fd " + std::to_string(sockfd_) + ": " + std::string(strerror(errno)));
-		return 1;
-	}
-*/
-	if (::fcntl(sockfd_, F_SETFL, O_NONBLOCK) == posix::kSyscallError){
-		LOG_ERROR("fcntl(F_SETFL) failed on socket fd "
-			+ std::to_string(sockfd_) + ": "
-			+ std::string(strerror(errno)));
-		return false;
-	}
-	return true;
 }
