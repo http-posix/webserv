@@ -3,7 +3,7 @@
 #include "cgi/env.hpp"
 #include "cgi/info.hpp"
 #include "http/http_status_code.hpp"
-
+#include "utils/posix_const.hpp"
 
 #include <string>
 #include <sys/types.h>
@@ -25,17 +25,15 @@ class Cgi{
 		Cgi& operator=(Cgi&& other) = delete;
 
 		// methods
-		HttpStatusCode			SpawnChild();
-		const pid_t&					process_num() const noexcept;
-		const std::array<int, 2>&		pipe_fd() const noexcept;
+		HttpStatusCode		SpawnChild();
+		pid_t		child_pid() const noexcept;
+		int			pipe_read_fd() const noexcept;
 
 	private:
-		constexpr static int	kInvalidValue = -1;
-		constexpr static int	kChildProc = 0;
 		constexpr static int	kMaxFd = 1024;
 
-		std::array<int, 2>		pipe_fd_ = {kInvalidValue, kInvalidValue};
-		pid_t					pid_ = kInvalidValue;
+		std::array<int, 2>		pipe_fds_ = {posix::kInvalidFd, posix::kInvalidFd};
+		pid_t					pid_ = posix::kInvalidPid;
 
 		std::string		srv_id_;
 		CgiEnv			cgi_env_;

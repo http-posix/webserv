@@ -1,5 +1,7 @@
 #pragma once
 
+#include "utils/posix_const.hpp"
+
 #include <sys/types.h>
 #include <variant>
 #include <string>
@@ -12,8 +14,8 @@ struct StateWriting {
 };
 
 struct StateCGI {
-	int		pipe_fd[2] = {-1, -1};
-	pid_t	pid = -1;
+	int		pipe_read_fd = posix::kInvalidFd;
+	pid_t	child_pid = posix::kInvalidPid;
 };
 
 // using here is type alias
