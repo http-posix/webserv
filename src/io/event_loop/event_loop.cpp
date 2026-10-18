@@ -30,11 +30,11 @@ namespace {
 		sockaddr_in	local{};
 		socklen_t	local_len = sizeof(local);
 
-		if (::getsockname(fd, reinterpret_cast<sockaddr*>(&local), &local_len) == 0){
-			return AddrToStr(local.sin_addr.s_addr);
+		if (!::getsockname(fd, reinterpret_cast<sockaddr*>(&local), &local_len)){
+			LOG_WARN("getsockname failed, using configured host");
+			return fallback;
 		}
-		LOG_WARN("getsockname failed, using configured host");
-		return fallback;
+		return AddrToStr(local.sin_addr.s_addr);
 	}
 }
 
