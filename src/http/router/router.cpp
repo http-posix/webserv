@@ -2,6 +2,24 @@
 #include "http/http_status_code.hpp"
 #include "utils/logger/logger.hpp"
 
+#include <filesystem>
+
+void HttpRouter::AppendIndex(const ConfigStruct* cfg)
+{
+	if (IsDir(rerouted_filepath_) == true)
+	{
+		if (!(rerouted_filepath_[rerouted_filepath_.size() - 1] == '/'))
+			rerouted_filepath_ += "/";
+		if (cfg != NULL)
+		{
+			if (!cfg->index.empty())
+				rerouted_filepath_ += cfg->index;
+			else
+				LOG_DEBUG("Requested file is directory, but no index element is found in config.");
+		}
+	}
+}
+
 void HttpRouter::PrefixServerRoot()
 {
 	if (srv_cfg_.root.empty())
