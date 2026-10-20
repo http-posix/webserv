@@ -69,8 +69,9 @@ class HttpRouter
 		// ReRouting FilePath with respect to configuration.
 		void ReplaceLocRoot();
 		void PrefixServerRoot();
-		std::string AppendIndex(std::string uri, const ConfigStruct* cfg);
+		void AppendIndex(const ConfigStruct* cfg);
 
+		bool IsDir(std::string path);
 	public :
 		HttpRouter(const HttpRequest& req, const ServerConfig& cfg);
 
