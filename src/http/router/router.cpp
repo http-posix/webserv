@@ -1,4 +1,6 @@
 #include "http/router/router.hpp"
+#include "http/http_status_code.hpp"
+#include "utils/logger/logger.hpp"
 
 const LocationConfig* HttpRouter::FindLocation(const std::string& req_path,
 		const std::vector<LocationConfig>& locations)
@@ -64,6 +66,7 @@ void HttpRouter::HandleLocationRedirection()
 	headers_["Location"] = loc_->redirection.second;
 	throw (HttpStatusException(loc_->redirection.first));
 };
+
 // Iterate through an array of allowed methods.
 // If no match is found between the requested 
 // method and the methods allowed in the location
