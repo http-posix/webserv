@@ -42,6 +42,28 @@ const LocationConfig* HttpRouter::FindLocation(const std::string& req_path,
 	return (result);
 }
 
+void HttpRouter::HandleLocationRedirection()
+{
+	// If statement true, no redirection has been initialized.
+	if (loc_->redirection.first == 0)
+		return;
+	switch (loc_->redirection.first)
+	{
+		case (MovedPermanently) : break ;
+		case (Found) : break ;
+		case (TemporaryRedirect) : break ;
+		case (PermanentRedirect) : break ;
+		default :
+		{
+			LOG_WARN("Redirection setting for location: " + loc_->uri_path + 
+					" has unrecognized return value: " + 
+					std::to_string(loc_->redirection.first) + ". Ignoring redirection.");
+			return ;
+		}
+	}
+	headers_["Location"] = loc_->redirection.second;
+	throw (HttpStatusException(loc_->redirection.first));
+};
 HttpRouter::HttpRouter(const HttpRequest& req, const ServerConfig& cfg) :
 	req_(req), srv_cfg_(cfg), loc_(FindLocation(req.path_, cfg.locations))
 {
