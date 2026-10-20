@@ -2,6 +2,16 @@
 #include "http/http_status_code.hpp"
 #include "utils/logger/logger.hpp"
 
+void HttpRouter::PrefixServerRoot()
+{
+	if (srv_cfg_.root.empty())
+	{
+		LOG_DEBUG("Server config does not have Index element.");
+		return ;
+	}
+	rerouted_filepath_ = srv_cfg_.root + req_.path_;
+};
+
 const LocationConfig* HttpRouter::FindLocation(const std::string& req_path,
 		const std::vector<LocationConfig>& locations)
 {
