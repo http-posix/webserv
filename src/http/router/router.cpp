@@ -12,6 +12,16 @@ void HttpRouter::PrefixServerRoot()
 	rerouted_filepath_ = srv_cfg_.root + req_.path_;
 };
 
+void HttpRouter::ReplaceLocRoot()
+{
+	size_t pos = req_.path_.find(loc_->uri_path);
+	rerouted_filepath_ = req_.path_;
+	
+	if (pos == std::string::npos)
+		LOG_DEBUG("No location found in request!"); return ;
+	rerouted_filepath_.replace(pos, loc_->uri_path.size(), loc_->root);
+};
+
 const LocationConfig* HttpRouter::FindLocation(const std::string& req_path,
 		const std::vector<LocationConfig>& locations)
 {
@@ -101,7 +111,7 @@ void HttpRouter::HandleLocationMethod()
 			return ;
 	}
 	throw (HttpStatusException(MethodNotAllowed));
-}
+};
 
 void HttpRouter::HandleLocationRoot()
 {
