@@ -139,6 +139,17 @@ void HttpRouter::HandleLocationRoot()
 		ReplaceLocRoot();
 };
 
+bool HttpRouter::IsDir(std::string path)
+{
+	std::filesystem::path p = path;
+	
+	if (!std::filesystem::exists(p))
+		throw (HttpStatusException(FileNotFound));
+	if (std::filesystem::is_directory(p))
+		return (true);
+	return (false);
+}
+
 void HttpRouter::HandleLocationIndex()
 {
 	//TODO
