@@ -32,6 +32,9 @@ struct LocationConfig : public ConfigStruct
 
 	// Location where uploaded files while be uploaded.
 	std::string upload_location;
+
+	// Maps extension with the interpreter.
+	std::unordered_map<std::string, std::string> cgi_extension;
 };
 
 struct ServerConfig : public ConfigStruct
