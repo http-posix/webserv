@@ -101,7 +101,7 @@ void HttpRouter::HandleLocationRedirection()
 			return ;
 		}
 	}
-	headers_["Location"] = loc_->redirection.second;
+	redirection_ = loc_->redirection.second;
 	throw (HttpStatusException(loc_->redirection.first));
 };
 
