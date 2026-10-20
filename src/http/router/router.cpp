@@ -90,6 +90,13 @@ void HttpRouter::HandleLocationMethod()
 	throw (HttpStatusException(MethodNotAllowed));
 }
 
+void HttpRouter::HandleLocationRoot()
+{
+	if (loc_->root.empty())
+		PrefixServerRoot();
+	else 
+		ReplaceLocRoot();
+};
 HttpRouter::HttpRouter(const HttpRequest& req, const ServerConfig& cfg) :
 	req_(req), srv_cfg_(cfg), loc_(FindLocation(req.path_, cfg.locations))
 {
