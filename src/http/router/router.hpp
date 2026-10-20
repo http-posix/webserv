@@ -3,6 +3,7 @@
 #include "config/structures.hpp"
 #include "http/request.hpp"
 
+#include <optional>
 #include <string>
 
 /*
@@ -45,9 +46,9 @@ class HttpRouter
 		bool autoindex_ = false;
 		bool cgi_ = false;
 		int http_status_code_;
+		std::string redirection_;
 
-		// Headers to copy for response generation
-		std::map<std::string, std::string> headers_;
+		CgiRequest cgi_req_;
 		
 		// The two main handling of the router.
 		void HandleLocation();
