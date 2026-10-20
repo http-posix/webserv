@@ -130,86 +130,6 @@ void HttpResponse::HandleLocationMethod(enum HttpMethod &req_method, const Locat
 	throw (HttpResponseException(MethodNotAllowed));
 }
 
-std::string HttpResponse::PrefixRoot(std::string uri, const ConfigStruct* cfg)
-{
-	std::string result;
-
-	if (cfg != NULL)
-	{
-		if (cfg->root.empty())
-			LOG_DEBUG("Accessing server/location structure without root");
-		else
-			result += cfg->root;
-	}
-	result += uri;
-	return (result);
-}
-
-bool HttpResponse::IsDir(std::string path)
-{
-	struct stat stat_buf;
-	
-	if (stat(path.c_str(), &stat_buf) == 0)
-	{
-		if (S_ISDIR(stat_buf.st_mode))
-			return (true);
-		return (false);
-	}
-	// TODO: Should probably find a better way around this.
-	// if stat fails, we want to see if we can open the file. OpenFile can throw 404 Not Found
-	OpenFile(path);
-	// Something went wrong with checking the file path.
-	LOG_WARN("`stat` call failed to open: " + path);
-	throw (HttpResponseException(InternalServerError));
-}
-
-std::string HttpResponse::AppendIndex(std::string uri, const ConfigStruct* cfg)
-{
-	std::string result = uri;
-
-	if (IsDir(uri) == true)
-	{
-		if (!(uri[uri.size() - 1] == '/'))
-			result += "/";
-		if (cfg != NULL)
-		{
-			if (!cfg->index.empty())
-				return (result + cfg->index);
-		}
-		LOG_DEBUG("Requested file is directory, but no index element is found in config.");
-	}
-	return (result);
-}
-
-void HttpResponse::HandleLocationRedirection(const LocationConfig* loc)
-{
-	// Config parser checks that redirection numbers can only
-	// be between 300 and 399. Thus this check is mainly to see
-	// whether a redirection has been initialized (since the
-	// default constructor initializes numbers to zero.)
-	// Thus, if it is indeed 0, we know redirection is not
-	// initialized.
-	if (loc->redirection.first == 0)
-		return ;
-	switch (loc->redirection.first)
-	{
-		case (MovedPermanently) : break ;
-		case (Found) : break ;
-		case (TemporaryRedirect) : break ;
-		case (PermanentRedirect) : break ;
-		default :
-		{
-			LOG_WARN("Redirection setting for location: " + loc->uri_path + 
-					" has unrecognized return value: " + 
-					std::to_string(loc->redirection.first) + ". Ignoring redirection.");
-			return ;
-		}
-	}
-	LOG_DEBUG("Returning location: " + loc->redirection.second);
-	headers_["Location"] = loc->redirection.second;
-	throw (HttpResponseException(loc->redirection.first));
-}
-
 void HttpResponse::HandleAutoIndex(std::string file_path)
 {
 	body_ += "<!DOCTYPE HTML><html><body>";
@@ -236,71 +156,13 @@ void HttpResponse::HandleAutoIndex(std::string file_path)
 	body_ += "</ul></body></html>\n";
 }
 
-std::string HttpResponse::ReplaceRoot(std::string uri, const LocationConfig* loc)
+void HttpResponse::HandleGet()
 {
-	size_t pos = uri.find(loc->uri_path);
-	std::string new_file_path = uri;
-
-	if (pos != std::string::npos)
-		new_file_path.replace(pos, loc->uri_path.size(), loc->root);
-	return (new_file_path);
-}
-
-void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* serv_cfg)
-{
-	std::string file_path;
-	const LocationConfig* location;
-
-	// TODO: I should rewrite this messy 'if-else' statement. Either function calling or switch-cases.
-	//HandleLocation.
-	location = FindLocation(req.path_, serv_cfg->locations);
-	if (location != NULL)
-	{
-		LOG_DEBUG("Location: " + location->uri_path + " accessed for: " + req.path_);
-		HandleLocationRedirection(location);
-		if (!location->allowed_methods.empty())
-				HandleLocationMethod(req.method_, location);
-		// If location has root, append custom root. Otherwise use server root.
-		if (location->root.empty())
-			file_path = PrefixRoot(req.path_, serv_cfg);
-		else
-			file_path = ReplaceRoot(req.path_, location);
-		if (IsDir(file_path) == true)
-		{
-			// If no index element is found, try to check if autoindex is on. Otherwise throw 403 Forbidden
-			if (location->index.empty())
-			{
-				if (location->autoindex == true)
-				{
-					LOG_DEBUG("Autoindex for: " + file_path);
-					HandleAutoIndex(file_path);
-				}
-				else
-					throw (HttpResponseException(Forbidden));
-			}
-			else
-			{
-				file_path = AppendIndex(file_path, location);
-				headers_["Content-Type"] = DetermineContentType(file_path);
-				body_ = OpenFile(file_path);
-				LOG_DEBUG("GET Request for file: " + file_path);
-			}
-		}
-		else
-		{
-			headers_["Content-Type"] = DetermineContentType(file_path);
-			body_ = OpenFile(file_path);
-			LOG_DEBUG("GET Request for file: " + file_path);
-		}
-	}
-	else
-	{
-		file_path = PrefixRoot(req.path_, serv_cfg);
-		file_path = AppendIndex(file_path, serv_cfg);
-		headers_["Content-Type"] = DetermineContentType(file_path);
-		body_ = OpenFile(file_path);
-		LOG_DEBUG("GET Request for file: " + file_path);
-	}
+	if (IsDir(file_path) == true)
+		HandleAutoIndex(file_path);
+	headers_["Content-Type"] = DetermineContentType(file_path);
+	body_ = OpenFile(file_path);
+	LOG_DEBUG("GET Request for file: " + file_path);
 }
 
 std::string	HttpResponse::Serialize() const
@@ -406,7 +268,7 @@ void HttpResponse::HandleErrorPage(int status_code, const ServerConfig* cfg)
 	HardcodeErrorPage();
 }
 
-HttpResponse::HttpResponse(HttpRequest req, const ServerConfig* cfg)
+void HttpResponse::BuildResponse()
 {
 	try {
 		switch (req.method_)
@@ -424,12 +286,10 @@ HttpResponse::HttpResponse(HttpRequest req, const ServerConfig* cfg)
 	catch (HttpResponseException& e)
 	{
 		int status_code = e.GetErrorCode();
-		LOG_DEBUG("Request resulted in Code: " + std::to_string(status_code));
-		// Handle error page
 		if (status_code > 399)
 			HandleErrorPage(e.GetErrorCode(), cfg);
-		// Handle other status_codes
 		else
 			SetStatus(status_code);
 	}
-};
+	LOG_DEBUG("BuildResponse resulted in Code: " + std::to_string(status_code));
+}
