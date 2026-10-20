@@ -62,7 +62,7 @@ const LocationConfig* HttpRouter::FindLocation(const std::string& req_path,
 		}
 	}
 	return (result);
-}
+};
 
 void HttpRouter::HandleLocationRedirection()
 {
@@ -119,6 +119,11 @@ void HttpRouter::HandleLocationRoot()
 		PrefixServerRoot();
 	else 
 		ReplaceLocRoot();
+};
+
+void HttpRouter::HandleLocationIndex()
+{
+	//TODO
 };
 
 void HttpRouter::HandleLocation()
