@@ -150,6 +150,25 @@ bool HttpRouter::IsDir(std::string path)
 	return (false);
 }
 
+bool HttpRouter::IsCgi(std::string path)
+{
+	if (loc_->cgi_extension.empty())
+		return (false);
+	// Think of ../../file.py
+	// we only want the last part :)
+	size_t slash = path.find_last_of('/');
+	size_t dot = path.rfind('.');
+	if (dot == std::string::npos || (slash != std::string::npos && slash > dot))
+		return (false);
+	std::string extension = path.substr(dot);
+	auto it = loc_->cgi_extension.find(extension);
+	if (it == loc_->cgi_extension.end())
+		return (false);
+
+	cgi_req_.interpreter = it->second;
+	return (true);
+}
+
 void HttpRouter::HandleLocationIndex()
 {
 	if (IsDir(rerouted_filepath_) != true)
