@@ -45,6 +45,7 @@ class HttpRouter
 		bool autoindex_ = false;
 		bool cgi_ = false;
 		int http_status_code_;
+
 		// Headers to copy for response generation
 		std::map<std::string, std::string> headers_;
 		
@@ -62,10 +63,12 @@ class HttpRouter
 				const std::vector<LocationConfig>& locations);
 		void HandleLocationRedirection();
 		void HandleLocationMethod();
+		void HandleLocationRoot();
+		void HandleLocationIndex();
 
 		// ReRouting FilePath with respect to configuration.
-		std::string ReplaceRoot(std::string uri, const ConfigStruct* cfg);
-		std::string PrefixRoot(std::string uri, const ConfigStruct* cfg);
+		void ReplaceLocRoot();
+		void PrefixServerRoot();
 		std::string AppendIndex(std::string uri, const ConfigStruct* cfg);
 
 	public :
