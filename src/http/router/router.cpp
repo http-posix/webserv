@@ -173,6 +173,12 @@ void HttpRouter::HandleLocation()
 	HandleLocationIndex();
 };
 
+void HttpRouter::HandleNoLocation()
+{
+	PrefixServerRoot();
+	AppendIndex(&srv_cfg_);
+}
+
 HttpRouter::HttpRouter(const HttpRequest& req, const ServerConfig& cfg) :
 	req_(req), srv_cfg_(cfg), loc_(FindLocation(req.path_, cfg.locations))
 {
