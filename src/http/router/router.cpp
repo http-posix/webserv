@@ -97,6 +97,15 @@ void HttpRouter::HandleLocationRoot()
 	else 
 		ReplaceLocRoot();
 };
+
+void HttpRouter::HandleLocation()
+{
+	HandleLocationRedirection();
+	HandleLocationMethod();
+	HandleLocationRoot();
+	HandleLocationIndex();
+};
+
 HttpRouter::HttpRouter(const HttpRequest& req, const ServerConfig& cfg) :
 	req_(req), srv_cfg_(cfg), loc_(FindLocation(req.path_, cfg.locations))
 {
