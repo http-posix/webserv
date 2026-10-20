@@ -2,6 +2,7 @@
 #include "http/http_status_code.hpp"
 #include "utils/logger/logger.hpp"
 
+#include <optional>
 #include <filesystem>
 
 void HttpRouter::AppendIndex(const ConfigStruct* cfg)
@@ -184,12 +185,19 @@ void HttpRouter::HandleLocationIndex()
 		AppendIndex(loc_);
 };
 
+void HttpRouter::HandleLocationCgi()
+{
+	if (!IsCgi())
+		return ;
+}
+
 void HttpRouter::HandleLocation()
 {
 	HandleLocationRedirection();
 	HandleLocationMethod();
 	HandleLocationRoot();
 	HandleLocationIndex();
+	HandleLocationCgi();
 };
 
 void HttpRouter::HandleNoLocation()
@@ -197,6 +205,13 @@ void HttpRouter::HandleNoLocation()
 	PrefixServerRoot();
 	AppendIndex(&srv_cfg_);
 }
+
+std::optional<CgiRequest> HttpRouter::GetCgiRequest()
+{
+	if (cgi_ == false)
+		return std::nullopt;
+	return (cgi_req_);
+};
 
 HttpRouter::HttpRouter(const HttpRequest& req, const ServerConfig& cfg) :
 	req_(req), srv_cfg_(cfg), loc_(FindLocation(req.path_, cfg.locations))
