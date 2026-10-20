@@ -45,6 +45,8 @@ class HttpRouter
 		bool autoindex_ = false;
 		bool cgi_ = false;
 		int http_status_code_;
+		// Headers to copy for response generation
+		std::map<std::string, std::string> headers_;
 		
 		// The two main handling of the router.
 		void HandleLocation();
