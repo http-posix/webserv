@@ -74,6 +74,8 @@ std::vector<std::string> ConfigParser::collectUntil(const std::string& stop)
 	{
 		if (pos_.type == ConfigToken::EndOfFile)
 			throw ConfigException("Unexpected end of file, expected '" + stop + "'.");
+		if (pos_.type == ConfigToken::Keyword)
+			throw ConfigException("Unexpected keyword found, expected '" + stop + "'.");
 		values.push_back(pos_.value);
 		pos_ = tokenizer_.next();
 	}
