@@ -66,6 +66,7 @@ class HttpRouter
 		void HandleLocationMethod();
 		void HandleLocationRoot();
 		void HandleLocationIndex();
+		void HandleLocationCgi();
 
 		// ReRouting FilePath with respect to configuration.
 		void ReplaceLocRoot();
@@ -73,8 +74,11 @@ class HttpRouter
 		void AppendIndex(const ConfigStruct* cfg);
 
 		bool IsDir(std::string path);
+		bool IsCgi(std::string path);
 	public :
 		HttpRouter(const HttpRequest& req, const ServerConfig& cfg);
+
+		std::optional<CgiRequest> GetCgiRequest();
 
 		class HttpStatusException : public std::exception {
 			private :
