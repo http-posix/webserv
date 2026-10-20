@@ -18,10 +18,11 @@ ConfigTokenizer::~ConfigTokenizer()
 // Technically a helper function and does not need to be part of the class
 bool ConfigTokenizer::isKeyword(std::string word)
 {
-	if (word == "server" || word == "location" || word == "listen" || word == "error_page" || word == "client_max_body_size" || word == "methods" || word == "return" || word == "root" || word == "autoindex" || word == "index" || word == "upload_enable" || word == "upload_store")
+	if (word == "cgi" || word == "server" || word == "location" || word == "listen" || word == "error_page" || word == "client_max_body_size" || word == "methods" || word == "return" || word == "root" || word == "autoindex" || word == "index" || word == "upload_enable" || word == "upload_store")
 		return (true);
 	return (false);
 }
+
 ConfigToken ConfigTokenizer::next()
 {
 	// Skip Optional White Space (OWS)
