@@ -341,6 +341,18 @@ void ConfigParser::createLocationConfig(LocationConfig& location)
 			if (location.upload_location.empty())
 				throw ConfigException("Empty 'upload_store' directive in location '" + location.uri_path + "'.");
 		}
+		else if (pos_.value == "cgi")
+		{
+			pos_ = tokenizer_.next();
+
+			if (pos_.type != ConfigToken::Identifier)
+				throw (ConfigException("Expected Identifier but got " + pos_.value));
+			std::string extension = pos_.value;
+			if (extension[0] != '.')
+				throw (ConfigException("CGI Extension must start with '.' (got " + extension + ")"));
+			pos_ = tokenizer_.next();
+			std::string interpreter = join(collectUntil(";"));
+		}
 		else
 		{
 			throw ConfigException("Unexpected token '" + pos_.value + "' in location '" + location.uri_path + "'.");
