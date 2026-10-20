@@ -152,7 +152,17 @@ bool HttpRouter::IsDir(std::string path)
 
 void HttpRouter::HandleLocationIndex()
 {
-	//TODO
+	if (IsDir(rerouted_filepath_) != true)
+		return ;
+	if (loc_->index.empty())
+	{
+		if (loc_->autoindex == true)
+			autoindex_ = true;
+		else
+			throw (HttpStatusException(Forbidden));
+	}
+	else
+		AppendIndex(loc_);
 };
 
 void HttpRouter::HandleLocation()
