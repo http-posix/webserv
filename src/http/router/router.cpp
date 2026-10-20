@@ -64,6 +64,32 @@ void HttpRouter::HandleLocationRedirection()
 	headers_["Location"] = loc_->redirection.second;
 	throw (HttpStatusException(loc_->redirection.first));
 };
+// Iterate through an array of allowed methods.
+// If no match is found between the requested 
+// method and the methods allowed in the location
+// an error is thrown (MethodNotAllowed)
+void HttpRouter::HandleLocationMethod()
+{
+	std::string req_method_str;
+
+	if (loc_->allowed_methods.empty())
+		return ;
+	switch (req_.method_)
+	{
+		case (Get) : req_method_str = "GET"; break;
+		case (Post) : req_method_str = "POST"; break;
+		case (Delete) : req_method_str = "DELETE"; break;
+		default : req_method_str = "none";
+	}
+
+	for (size_t i = 0; i < loc_->allowed_methods.size(); i++)
+	{
+		if (req_method_str == loc_->allowed_methods[i])
+			return ;
+	}
+	throw (HttpStatusException(MethodNotAllowed));
+}
+
 HttpRouter::HttpRouter(const HttpRequest& req, const ServerConfig& cfg) :
 	req_(req), srv_cfg_(cfg), loc_(FindLocation(req.path_, cfg.locations))
 {
