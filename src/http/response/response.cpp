@@ -169,39 +169,42 @@ void HttpResponse::HardcodeErrorPage()
 	body_ += "</html>\n";
 }
 
-void HttpResponse::HandleErrorPage(int status_code, const ServerConfig* cfg)
 void HttpResponse::HandleRedirection(std::string redirection)
 {
 	headers_["Location"] = redirection;
 }
 
+void HttpResponse::HandleErrorPage(int status_code)
 {
 	SetStatus(status_code);
 	headers_["Content-Type"] = "text/html";
 	// In case some error occured while building the body, we need to clear it.
-	// body_.clear();
+	body_.clear();
 	
-	if (cfg != NULL && !cfg->error_pages.empty())
+	if (srv_cfg_ == nullptr)
+		return ;
+	if (srv_cfg_->error_pages.empty())
 	{
-		// .find() function returns an iterator specific to our unordered_map.
-		//  It is easier to use auto instead of
-		//  std::unordered_map<int, std::string>::iterator
-		auto it = cfg->error_pages.find(status_code);
-		// If we have a custom error page, try to open it.
-		if (it != cfg->error_pages.end())
+		HardcodeErrorPage();
+		return ;
+	}
+	// .find() function returns an iterator specific to our unordered_map.
+	//  It is easier to use auto instead of
+	//  std::unordered_map<int, std::string>::iterator
+	auto it = srv_cfg_->error_pages.find(status_code);
+	// If we have a custom error page, try to open it.
+	if (it != srv_cfg_->error_pages.end())
+	{
+		try
 		{
-			try
-			{
-				body_ = OpenFile(it->second);
-				return ;
-			}
-			catch (HttpResponseException& e)
-			{
-				LOG_WARN("Custom Error Page cannot be opened; Falling back on built-in page.");
-			}
+			body_ = OpenFile(it->second);
+		}
+		catch (HttpResponseException& e)
+		{
+			LOG_WARN("Custom Error Page cannot be opened; Falling back on built-in page.");
+			HardcodeErrorPage();
 		}
 	}
-	HardcodeErrorPage();
 }
 
 void HttpResponse::HandleGet(const RoutedRequest& req)
