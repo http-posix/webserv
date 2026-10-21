@@ -20,7 +20,7 @@ class HttpRouter
 	private :
 		// References for easy access in Helper functions
 		const HttpRequest& req_;
-		const ServerConfig& srv_cfg_;
+		const ServerConfig* srv_cfg_;
 		const LocationConfig* loc_;
 
 
@@ -33,7 +33,7 @@ class HttpRouter
 		std::string redirection_;
 
 		CgiRequest cgi_req_;
-		RoutedRequest rout_req;
+		RoutedRequest rout_req_;
 		
 		// The two main handling of the router.
 		void HandleLocation();
@@ -61,9 +61,10 @@ class HttpRouter
 		bool IsDir(std::string path);
 		bool IsCgi(std::string path);
 	public :
-		HttpRouter(const HttpRequest& req, const ServerConfig& cfg);
+		HttpRouter(const HttpRequest& req, const ServerConfig* cfg);
 
 		std::optional<CgiRequest> GetCgiRequest();
+		std::optional<RoutedRequest> GetRoutedRequest();
 
 		class HttpStatusException : public std::exception {
 			private :

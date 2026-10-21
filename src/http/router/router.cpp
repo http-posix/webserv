@@ -23,12 +23,12 @@ void HttpRouter::AppendIndex(const ConfigStruct* cfg)
 
 void HttpRouter::PrefixServerRoot()
 {
-	if (srv_cfg_.root.empty())
+	if (srv_cfg_->root.empty())
 	{
 		LOG_DEBUG("Server config does not have Index element.");
 		return ;
 	}
-	rerouted_filepath_ = srv_cfg_.root + req_.path_;
+	rerouted_filepath_ = srv_cfg_->root + req_.path_;
 };
 
 void HttpRouter::ReplaceLocRoot()
@@ -37,7 +37,10 @@ void HttpRouter::ReplaceLocRoot()
 	rerouted_filepath_ = req_.path_;
 	
 	if (pos == std::string::npos)
-		LOG_DEBUG("No location found in request!"); return ;
+	{
+		LOG_DEBUG("No location found in request!"); 
+		return ;
+	}
 	rerouted_filepath_.replace(pos, loc_->uri_path.size(), loc_->root);
 };
 
@@ -214,7 +217,7 @@ void HttpRouter::HandleLocation()
 void HttpRouter::HandleNoLocation()
 {
 	PrefixServerRoot();
-	AppendIndex(&srv_cfg_);
+	AppendIndex(srv_cfg_);
 }
 
 // Does the cgi request not need to know whether it is get or post?
@@ -229,19 +232,26 @@ std::optional<CgiRequest> HttpRouter::GetCgiRequest()
 // Why keep everything as private variables first, and then set them to the structure?
 void HttpRouter::BuildRoutedRequest()
 {
-	rout_req.method = req_.method_;
-	rout_req.uri = rerouted_filepath_;
-	rout_req.version = req_.version_;
-	rout_req.headers = req_.headers_;
-	rout_req.body = req_.body_;
+	rout_req_.method = req_.method_;
+	rout_req_.uri = rerouted_filepath_;
+	rout_req_.version = req_.version_;
+	rout_req_.headers = req_.headers_;
+	rout_req_.body = req_.body_;
 
-	rout_req.http_status_code = http_status_code_;
-	rout_req.autoindex = autoindex_;
-	rout_req.redirection = redirection_;
+	rout_req_.http_status_code = http_status_code_;
+	rout_req_.autoindex = autoindex_;
+	rout_req_.redirection = redirection_;
 }
 
-HttpRouter::HttpRouter(const HttpRequest& req, const ServerConfig& cfg) :
-	req_(req), srv_cfg_(cfg), loc_(FindLocation(req.path_, cfg.locations))
+std::optional<RoutedRequest> HttpRouter::GetRoutedRequest()
+{
+	if (cgi_ == true)
+		return std::nullopt;
+	return (rout_req_);
+}
+
+HttpRouter::HttpRouter(const HttpRequest& req, const ServerConfig* cfg) :
+	req_(req), srv_cfg_(cfg), loc_(FindLocation(req.path_, cfg->locations)), http_status_code_(-1)
 {
 	// Check whether the requested file path falls
 	// under one of the locations set in the configuration.
