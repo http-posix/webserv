@@ -257,8 +257,6 @@ HttpRouter::HttpRouter(const HttpRequest& req, const ServerConfig& cfg) :
 	catch (HttpStatusException& e)
 	{
 		http_status_code_ = e.GetErrorCode();
-		BuildRoutedRequest();
-		return;
 	}
 
 	if (cgi_ == false)
