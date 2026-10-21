@@ -217,6 +217,7 @@ void HttpRouter::HandleNoLocation()
 	AppendIndex(&srv_cfg_);
 }
 
+// Does the cgi request not need to know whether it is get or post?
 std::optional<CgiRequest> HttpRouter::GetCgiRequest()
 {
 	if (cgi_ == false)
@@ -258,7 +259,6 @@ HttpRouter::HttpRouter(const HttpRequest& req, const ServerConfig& cfg) :
 	{
 		http_status_code_ = e.GetErrorCode();
 	}
-
 	if (cgi_ == false)
 		BuildRoutedRequest();
 };
