@@ -170,6 +170,11 @@ void HttpResponse::HardcodeErrorPage()
 }
 
 void HttpResponse::HandleErrorPage(int status_code, const ServerConfig* cfg)
+void HttpResponse::HandleRedirection(std::string redirection)
+{
+	headers_["Location"] = redirection;
+}
+
 {
 	SetStatus(status_code);
 	headers_["Content-Type"] = "text/html";
