@@ -197,7 +197,6 @@ void HttpResponse::HandleErrorPage(int status_code, const ServerConfig* cfg)
 	HardcodeErrorPage();
 }
 
-void HttpResponse::BuildResponse()
 void HttpResponse::HandleGet(const RoutedRequest& req)
 {
 	if (req.autoindex == true)
@@ -208,13 +207,16 @@ void HttpResponse::HandleGet(const RoutedRequest& req)
 	LOG_DEBUG("GET Request for file: " + req.uri);
 }
 
+void HttpResponse::BuildResponse(const RoutedRequest& req)
 {
 	try {
-		switch (req.method_)
+		if (req.http_status_code != -1)
+			throw (HttpResponseException(req.http_status_code));
+		switch (req.method)
 		{
 			case (Get) :
 			{
-				HandleGet(req, cfg);
+				HandleGet(req);
 				break ;
 			}
 			default :
@@ -225,10 +227,13 @@ void HttpResponse::HandleGet(const RoutedRequest& req)
 	catch (HttpResponseException& e)
 	{
 		int status_code = e.GetErrorCode();
+		status_code_ = status_code;
+		if (status_code < 400 && status_code > 299)
+			HandleRedirection(req.redirection);
 		if (status_code > 399)
-			HandleErrorPage(e.GetErrorCode(), cfg);
+			HandleErrorPage(e.GetErrorCode());
 		else
 			SetStatus(status_code);
 	}
-	LOG_DEBUG("BuildResponse resulted in Code: " + std::to_string(status_code));
+	LOG_DEBUG("BuildResponse resulted in Code: " + std::to_string(status_code_));
 }
