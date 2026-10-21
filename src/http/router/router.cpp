@@ -187,8 +187,19 @@ void HttpRouter::HandleLocationIndex()
 
 void HttpRouter::HandleLocationCgi()
 {
-	if (!IsCgi())
+	if (!IsCgi(rerouted_filepath_))
 		return ;
+	cgi_ = true;
+	cgi_req_.script_path = rerouted_filepath_;
+	size_t slash = rerouted_filepath_.rfind('/');
+	if (slash == std::string::npos)
+		cgi_req_.script_name = rerouted_filepath_;
+	else
+		cgi_req_.script_name = rerouted_filepath_.substr(slash);
+	cgi_req_.query_string = req_.query_;
+	if (req_.method_ == Post)
+		cgi_req_.request_body = req_.body_;
+	
 }
 
 void HttpRouter::HandleLocation()
