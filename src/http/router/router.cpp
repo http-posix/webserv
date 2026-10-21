@@ -224,9 +224,19 @@ std::optional<CgiRequest> HttpRouter::GetCgiRequest()
 	return (cgi_req_);
 };
 
+// Ugly ugly ugly ugly. Why not set everything to the rerouted_req structure immediately
+// Why keep everything as private variables first, and then set them to the structure?
 void HttpRouter::BuildRoutedRequest()
 {
 	rout_req.method = req_.method_;
+	rout_req.uri = rerouted_filepath_;
+	rout_req.version = req_.version_;
+	rout_req.headers = req_.headers_;
+	rout_req.body = req_.body_;
+
+	rout_req.http_status_code = http_status_code_;
+	rout_req.autoindex = autoindex_;
+	rout_req.redirection = redirection_;
 }
 
 HttpRouter::HttpRouter(const HttpRequest& req, const ServerConfig& cfg) :
