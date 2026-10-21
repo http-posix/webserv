@@ -5,10 +5,15 @@
 #include <cerrno>
 #include <cstring>
 
-bool	posix::SetNonBlockingMode(int fd, const std::string& fd_type, const std::string& ctx){
+/* ========================================================================== */
+/*                               Public Functions                             */
+/* ========================================================================== */
+
 // read-modify-write pattern is a best practice in POSIX
 // but flag F_GETFL isn't allowed in this project
-// in this particular project this is ok, 'cause we set flags on just created socket wich hasn't any other flags
+// in this particular project this is ok,
+// because we set flags on just created fd which hasn't any other flags
+bool	posix::SetNonBlockingMode(int fd, const std::string& fd_type, const std::string& ctx){
 /* 
 	int flags = ::fcntl(fd, F_GETFL, 0);
 	if (flags == posix::kSyscallError)
