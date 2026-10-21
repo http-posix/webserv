@@ -11,7 +11,7 @@
 class HttpResponse
 {
 	private :
-		const ServerConfig& srv_cfg_;
+		const ServerConfig* srv_cfg_;
 
 		int			status_code_ = -1;
 		std::string status_text_;
@@ -21,13 +21,16 @@ class HttpResponse
 		std::string OpenFile(std::string filename);
 		std::string DetermineContentType(const std::string& path);
 		void SetStatus(int status_code);
-		void HardcodeErrorPage();
-		void HandleErrorPage(int status_code, const ServerConfig* cfg);
-		void HandleAutoIndex(std::string file_path);
 
-		void HandleGet(HttpRequest& req, const ServerConfig* cfg);
-		//void HandlePost(HttpRequest& req, ServerConfig& cfg);
-		//void HandleDelete(HttpRequest& req, ServerConfig& cfg);
+		void HardcodeErrorPage();
+		void HandleErrorPage(int status_code);
+
+		void HandleAutoIndex(std::string file_path);
+		void HandleRedirection(std::string redirection);
+
+		void HandleGet(const RoutedRequest& req);
+		//void HandlePost();
+		//void HandleDelete();
 	public :
 		class HttpResponseException : public std::exception {
 			private :
@@ -37,8 +40,8 @@ class HttpResponse
 				int GetErrorCode() { return (error_code_); };
 		};
 		
-		void BuildResponse();
-		HttpResponse(const ServerConfig& cfg) : srv_cfg_(cfg){};
+		void BuildResponse(const RoutedRequest& req);
+		HttpResponse(const ServerConfig* cfg) : srv_cfg_(cfg){};
 		// Serializes the response into a raw HTTP/1.1 wire format string
 		std::string	Serialize() const;
 };
