@@ -6,22 +6,6 @@
 #include <optional>
 #include <string>
 
-/*
- * Think I need a structure that the Router can create
- * similar to a request but this time updated depending
- * on the location and server configuration.
- *
- * It also keeps track of whether CGI or a regular response
- * handling is needed.
-
-struct RoutedRequest
-{
-	int status_code = -1;
-	enum method;
-		
-	std::string uri;
-*/
-
 // Router follows the request to proper response handling. 
 // It looks at the following:
 // 	- Location handling/routing
