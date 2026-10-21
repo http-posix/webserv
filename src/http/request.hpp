@@ -37,6 +37,7 @@ struct	HttpRequest
 {
 		enum HttpMethod method_;
 		std::string path_;
+		std::string query_;	// Part of the request target after '?' (empty if none)
 		std::string version_;
 		std::map<std::string, std::string> headers_;
 		std::string body_;
