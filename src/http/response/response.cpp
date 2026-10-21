@@ -31,48 +31,6 @@ std::string	HttpResponse::OpenFile(std::string filename)
 	return (result);
 }
 
-const LocationConfig* HttpResponse::FindLocation(const std::string& req_path,
-		const std::vector<LocationConfig>& locations)
-{
-	const LocationConfig* result = NULL;
-	size_t longest_match = 0;
-
-	for (size_t i = 0; i < locations.size(); i++)
-	{
-		std::string loc_path = locations[i].uri_path;
-		size_t loc_len = loc_path.size();
-
-		// Check if we find the location EXACTLY
-		// at the start of the requested path.
-		if (req_path.compare(0, loc_len, loc_path) == 0)
-		{
-			// If exact match we are dealing with
-			// a directory request, still it is a valid request.
-			bool exact_match = (req_path == loc_path);
-
-			// A request `/data/images/picture1.jpq` with location `/data`
-			// will correctly return `/data` as location since
-			// it found a `/` after `/data` in the request path.
-			bool req_has_slash = (req_path.size() > loc_len && req_path[loc_len] == '/');
-
-			// If the request was `/data/images` and location is `/data/` it is
-			// not an exact match but still a match, nor will we find a `/` at
-			// req_path[loc_len] since it will one char too far.
-			bool loc_ends_in_slash = (loc_len > 0 && loc_path[loc_len - 1] == '/');
-			
-			if (exact_match || loc_ends_in_slash || req_has_slash)
-			{
-				if (loc_len > longest_match || result == NULL)
-				{
-					longest_match = loc_len;
-					result = &locations[i];
-				}
-			}
-		}
-	}
-	return (result);
-}
-
 std::string HttpResponse::DetermineContentType(const std::string& path)
 {
 	//find the last `.` starting from the right (reverse search).
@@ -108,26 +66,6 @@ std::string HttpResponse::DetermineContentType(const std::string& path)
 	}
 
 	return (got->second);
-}
-
-void HttpResponse::HandleLocationMethod(enum HttpMethod &req_method, const LocationConfig* loc)
-{
-	std::string req_method_str;
-
-	switch (req_method)
-	{
-		case (Get) : req_method_str = "GET"; break;
-		case (Post) : req_method_str = "POST"; break;
-		case (Delete) : req_method_str = "DELETE"; break;
-		default : req_method_str = "none";
-	}
-
-	for (size_t i = 0; i < loc->allowed_methods.size(); i++)
-	{
-		if (req_method_str == loc->allowed_methods[i])
-			return ;
-	}
-	throw (HttpResponseException(MethodNotAllowed));
 }
 
 void HttpResponse::HandleAutoIndex(std::string file_path)
