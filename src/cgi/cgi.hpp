@@ -31,6 +31,8 @@ class Cgi{
 
 	private:
 		constexpr static int	kAssumedMaxFds = 1024;
+		static constexpr int	kReadEnd = 0;
+		static constexpr int	kWriteEnd = 1;
 
 		std::array<int, 2>		pipe_fds_ = {posix::kInvalidFd, posix::kInvalidFd};
 		pid_t					pid_ = posix::kInvalidPid;
