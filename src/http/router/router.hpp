@@ -49,6 +49,7 @@ class HttpRouter
 		std::string redirection_;
 
 		CgiRequest cgi_req_;
+		RoutedRequest rout_req;
 		
 		// The two main handling of the router.
 		void HandleLocation();

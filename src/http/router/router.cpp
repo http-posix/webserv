@@ -224,6 +224,11 @@ std::optional<CgiRequest> HttpRouter::GetCgiRequest()
 	return (cgi_req_);
 };
 
+void HttpRouter::BuildRoutedRequest()
+{
+	rout_req.method = req_.method_;
+}
+
 HttpRouter::HttpRouter(const HttpRequest& req, const ServerConfig& cfg) :
 	req_(req), srv_cfg_(cfg), loc_(FindLocation(req.path_, cfg.locations))
 {
@@ -246,8 +251,6 @@ HttpRouter::HttpRouter(const HttpRequest& req, const ServerConfig& cfg) :
 		return;
 	}
 
-	if (cgi_ == true)
-		BuildCgiRequest();
-	else
+	if (cgi_ == false)
 		BuildRoutedRequest();
 };
