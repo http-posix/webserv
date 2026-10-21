@@ -47,7 +47,7 @@ HttpStatusCode	Cgi::SpawnChild(){
 		LOG_ERROR("Failed pipe() ", srv_id_);
 		return HttpStatusCode::InternalServerError;
 	}
-	if (!posix::SetNonBlockingMode(pipe_fds_[0], "pipe fd", srv_id_)){
+	if (!posix::SetNonBlockingMode(pipe_fds_[kReadEnd], "pipe fd", srv_id_)){
 		ClosePipeFds();
 		return HttpStatusCode::InternalServerError;
 	}
@@ -60,7 +60,7 @@ HttpStatusCode	Cgi::SpawnChild(){
 	// who check access to script - here or in http parser?
 	// TODO: access(F_OK) -> 404, access(R_OK) -> 403. Do it BEFORE pipe() (here or router), otherwise missing script = 502
 	if (pid_ == posix::kForkChild){
-		if (dup2(pipe_fds_[1], STDOUT_FILENO) == posix::kSyscallError){
+		if (dup2(pipe_fds_[kWriteEnd], STDOUT_FILENO) == posix::kSyscallError){
 			LOG_ERROR("dup2() failed",  srv_id_);
 			std::_Exit(1);
 		}
@@ -71,7 +71,7 @@ HttpStatusCode	Cgi::SpawnChild(){
 		execve(interpreter_.c_str(), argv_, cgi_env_.Envp());
 		std::_Exit(127);
 	}
-	CloseFd(pipe_fds_[1]);
+	CloseFd(pipe_fds_[kWriteEnd]);
 	return HttpStatusCode::OK;
 }
 
@@ -80,7 +80,7 @@ HttpStatusCode	Cgi::SpawnChild(){
 /* ========================================================================== */
 
 int	Cgi::pipe_read_fd() const noexcept{
-	return pipe_fds_[0];
+	return pipe_fds_[kReadEnd];
 }
 
 pid_t	Cgi::child_pid() const noexcept{
