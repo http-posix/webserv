@@ -35,10 +35,12 @@ std::string HttpResponse::DetermineContentType(const std::string& path)
 {
 	//find the last `.` starting from the right (reverse search).
 	//copy that part into comparison
-	const size_t pos = path.rfind('.');
-	if (pos == std::string::npos)
+	const size_t dot = path.rfind('.');
+	const size_t slash = path.rfind('/');
+	// Second check is ../some_dir/./anotherfolder
+	if (dot == std::string::npos || (slash != std::string::npos && slash > dot))
 		return ("text/plain");
-	const std::string extension = path.substr(pos);
+	const std::string extension = path.substr(dot);
 
 	static const std::unordered_map<std::string, std::string> content_types{
 		{".mp4", "video/mp4"},
@@ -59,7 +61,7 @@ std::string HttpResponse::DetermineContentType(const std::string& path)
 		if (temp_pos == std::string::npos)
 			filename = path;
 		else
-			filename = path.substr(pos);
+			filename = path.substr(dot);
 		headers_["Content-Disposition"] = "attachment";
 		headers_["filename"] = "\"" + filename + "\"";
 		return ("text/plain");
