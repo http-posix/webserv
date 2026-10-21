@@ -30,6 +30,7 @@ class HttpParser
 		
 		HttpMethod method_;
 		std::string path_;
+		std::string query_;
 		std::string version_;
 		std::map<std::string, std::string> headers_;
 		std::string body_;
@@ -39,6 +40,7 @@ class HttpParser
 		int ParseRequestLine();
 		int ParseMethod(std::string str);
 		int ParseVersion(std::string str);
+		int ParseRequestQuery(const std::string& target);
 		int ParseHeaders();
 		int ParseSingleHeaderLine(const std::string& header_line);
 		int ParseBody();
@@ -65,6 +67,7 @@ class HttpParser
 		HttpParserState GetExternalState() const;
 		HttpMethod GetMethod() const;
 		std::string GetPath() const;
+		std::string GetQuery() const;
 		std::string GetVersion() const;
 		std::map<std::string, std::string> GetHeaders() const;
 		std::string GetBody() const;

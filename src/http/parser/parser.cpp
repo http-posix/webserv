@@ -344,6 +344,22 @@ int HttpParser::ParseVersion(std::string str)
 	return (0);
 }
 
+int HttpParser::ParseRequestQuery(const std::string& target)
+{
+	// Only the FIRST '?' is a separator, any following '?' belongs to the query.
+	// which we don't encode (for now). We might have to later, depends on Tetiana
+	size_t separator = target.find('?');
+	if (separator == std::string::npos)
+	{
+		path_ = target;
+		query_.clear();
+		return (0);
+	}
+	path_ = target.substr(0, separator);
+	query_ = target.substr(separator + 1);
+	return (0);
+}
+
 int HttpParser::ParseRequestLine()
 {
 	input_i_ = input_buffer_.find("\r\n");
@@ -381,11 +397,10 @@ int HttpParser::ParseRequestLine()
 		external_state_ = InvalidRequest;
 		return (-1);
 	}
-	// Hard copy the path since we don't need to check anything
-	// j - i: Second parameter of substr is length of the string.
-	// TODO: What if input is: GET  HTTP/1.0
-	// You have no path, only whitespace. How do we deal with this?
-	path_ = input_buffer_.substr(i, j - i);
+	// target == uri + query
+	std::string target = input_buffer_.substr(i, j - i);
+	if (ParseRequestQuery(target) == -1)
+		return (-1);
 	// Skip the space by j + 1
 	j++;
 	// input_i_ - j because that is the length of the rest of string.
@@ -408,6 +423,7 @@ HttpRequest HttpParser::GetRequest()
 
 	result.method_ = this->method_;
 	result.path_ = this->path_;
+	result.query_ = this->query_;
 	result.version_ = this->version_;
 	result.headers_ = this->headers_;
 	result.body_ = this->body_;
@@ -433,6 +449,11 @@ HttpMethod HttpParser::GetMethod() const
 std::string HttpParser::GetPath() const
 {
 	return (this->path_);
+}
+
+std::string HttpParser::GetQuery() const
+{
+	return (this->query_);
 }
 
 std::string HttpParser::GetVersion() const
