@@ -259,3 +259,92 @@ TEST_CASE("Invalid Content-Length (non-numeric value)") {
 	CHECK(p.GetExternalState() == InvalidRequest);
 }
 
+TEST_CASE("GET request with query string") {
+	HttpParser p;
+
+	p.Feed("GET /script.py?name=value HTTP/1.1\r\n");
+	p.Feed("Host: example.com\r\n");
+	p.Feed("\r\n");
+
+	CHECK(p.GetExternalState() == Complete);
+	CHECK(p.GetMethod() == Get);
+	CHECK(p.GetPath() == "/script.py");
+	CHECK(p.GetQuery() == "name=value");
+}
+
+TEST_CASE("Request without query string has an empty query") {
+	HttpParser p;
+
+	p.Feed("GET /index.html HTTP/1.1\r\n");
+	p.Feed("Host: example.com\r\n");
+	p.Feed("\r\n");
+
+	CHECK(p.GetExternalState() == Complete);
+	CHECK(p.GetPath() == "/index.html");
+	CHECK(p.GetQuery() == "");
+}
+
+TEST_CASE("POST request with query string and body") {
+	HttpParser p;
+
+	p.Feed("POST /upload?token=abc&kind=image HTTP/1.1\r\n");
+	p.Feed("Host: example.com\r\n");
+	p.Feed("Content-Length: 5\r\n");
+	p.Feed("\r\n");
+	p.Feed("hello");
+
+	CHECK(p.GetExternalState() == Complete);
+	CHECK(p.GetMethod() == Post);
+	CHECK(p.GetPath() == "/upload");
+	CHECK(p.GetQuery() == "token=abc&kind=image");
+	CHECK(p.GetBody() == "hello");
+}
+
+TEST_CASE("Empty query string after question mark") {
+	HttpParser p;
+
+	p.Feed("GET /script.py? HTTP/1.1\r\n");
+	p.Feed("Host: example.com\r\n");
+	p.Feed("\r\n");
+
+	CHECK(p.GetExternalState() == Complete);
+	CHECK(p.GetPath() == "/script.py");
+	CHECK(p.GetQuery() == "");
+}
+
+TEST_CASE("Only the first question mark separates path and query") {
+	HttpParser p;
+
+	p.Feed("GET /script.py?a=1?b=2 HTTP/1.1\r\n");
+	p.Feed("Host: example.com\r\n");
+	p.Feed("\r\n");
+
+	CHECK(p.GetExternalState() == Complete);
+	CHECK(p.GetPath() == "/script.py");
+	CHECK(p.GetQuery() == "a=1?b=2");
+}
+
+TEST_CASE("Query string is kept raw (not percent-decoded)") {
+	HttpParser p;
+
+	p.Feed("GET /search?q=hello%20world&x=a+b HTTP/1.1\r\n");
+	p.Feed("Host: example.com\r\n");
+	p.Feed("\r\n");
+
+	CHECK(p.GetExternalState() == Complete);
+	CHECK(p.GetPath() == "/search");
+	CHECK(p.GetQuery() == "q=hello%20world&x=a+b");
+}
+
+TEST_CASE("GetRequest passes the query string along") {
+	HttpParser p;
+
+	p.Feed("GET /script.py?name=value HTTP/1.1\r\n");
+	p.Feed("Host: example.com\r\n");
+	p.Feed("\r\n");
+
+	HttpRequest req = p.GetRequest();
+	CHECK(req.path_ == "/script.py");
+	CHECK(req.query_ == "name=value");
+}
+
