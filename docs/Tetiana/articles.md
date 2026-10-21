@@ -48,6 +48,7 @@
 - version contorl
 	- [Pull Request Naming Guide](https://github.com/adobe/react-spectrum/wiki/Pull-Request-Naming-Guide)
 	- [Best practices for writing good pull request titles](https://graphite.com/guides/best-pr-title-guidelines)
+	- [Chris Beams: How to Write a Git Commit Message](https://cbea.ms/git-commit/)
 
 - general info
 	- [Regular Expressions](https://pubs.opengroup.org/onlinepubs/9799919799/)
