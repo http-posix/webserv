@@ -94,15 +94,6 @@ void HttpResponse::HandleAutoIndex(std::string file_path)
 	body_ += "</ul></body></html>\n";
 }
 
-void HttpResponse::HandleGet()
-{
-	if (IsDir(file_path) == true)
-		HandleAutoIndex(file_path);
-	headers_["Content-Type"] = DetermineContentType(file_path);
-	body_ = OpenFile(file_path);
-	LOG_DEBUG("GET Request for file: " + file_path);
-}
-
 std::string	HttpResponse::Serialize() const
 {
 	std::string	result = "HTTP/1.0 " + std::to_string(status_code_)
@@ -207,6 +198,16 @@ void HttpResponse::HandleErrorPage(int status_code, const ServerConfig* cfg)
 }
 
 void HttpResponse::BuildResponse()
+void HttpResponse::HandleGet(const RoutedRequest& req)
+{
+	if (req.autoindex == true)
+		HandleAutoIndex(req.uri);
+	else
+		body_ = OpenFile(req.uri);
+	headers_["Content-Type"] = DetermineContentType(req.uri);
+	LOG_DEBUG("GET Request for file: " + req.uri);
+}
+
 {
 	try {
 		switch (req.method_)
