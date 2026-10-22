@@ -2,7 +2,7 @@
 #include "../../utils/app_exception/app_exception.hpp"
 #include "../tokenizer/tokenizer.hpp"
 #include "../../utils/logger/logger.hpp"
-#include "parser.hpp"
+#include "config/parser/parser.hpp"
 #include "config/structures.hpp"
 
 #include <fstream>
@@ -74,6 +74,8 @@ std::vector<std::string> ConfigParser::collectUntil(const std::string& stop)
 	{
 		if (pos_.type == ConfigToken::EndOfFile)
 			throw ConfigException("Unexpected end of file, expected '" + stop + "'.");
+		if (pos_.value == "\n")
+			throw ConfigException("Unexpected End of Line, expected '" + stop + "'");
 		values.push_back(pos_.value);
 		pos_ = tokenizer_.next();
 	}
@@ -338,6 +340,22 @@ void ConfigParser::createLocationConfig(LocationConfig& location)
 			location.upload_location = join(collectUntil(";"));
 			if (location.upload_location.empty())
 				throw ConfigException("Empty 'upload_store' directive in location '" + location.uri_path + "'.");
+		}
+		else if (pos_.value == "cgi")
+		{
+			pos_ = tokenizer_.next();
+			if (pos_.type != ConfigToken::Identifier)
+				throw (ConfigException("Expected Identifier but got " + pos_.value));
+			std::string extension = pos_.value;
+			if (extension[0] != '.')
+				throw (ConfigException("CGI Extension must start with '.' (got " + extension + ")"));
+			if (extension.size() < 2)
+				throw (ConfigException("CGI Extension needs more than just a '.'"));
+			pos_ = tokenizer_.next();
+			std::string interpreter = join(collectUntil(";"));
+			if (interpreter.empty())
+				throw("Empty interpreter in cgi line.");
+			location.cgi_extension[extension] = interpreter;
 		}
 		else
 		{

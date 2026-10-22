@@ -31,56 +31,16 @@ std::string	HttpResponse::OpenFile(std::string filename)
 	return (result);
 }
 
-const LocationConfig* HttpResponse::FindLocation(const std::string& req_path,
-		const std::vector<LocationConfig>& locations)
-{
-	const LocationConfig* result = NULL;
-	size_t longest_match = 0;
-
-	for (size_t i = 0; i < locations.size(); i++)
-	{
-		std::string loc_path = locations[i].uri_path;
-		size_t loc_len = loc_path.size();
-
-		// Check if we find the location EXACTLY
-		// at the start of the requested path.
-		if (req_path.compare(0, loc_len, loc_path) == 0)
-		{
-			// If exact match we are dealing with
-			// a directory request, still it is a valid request.
-			bool exact_match = (req_path == loc_path);
-
-			// A request `/data/images/picture1.jpq` with location `/data`
-			// will correctly return `/data` as location since
-			// it found a `/` after `/data` in the request path.
-			bool req_has_slash = (req_path.size() > loc_len && req_path[loc_len] == '/');
-
-			// If the request was `/data/images` and location is `/data/` it is
-			// not an exact match but still a match, nor will we find a `/` at
-			// req_path[loc_len] since it will one char too far.
-			bool loc_ends_in_slash = (loc_len > 0 && loc_path[loc_len - 1] == '/');
-			
-			if (exact_match || loc_ends_in_slash || req_has_slash)
-			{
-				if (loc_len > longest_match || result == NULL)
-				{
-					longest_match = loc_len;
-					result = &locations[i];
-				}
-			}
-		}
-	}
-	return (result);
-}
-
 std::string HttpResponse::DetermineContentType(const std::string& path)
 {
 	//find the last `.` starting from the right (reverse search).
 	//copy that part into comparison
-	const size_t pos = path.rfind('.');
-	if (pos == std::string::npos)
+	const size_t dot = path.rfind('.');
+	const size_t slash = path.rfind('/');
+	// Second check is ../some_dir/./anotherfolder
+	if (dot == std::string::npos || (slash != std::string::npos && slash > dot))
 		return ("text/plain");
-	const std::string extension = path.substr(pos);
+	const std::string extension = path.substr(dot);
 
 	static const std::unordered_map<std::string, std::string> content_types{
 		{".mp4", "video/mp4"},
@@ -95,109 +55,19 @@ std::string HttpResponse::DetermineContentType(const std::string& path)
 	const std::unordered_map<std::string, std::string>::const_iterator got = content_types.find(extension);
 
 	if (got == content_types.end())
-		throw (HttpResponseException(UnsupportedMediaType));
+	{
+		std::string filename;
+		const size_t temp_pos = path.rfind('/');
+		if (temp_pos == std::string::npos)
+			filename = path;
+		else
+			filename = path.substr(dot);
+		headers_["Content-Disposition"] = "attachment";
+		headers_["filename"] = "\"" + filename + "\"";
+		return ("text/plain");
+	}
 
 	return (got->second);
-}
-
-void HttpResponse::HandleLocationMethod(enum HttpMethod &req_method, const LocationConfig* loc)
-{
-	std::string req_method_str;
-
-	switch (req_method)
-	{
-		case (Get) : req_method_str = "GET"; break;
-		case (Post) : req_method_str = "POST"; break;
-		case (Delete) : req_method_str = "DELETE"; break;
-		default : req_method_str = "none";
-	}
-
-	for (size_t i = 0; i < loc->allowed_methods.size(); i++)
-	{
-		if (req_method_str == loc->allowed_methods[i])
-			return ;
-	}
-	throw (HttpResponseException(MethodNotAllowed));
-}
-
-std::string HttpResponse::PrefixRoot(std::string uri, const ConfigStruct* cfg)
-{
-	std::string result;
-
-	if (cfg != NULL)
-	{
-		if (cfg->root.empty())
-			LOG_DEBUG("Accessing server/location structure without root");
-		else
-			result += cfg->root;
-	}
-	result += uri;
-	return (result);
-}
-
-bool HttpResponse::IsDir(std::string path)
-{
-	struct stat stat_buf;
-	
-	if (stat(path.c_str(), &stat_buf) == 0)
-	{
-		if (S_ISDIR(stat_buf.st_mode))
-			return (true);
-		return (false);
-	}
-	// TODO: Should probably find a better way around this.
-	// if stat fails, we want to see if we can open the file. OpenFile can throw 404 Not Found
-	OpenFile(path);
-	// Something went wrong with checking the file path.
-	LOG_WARN("`stat` call failed to open: " + path);
-	throw (HttpResponseException(InternalServerError));
-}
-
-std::string HttpResponse::AppendIndex(std::string uri, const ConfigStruct* cfg)
-{
-	std::string result = uri;
-
-	if (IsDir(uri) == true)
-	{
-		if (!(uri[uri.size() - 1] == '/'))
-			result += "/";
-		if (cfg != NULL)
-		{
-			if (!cfg->index.empty())
-				return (result + cfg->index);
-		}
-		LOG_DEBUG("Requested file is directory, but no index element is found in config.");
-	}
-	return (result);
-}
-
-void HttpResponse::HandleLocationRedirection(const LocationConfig* loc)
-{
-	// Config parser checks that redirection numbers can only
-	// be between 300 and 399. Thus this check is mainly to see
-	// whether a redirection has been initialized (since the
-	// default constructor initializes numbers to zero.)
-	// Thus, if it is indeed 0, we know redirection is not
-	// initialized.
-	if (loc->redirection.first == 0)
-		return ;
-	switch (loc->redirection.first)
-	{
-		case (MovedPermanently) : break ;
-		case (Found) : break ;
-		case (TemporaryRedirect) : break ;
-		case (PermanentRedirect) : break ;
-		default :
-		{
-			LOG_WARN("Redirection setting for location: " + loc->uri_path + 
-					" has unrecognized return value: " + 
-					std::to_string(loc->redirection.first) + ". Ignoring redirection.");
-			return ;
-		}
-	}
-	LOG_DEBUG("Returning location: " + loc->redirection.second);
-	headers_["Location"] = loc->redirection.second;
-	throw (HttpResponseException(loc->redirection.first));
 }
 
 void HttpResponse::HandleAutoIndex(std::string file_path)
@@ -224,73 +94,6 @@ void HttpResponse::HandleAutoIndex(std::string file_path)
 		throw (HttpResponseException(InternalServerError));
 	}
 	body_ += "</ul></body></html>\n";
-}
-
-std::string HttpResponse::ReplaceRoot(std::string uri, const LocationConfig* loc)
-{
-	size_t pos = uri.find(loc->uri_path);
-	std::string new_file_path = uri;
-
-	if (pos != std::string::npos)
-		new_file_path.replace(pos, loc->uri_path.size(), loc->root);
-	return (new_file_path);
-}
-
-void HttpResponse::HandleGet(HttpRequest& req, const ServerConfig* serv_cfg)
-{
-	std::string file_path;
-	const LocationConfig* location;
-
-	// TODO: I should rewrite this messy 'if-else' statement. Either function calling or switch-cases.
-	//HandleLocation.
-	location = FindLocation(req.path_, serv_cfg->locations);
-	if (location != NULL)
-	{
-		LOG_DEBUG("Location: " + location->uri_path + " accessed for: " + req.path_);
-		HandleLocationRedirection(location);
-		if (!location->allowed_methods.empty())
-				HandleLocationMethod(req.method_, location);
-		// If location has root, append custom root. Otherwise use server root.
-		if (location->root.empty())
-			file_path = PrefixRoot(req.path_, serv_cfg);
-		else
-			file_path = ReplaceRoot(req.path_, location);
-		if (IsDir(file_path) == true)
-		{
-			// If no index element is found, try to check if autoindex is on. Otherwise throw 403 Forbidden
-			if (location->index.empty())
-			{
-				if (location->autoindex == true)
-				{
-					LOG_DEBUG("Autoindex for: " + file_path);
-					HandleAutoIndex(file_path);
-				}
-				else
-					throw (HttpResponseException(Forbidden));
-			}
-			else
-			{
-				file_path = AppendIndex(file_path, location);
-				headers_["Content-Type"] = DetermineContentType(file_path);
-				body_ = OpenFile(file_path);
-				LOG_DEBUG("GET Request for file: " + file_path);
-			}
-		}
-		else
-		{
-			headers_["Content-Type"] = DetermineContentType(file_path);
-			body_ = OpenFile(file_path);
-			LOG_DEBUG("GET Request for file: " + file_path);
-		}
-	}
-	else
-	{
-		file_path = PrefixRoot(req.path_, serv_cfg);
-		file_path = AppendIndex(file_path, serv_cfg);
-		headers_["Content-Type"] = DetermineContentType(file_path);
-		body_ = OpenFile(file_path);
-		LOG_DEBUG("GET Request for file: " + file_path);
-	}
 }
 
 std::string	HttpResponse::Serialize() const
@@ -366,44 +169,64 @@ void HttpResponse::HardcodeErrorPage()
 	body_ += "</html>\n";
 }
 
-void HttpResponse::HandleErrorPage(int status_code, const ServerConfig* cfg)
+void HttpResponse::HandleRedirection(std::string redirection)
+{
+	headers_["Location"] = redirection;
+}
+
+void HttpResponse::HandleErrorPage(int status_code)
 {
 	SetStatus(status_code);
 	headers_["Content-Type"] = "text/html";
 	// In case some error occured while building the body, we need to clear it.
-	// body_.clear();
+	body_.clear();
 	
-	if (cfg != NULL && !cfg->error_pages.empty())
+	if (srv_cfg_ == nullptr)
+		return ;
+	if (srv_cfg_->error_pages.empty())
 	{
-		// .find() function returns an iterator specific to our unordered_map.
-		//  It is easier to use auto instead of
-		//  std::unordered_map<int, std::string>::iterator
-		auto it = cfg->error_pages.find(status_code);
-		// If we have a custom error page, try to open it.
-		if (it != cfg->error_pages.end())
+		HardcodeErrorPage();
+		return ;
+	}
+	// .find() function returns an iterator specific to our unordered_map.
+	//  It is easier to use auto instead of
+	//  std::unordered_map<int, std::string>::iterator
+	auto it = srv_cfg_->error_pages.find(status_code);
+	// If we have a custom error page, try to open it.
+	if (it != srv_cfg_->error_pages.end())
+	{
+		try
 		{
-			try
-			{
-				body_ = OpenFile(it->second);
-				return ;
-			}
-			catch (HttpResponseException& e)
-			{
-				LOG_WARN("Custom Error Page cannot be opened; Falling back on built-in page.");
-			}
+			body_ = OpenFile(it->second);
+		}
+		catch (HttpResponseException& e)
+		{
+			LOG_WARN("Custom Error Page cannot be opened; Falling back on built-in page.");
+			HardcodeErrorPage();
 		}
 	}
-	HardcodeErrorPage();
 }
 
-HttpResponse::HttpResponse(HttpRequest req, const ServerConfig* cfg)
+void HttpResponse::HandleGet(const RoutedRequest& req)
+{
+	if (req.autoindex == true)
+		HandleAutoIndex(req.uri);
+	else
+		body_ = OpenFile(req.uri);
+	headers_["Content-Type"] = DetermineContentType(req.uri);
+	LOG_DEBUG("GET Request for file: " + req.uri);
+}
+
+void HttpResponse::BuildResponse(const RoutedRequest& req)
 {
 	try {
-		switch (req.method_)
+		if (req.http_status_code != -1)
+			throw (HttpResponseException(req.http_status_code));
+		switch (req.method)
 		{
 			case (Get) :
 			{
-				HandleGet(req, cfg);
+				HandleGet(req);
 				break ;
 			}
 			default :
@@ -414,12 +237,13 @@ HttpResponse::HttpResponse(HttpRequest req, const ServerConfig* cfg)
 	catch (HttpResponseException& e)
 	{
 		int status_code = e.GetErrorCode();
-		LOG_DEBUG("Request resulted in Code: " + std::to_string(status_code));
-		// Handle error page
+		status_code_ = status_code;
+		if (status_code < 400 && status_code > 299)
+			HandleRedirection(req.redirection);
 		if (status_code > 399)
-			HandleErrorPage(e.GetErrorCode(), cfg);
-		// Handle other status_codes
+			HandleErrorPage(e.GetErrorCode());
 		else
 			SetStatus(status_code);
 	}
-};
+	LOG_DEBUG("BuildResponse resulted in Code: " + std::to_string(status_code_));
+}

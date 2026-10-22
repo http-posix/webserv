@@ -2,6 +2,7 @@
 #include "io/instruction.hpp"
 #include "utils/logger/logger.hpp"
 #include "http/response/response.hpp"
+#include "http/router/router.hpp"
 #include "config/parser/parser.hpp"
 
 #include <sys/socket.h>
@@ -80,7 +81,12 @@ InstructionList Connection::ProcessReceivedBytes(const char* buf){
 InstructionList	Connection::HandleCompleteRequest(){
 	InstructionList			instructions;
 	const HttpRequest&		request = http_parser_.GetRequest();
-	HttpResponse			response(request, server_config_);
+	HttpRouter				router(request, server_config_);
+	HttpResponse			response(server_config_);
+
+	auto routed_request = router.GetRoutedRequest();
+	if (routed_request != std::nullopt)
+		response.BuildResponse(*routed_request);
 
 	// if (CGI == true){
 	// 	Cgi	cgi(request, response, server_config_, srv_id_);
@@ -89,9 +95,11 @@ InstructionList	Connection::HandleCompleteRequest(){
 		// LOG_DEBUG("reading: request parsed -> cgi fd=" + std::to_string(socket_.fd()), srv_id_);
 	// }
 	// else{
+	{
 		instructions.Add(Action::WaitWritable, socket_.fd());
 		state_ = StateWriting{response.Serialize(), 0};
 		LOG_DEBUG("reading: request parsed -> writing fd=" + std::to_string(socket_.fd()), srv_id_);
+	}
 	// }
 
 	return instructions;

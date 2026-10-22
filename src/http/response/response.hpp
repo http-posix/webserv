@@ -4,13 +4,16 @@
 
 #include "config/structures.hpp"
 #include "http/request.hpp"
+#include "config/parser/parser.hpp"
 
 // Simple response abstraction. Grows to support error pages,
 // redirections, autoindex, CGI etc.
 class HttpResponse
 {
 	private :
-		int			status_code_;
+		const ServerConfig* srv_cfg_;
+
+		int			status_code_ = -1;
 		std::string status_text_;
 		std::map<std::string, std::string>	headers_;
 		std::string	body_;
@@ -18,22 +21,16 @@ class HttpResponse
 		std::string OpenFile(std::string filename);
 		std::string DetermineContentType(const std::string& path);
 		void SetStatus(int status_code);
-		void SetStatusOK();
-		const LocationConfig* FindLocation(const std::string& req_path,
-				const std::vector<LocationConfig>& locations);
-		void HandleLocationRedirection(const LocationConfig* loc);
-		void HandleLocationMethod(enum HttpMethod  &req_method, const LocationConfig* loc);
-		std::string ReplaceRoot(std::string uri, const LocationConfig* loc);
-		std::string PrefixRoot(std::string uri, const ConfigStruct* cfg);
-		std::string AppendIndex(std::string uri, const ConfigStruct* cfg);
-		bool IsDir(std::string path);
-		void HardcodeErrorPage();
-		void HandleErrorPage(int status_code, const ServerConfig* cfg);
-		void HandleAutoIndex(std::string file_path);
 
-		void HandleGet(HttpRequest& req, const ServerConfig* cfg);
-		//void HandlePost(HttpRequest& req, ServerConfig& cfg);
-		//void HandleDelete(HttpRequest& req, ServerConfig& cfg);
+		void HardcodeErrorPage();
+		void HandleErrorPage(int status_code);
+
+		void HandleAutoIndex(std::string file_path);
+		void HandleRedirection(std::string redirection);
+
+		void HandleGet(const RoutedRequest& req);
+		//void HandlePost();
+		//void HandleDelete();
 	public :
 		class HttpResponseException : public std::exception {
 			private :
@@ -43,7 +40,8 @@ class HttpResponse
 				int GetErrorCode() { return (error_code_); };
 		};
 		
-		HttpResponse(HttpRequest req, const ServerConfig* cfg);
+		void BuildResponse(const RoutedRequest& req);
+		HttpResponse(const ServerConfig* cfg) : srv_cfg_(cfg){};
 		// Serializes the response into a raw HTTP/1.1 wire format string
 		std::string	Serialize() const;
 };
