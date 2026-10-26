@@ -39,9 +39,7 @@ class HttpRouter
 		void HandleLocation();
 		void HandleNoLocation();
 
-		// Two main creators for response generation. 
-		// Depending on whether cgi is needed or not.
-		void BuildCgiRequest();
+		// Routed Request is for non-cgi request
 		void BuildRoutedRequest();
 
 		// Location specific helper functions
