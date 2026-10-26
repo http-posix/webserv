@@ -86,7 +86,12 @@ InstructionList	Connection::HandleCompleteRequest(){
 
 	auto routed_request = router.GetRoutedRequest();
 	if (routed_request != std::nullopt)
+	{
 		response.BuildResponse(*routed_request);
+		instructions.Add(Action::WaitWritable, socket_.fd());
+		state_ = StateWriting{response.Serialize(), 0};
+		LOG_DEBUG("reading: request parsed -> writing fd=" + std::to_string(socket_.fd()), srv_id_);
+	}
 
 	// if (CGI == true){
 	// 	Cgi	cgi(request, response, server_config_, srv_id_);
@@ -95,11 +100,6 @@ InstructionList	Connection::HandleCompleteRequest(){
 		// LOG_DEBUG("reading: request parsed -> cgi fd=" + std::to_string(socket_.fd()), srv_id_);
 	// }
 	// else{
-	{
-		instructions.Add(Action::WaitWritable, socket_.fd());
-		state_ = StateWriting{response.Serialize(), 0};
-		LOG_DEBUG("reading: request parsed -> writing fd=" + std::to_string(socket_.fd()), srv_id_);
-	}
 	// }
 
 	return instructions;
