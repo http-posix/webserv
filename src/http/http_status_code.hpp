@@ -13,4 +13,6 @@ enum HttpStatusCode
 	MethodNotAllowed = 405,
 	UnsupportedMediaType = 415,
 	InternalServerError = 500,
+	BadGateway = 502,
+	GatewayTimeout = 504,
 };
