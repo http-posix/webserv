@@ -193,6 +193,7 @@ void HttpRouter::HandleLocationCgi()
 	if (!IsCgi(rerouted_filepath_))
 		return ;
 	cgi_ = true;
+	cgi_req_.script_filename = req_.path_;
 	cgi_req_.script_path = rerouted_filepath_;
 	size_t slash = rerouted_filepath_.rfind('/');
 	if (slash == std::string::npos)
