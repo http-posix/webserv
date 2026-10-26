@@ -354,7 +354,7 @@ void ConfigParser::createLocationConfig(LocationConfig& location)
 			pos_ = tokenizer_.next();
 			std::string interpreter = join(collectUntil(";"));
 			if (interpreter.empty())
-				throw("Empty interpreter in cgi line.");
+				throw(ConfigException("Empty interpreter in cgi line."));
 			location.cgi_extension[extension] = interpreter;
 		}
 		else
