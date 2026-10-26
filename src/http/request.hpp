@@ -14,7 +14,7 @@ enum HttpMethod
 struct CgiRequest
 {
 	std::string interpreter;	// e.g. /usr/bin/python3
-	std::string script_path;	// resolved filesystem path of the script
+	std::string script_filename;// unresolved filesystem path of the script
 	std::string script_name;	// URI of the request (path only, no query)
 	std::string query_string;	// part after '?' (empty if none)
 	std::string request_body;	// POST body, written to the script's stdin
