@@ -28,7 +28,6 @@ RFC -> "must if"
 #include "http/response/response.hpp"
 #include "config/parser/parser.hpp"
 #include "io/connection/connection_info.hpp"
-#include "cgi/info.hpp"
 
 #include <map>
 #include <string>
@@ -36,7 +35,7 @@ RFC -> "must if"
 
 struct CgiEnv {
 	CgiEnv() = delete;
-	CgiEnv(const ConnInfo& info, const HttpRequest& req, const CgiInfo& cgi_info, const ServerConfig&, const std::string&);
+	CgiEnv(const ConnInfo& info, const HttpRequest& req, const CgiRequest& cgi_info);
 	~CgiEnv() = default;
 
 	// copy
