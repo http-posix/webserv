@@ -1,0 +1,11 @@
+server {
+	listen 8080;
+	hostname 127.0.0.1;
+	index index.html;
+	location /cgi-bin {
+		cgi .py /bin/python3;
+	}
+}
+
+
+	

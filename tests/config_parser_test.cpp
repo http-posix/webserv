@@ -350,10 +350,29 @@ TEST_CASE("Valid: nginx-style configuration")
 	CHECK(redir.redirection.second == "/new-page");
 }
 
+TEST_CASE("Valid: python bin for CGI")
+{
+	Config c = parseFile("tests/config_test_files/valid_cgi");
+
+	CHECK(c.servers[0].hostname == "127.0.0.1");
+	CHECK(c.servers[0].listen_ports[0] == 8080);
+	CHECK(c.servers[0].index == "index.html");
+	CHECK(c.servers[0].locations.size() == 1);
+	CHECK(c.servers[0].locations[0].cgi_extension[".py"] == "/bin/python3");
+
+}
+
 // ---------------------------------------------------------------------------
 // Invalid configuration files (must be rejected with a ConfigException)
 // ---------------------------------------------------------------------------
 
+/*
+TEST_CASE("Invalid cgi. Missing extension")
+{
+	expectParseFailure("tests/config_test_files/invalid_cgi");
+}
+
+*/
 TEST_CASE("Invalid configs: block syntax")
 {
 	SUBCASE("missing semicolon")
