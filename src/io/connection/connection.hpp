@@ -7,6 +7,7 @@
 #include "http/parser/parser.hpp"
 #include "io/socket/socket.hpp"
 #include "config/parser/parser.hpp"
+#include "http/http_status_code.hpp"
 
 class Connection{
 	public:
@@ -18,7 +19,7 @@ class Connection{
 		Connection(const Connection& other) = delete;
 		Connection& operator=(const Connection& other) = delete;
 
-		//move
+		// move
 		Connection(Connection&& other) noexcept = default;
 		Connection& operator=(Connection&& other) noexcept = default;
 
@@ -26,24 +27,27 @@ class Connection{
 		InstructionList	OnReadable();
 		InstructionList	OnWritable();
 		InstructionList	OnCgi();
-		InstructionList ProcessReceivedBytes(const char* buf);
-		InstructionList	HandleCompleteRequest();
+
 
 		const std::string	srv_id() const noexcept;
 		// const ServerConfig&	server_config() const noexcept;
 
 	private:
+		static constexpr size_t	kBufSize = 4096;
+
 		Socket				socket_;
-		[[maybe_unused]] ConnInfo			conn_info_; // remove [[maybe_unused]] once CGI wired
+		ConnInfo			conn_info_;
 		std::string			srv_id_;
 		const ServerConfig*	server_config_;
 
 		ConnectionState		state_ = StateReading{};
-
 		HttpParser			http_parser_; // Not in StateReadable to keep buffer with 2 dif requests
-		
-		// HttpRequest		http_request_;
-		// HttpResponse		http_response_; - note for future, when it would be ready
-		// Router			router_;
+
+		// methods
+		InstructionList ProcessReceivedBytes(const char* buf);
+		InstructionList	HandleCompleteRequest();
+		InstructionList	ProcessCgiOutput(StateCGI& cgi);
+		InstructionList	FinishCgi(StateCGI& cgi, const HttpStatusCode& code);
+
 		// bool				keep_alive;
 	};
