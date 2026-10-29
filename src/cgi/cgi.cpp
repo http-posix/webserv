@@ -27,11 +27,10 @@ namespace {
 
 Cgi::Cgi(const ConnInfo& info,
 		const HttpRequest& req,
-		const CgiInfo& cgi_info,
-		const ServerConfig& cfg,
+		const CgiRequest& cgi_info,
 		const std::string& srv_id):
 	srv_id_(srv_id),
-	cgi_env_(info, req, cgi_info, cfg, srv_id),
+	cgi_env_(info, req, cgi_info),
 	interpreter_(cgi_info.interpreter)
 {
 	BuildArgv(cgi_info.script_filename);

@@ -45,13 +45,11 @@ namespace {
 /* ========================================================================== */
 CgiEnv::CgiEnv(const ConnInfo& info,
 		const HttpRequest& req,
-		const CgiInfo& cgi_info,
-		const ServerConfig&,
-		const std::string&)
+		const CgiRequest& cgi_info)
 {
 	AddToEnv("GATEWAY_INTERFACE", kGatewayInterface);
 
-	AddToEnv("QUERY_STRING", cgi_info.query_string);
+	AddToEnv("QUERY_STRING", req.query_);
 	AddToEnv("REMOTE_ADDR", info.addr);
 	AddToEnv("REQUEST_METHOD", FindRequestedMethod(req.method_));
 	AddToEnv("SCRIPT_NAME", cgi_info.script_name);
@@ -64,8 +62,9 @@ CgiEnv::CgiEnv(const ConnInfo& info,
 	AddToEnv("REMOTE_HOST", info.addr);
 	AddHttpHeaders(req.headers_);
 
-	if (!cgi_info.path_info.empty())
-		AddToEnv("PATH_INFO", cgi_info.path_info);
+	// waiting while it will be added into src/http/request.hpp
+	// if (!cgi_info.path_info.empty())
+	// 	AddToEnv("PATH_INFO", cgi_info.path_info);
 	BuildEnvp();
 }
 
