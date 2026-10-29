@@ -29,15 +29,10 @@ Connection::Connection(Socket socket, const ConnInfo& conn_info, const std::stri
 /*                               Public Methods                               */
 /* ========================================================================== */
 
-// ssize_t recv(size_t size;
-//                         int sockfd, void buf[size], size_t size,
-//                         int flags);
-
 // Variable result is defined by default ctor with 0 size
 // That give us "no option return" so fd would be active and wait for next check
 InstructionList	Connection::OnReadable(){
 	InstructionList		instructions;
-	constexpr size_t	kBufSize = 4096;
 	char				buf[kBufSize];
 
 	ssize_t recv_bytes = ::recv(socket_.fd(), buf, kBufSize - 1, 0);
@@ -59,60 +54,26 @@ InstructionList	Connection::OnReadable(){
 	return ProcessReceivedBytes(buf);
 }
 
-InstructionList Connection::ProcessReceivedBytes(const char* buf){
-	InstructionList		instructions;
-	HttpParserState	status = http_parser_.Feed(buf);
+// InstructionList Connection::ProcessReceivedBytes(const char* buf){
+// 	InstructionList		instructions;
+// 	HttpParserState	status = http_parser_.Feed(buf);
 
-	switch (status){
-		case HttpParserState::NeedMoreData:
-			LOG_DEBUG("reading: request incomplete, waiting for more data fd="
-				+ std::to_string(socket_.fd()), srv_id_);
-			break; // No instructions => fd goes through run loop again + keep StateReading
-		case HttpParserState::Complete:
-			instructions = HandleCompleteRequest();
-			break;
-		case HttpParserState::InvalidRequest:
-			LOG_DEBUG("reading: invalid request, closing fd=" + std::to_string(socket_.fd()), srv_id_);
-			instructions.Add(Action::CloseConnection, socket_.fd());
-			break;
-	}
-	return instructions;
-}
+// 	switch (status){
+// 		case HttpParserState::NeedMoreData:
+// 			LOG_DEBUG("reading: request incomplete, waiting for more data fd="
+// 				+ std::to_string(socket_.fd()), srv_id_);
+// 			break; // No instructions => fd goes through run loop again + keep StateReading
+// 		case HttpParserState::Complete:
+// 			instructions = HandleCompleteRequest();
+// 			break;
+// 		case HttpParserState::InvalidRequest:
+// 			LOG_DEBUG("reading: invalid request, closing fd=" + std::to_string(socket_.fd()), srv_id_);
+// 			instructions.Add(Action::CloseConnection, socket_.fd());
+// 			break;
+// 	}
+// 	return instructions;
+// }
 
-InstructionList	Connection::HandleCompleteRequest(){
-	InstructionList			instructions;
-	const HttpRequest&		request = http_parser_.GetRequest();
-	HttpRouter				router(request, server_config_);
-	HttpResponse			response(server_config_);
-
-	auto routed_request = router.GetRoutedRequest();
-	if (routed_request != std::nullopt)
-	{
-		response.BuildResponse(*routed_request);
-		instructions.Add(Action::WaitWritable, socket_.fd());
-		state_ = StateWriting{response.Serialize(), 0};
-		LOG_DEBUG("reading: request parsed -> writing fd=" + std::to_string(socket_.fd()), srv_id_);
-	}
-	CgiInfo					cgi_info;
-
-	cgi_info.interpreter = "/usr/bin/python3";
-	cgi_info.script_name = "/cgi-bin/hello.py";
-	cgi_info.path_info = "";
-	cgi_info.query_string = "";
-	cgi_info.script_filename = "./www/cgi-bin/hello.py";
-
-	// if (CGI == true){
-	// 	Cgi	cgi(conn_info_, request, cgi_info, server_config_, srv_id_);
-	// 	cgi.Start();
-	// 	instructions.Add(Action::WatchCgi, cgi.pipe_fd());
-	// 	state_ = StateCGI{cgi.pipe_fd(), cgi.process_num()};
-		// LOG_DEBUG("reading: request parsed -> cgi fd=" + std::to_string(socket_.fd()), srv_id_);
-	// }
-	// else{
-	// }
-
-	return instructions;
-}
 
 // ssize_t send(size_t size;
                     //   int sockfd, const void buf[size], size_t size,

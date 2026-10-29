@@ -1,7 +1,6 @@
 #pragma once
 
 #include "cgi/env.hpp"
-#include "cgi/info.hpp"
 #include "http/http_status_code.hpp"
 #include "utils/posix/posix.hpp"
 
@@ -13,7 +12,7 @@
 class Cgi{
 	public:
 		Cgi() = delete;
-		Cgi(const ConnInfo& info, const HttpRequest& req, const CgiInfo& cgi_info, const ServerConfig& cfg, const std::string& srv_id);
+		Cgi(const ConnInfo& info, const HttpRequest& req, const CgiRequest& cgi_info, const std::string& srv_id);
 		~Cgi() = default;
 
 		// Copy
@@ -30,7 +29,7 @@ class Cgi{
 		int					pipe_read_fd() const noexcept;
 
 	private:
-		constexpr static int	kAssumedMaxFds = 1024;
+		static constexpr int	kAssumedMaxFds = 1024;
 		static constexpr int	kReadEnd = 0;
 		static constexpr int	kWriteEnd = 1;
 

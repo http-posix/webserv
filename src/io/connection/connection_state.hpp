@@ -14,8 +14,9 @@ struct StateWriting {
 };
 
 struct StateCGI {
-	int		pipe_read_fd = posix::kInvalidFd;
-	pid_t	child_pid = posix::kInvalidPid;
+	int			pipe_read_fd = posix::kInvalidFd;
+	pid_t		child_pid = posix::kInvalidPid;
+	std::string	output;
 };
 
 // using here is type alias
