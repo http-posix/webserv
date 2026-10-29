@@ -349,9 +349,10 @@ void ConfigParser::createLocationConfig(LocationConfig& location)
 			std::string extension = pos_.value;
 			if (extension[0] != '.')
 				throw (ConfigException("CGI Extension must start with '.' (got " + extension + ")"));
+			pos_ = tokenizer_.next();
+			extension += pos_.value;
 			if (extension.size() < 2)
 				throw (ConfigException("CGI Extension needs more than just a '.'"));
-			pos_ = tokenizer_.next();
 			std::string interpreter = join(collectUntil(";"));
 			if (interpreter.empty())
 				throw(ConfigException("Empty interpreter in cgi line."));
