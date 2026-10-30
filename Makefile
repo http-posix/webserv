@@ -30,7 +30,7 @@ DEPFLAGS := -MMD -MP
 # make DBG=1 LOG=1 -> debug + LOG_TO_FILE (Logger writes to file, not stdout)
 
 ifdef DBG
-	CXXFLAGS += -DDEBUG_MODE
+	CXXFLAGS += -DDEBUG_MODE -g -O0
 	ifdef LOG
 		CXXFLAGS += -DLOG_TO_FILE
 	endif
