@@ -37,8 +37,8 @@ namespace {
 		return r;
 	}
 
-	CgiInfo	MakeInfo(const std::string& interpreter, const std::string& script, const std::string& query = ""){
-		CgiInfo	info;
+	CgiRequest	MakeInfo(const std::string& interpreter, const std::string& script, const std::string& query = ""){
+		CgiRequest	info;
 		info.interpreter = interpreter;
 		info.script_name = "/cgi-bin/" + script;
 		info.query_string = query;
