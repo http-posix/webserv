@@ -37,19 +37,19 @@ namespace {
 		return r;
 	}
 
-	CgiRequest	MakeInfo(const std::string& interpreter, const std::string& script, const std::string& query = ""){
+	CgiRequest	MakeInfo(const std::string& interpreter, const std::string& script){
 		CgiRequest	info;
 		info.interpreter = interpreter;
 		info.script_name = "/cgi-bin/" + script;
-		info.query_string = query;
 		info.script_filename = kScriptDir + script;
 		return info;
 	}
 
-	HttpRequest	MakeRequest(){
+	HttpRequest	MakeRequest(const std::string& query = ""){
 		HttpRequest	req{};
 		req.method_ = HttpMethod::Get;
 		req.version_ = "HTTP/1.1";
+		req.query_ = query;
 		req.headers_ = {{"host", "localhost"}, {"authorization", "secret"}, {"proxy", "evil"}};
 		return req;
 	}
@@ -61,10 +61,9 @@ namespace {
 
 TEST_SUITE("Cgi") {
 	ConnInfo		conn{"127.0.0.1", "localhost", "8080"};
-	ServerConfig	cfg;
 
 	TEST_CASE("Script runs, pipe reaches EOF, exit status 0") {
-		Cgi	cgi(conn, MakeRequest(), MakeInfo(kPython, "env.py"), cfg, "test");
+		Cgi	cgi(conn, MakeRequest(), MakeInfo(kPython, "env.py"), "test");
 		REQUIRE(cgi.SpawnChild() == HttpStatusCode::OK);
 
 		ChildResult	r = ReadUntilEof(cgi.pipe_read_fd(), cgi.child_pid());
@@ -75,7 +74,7 @@ TEST_SUITE("Cgi") {
 	}
 
 	TEST_CASE("Read end is non-blocking") {
-		Cgi	cgi(conn, MakeRequest(), MakeInfo(kPython, "env.py"), cfg, "test");
+		Cgi	cgi(conn, MakeRequest(), MakeInfo(kPython, "env.py"), "test");
 		REQUIRE(cgi.SpawnChild() == HttpStatusCode::OK);
 
 		CHECK((::fcntl(cgi.pipe_read_fd(), F_GETFL) & O_NONBLOCK) != 0);
@@ -83,7 +82,7 @@ TEST_SUITE("Cgi") {
 	}
 
 	TEST_CASE("Environment and unsafe headers") {
-		Cgi	cgi(conn, MakeRequest(), MakeInfo(kPython, "env.py", "a=1"), cfg, "test");
+		Cgi	cgi(conn, MakeRequest("a=1"), MakeInfo(kPython, "env.py"), "test");
 		REQUIRE(cgi.SpawnChild() == HttpStatusCode::OK);
 
 		std::string out = ReadUntilEof(cgi.pipe_read_fd(), cgi.child_pid()).output;
@@ -98,7 +97,7 @@ TEST_SUITE("Cgi") {
 	}
 
 	TEST_CASE("Child runs in the script directory") {
-		Cgi	cgi(conn, MakeRequest(), MakeInfo(kPython, "env.py"), cfg, "test");
+		Cgi	cgi(conn, MakeRequest(), MakeInfo(kPython, "env.py"), "test");
 		REQUIRE(cgi.SpawnChild() == HttpStatusCode::OK);
 
 		std::string out = ReadUntilEof(cgi.pipe_read_fd(), cgi.child_pid()).output;
@@ -109,7 +108,7 @@ TEST_SUITE("Cgi") {
 		int	extra = ::dup(STDIN_FILENO); // Stands for a client socket
 		REQUIRE(extra >= 3);
 
-		Cgi	cgi(conn, MakeRequest(), MakeInfo(kPython, "fd_check.py", std::to_string(extra)), cfg, "test");
+		Cgi	cgi(conn, MakeRequest(std::to_string(extra)), MakeInfo(kPython, "fd_check.py"), "test");
 		REQUIRE(cgi.SpawnChild() == HttpStatusCode::OK);
 
 		std::string out = ReadUntilEof(cgi.pipe_read_fd(), cgi.child_pid()).output;
@@ -118,7 +117,7 @@ TEST_SUITE("Cgi") {
 	}
 
 	TEST_CASE("Missing script -> no output, non-zero exit (502)") {
-		Cgi	cgi(conn, MakeRequest(), MakeInfo(kPython, "nope.py"), cfg, "test");
+		Cgi	cgi(conn, MakeRequest(), MakeInfo(kPython, "nope.py"), "test");
 		REQUIRE(cgi.SpawnChild() == HttpStatusCode::OK);
 
 		ChildResult	r = ReadUntilEof(cgi.pipe_read_fd(), cgi.child_pid());
@@ -128,7 +127,7 @@ TEST_SUITE("Cgi") {
 	}
 
 	TEST_CASE("Missing interpreter -> execve fails, exit 1 (502)") {
-		Cgi	cgi(conn, MakeRequest(), MakeInfo("/no/such/python", "env.py"), cfg, "test");
+		Cgi	cgi(conn, MakeRequest(), MakeInfo("/no/such/python", "env.py"), "test");
 		REQUIRE(cgi.SpawnChild() == HttpStatusCode::OK);
 
 		ChildResult	r = ReadUntilEof(cgi.pipe_read_fd(), cgi.child_pid());
