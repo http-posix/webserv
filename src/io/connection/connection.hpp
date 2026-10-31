@@ -47,7 +47,6 @@ class Connection{
 		InstructionList ProcessReceivedBytes(const char* buf);
 		InstructionList	HandleCompleteRequest();
 		InstructionList	ProcessCgiOutput(StateCGI& cgi);
-		InstructionList	FinishCgi(StateCGI& cgi, const HttpStatusCode& code);
 
 		// bool				keep_alive;
 	};
