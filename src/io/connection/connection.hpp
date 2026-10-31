@@ -1,23 +1,25 @@
 #pragma once
 
 #include "io/connection/connection_state.hpp"
+#include "io/connection/connection_info.hpp"
 #include "io/instruction.hpp"
 #include "http/request.hpp"
 #include "http/parser/parser.hpp"
 #include "io/socket/socket.hpp"
 #include "config/parser/parser.hpp"
+#include "http/http_status_code.hpp"
 
 class Connection{
 	public:
 		Connection() = delete;
-		Connection(Socket socket, std::string srv_id, const ServerConfig& server_config);
+		Connection(Socket socket, const ConnInfo& conn_info, const std::string& srv_id, const ServerConfig& server_config);
 		~Connection() = default;
 
 		// copy
 		Connection(const Connection& other) = delete;
 		Connection& operator=(const Connection& other) = delete;
 
-		//move
+		// move
 		Connection(Connection&& other) noexcept = default;
 		Connection& operator=(Connection&& other) noexcept = default;
 
@@ -25,22 +27,26 @@ class Connection{
 		InstructionList	OnReadable();
 		InstructionList	OnWritable();
 		InstructionList	OnCgi();
-		InstructionList ProcessReceivedBytes(const char* buf);
-		InstructionList	HandleCompleteRequest();
+
 
 		const std::string	srv_id() const noexcept;
 		// const ServerConfig&	server_config() const noexcept;
 
 	private:
+		static constexpr size_t	kBufSize = 4096;
+
 		Socket				socket_;
+		ConnInfo			conn_info_;
 		std::string			srv_id_;
-		// Used by response building (WIP); remove [[maybe_unused]] once wired
-		[[maybe_unused]] const ServerConfig*	server_config_;
-		ConnectionState		state_; // Should I be consistent and set state_ in ctor or better here, `cause this is always initial state?
+		const ServerConfig*	server_config_;
+
+		ConnectionState		state_ = StateReading{};
 		HttpParser			http_parser_; // Not in StateReadable to keep buffer with 2 dif requests
-		
-		// HttpRequest		http_request_;
-		// HttpResponse		http_response_; - note for future, when it would be ready
-		// Router			router_;
+
+		// methods
+		InstructionList ProcessReceivedBytes(const char* buf);
+		InstructionList	HandleCompleteRequest();
+		InstructionList	ProcessCgiOutput(StateCGI& cgi);
+
 		// bool				keep_alive;
 	};

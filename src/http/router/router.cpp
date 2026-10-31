@@ -193,8 +193,8 @@ void HttpRouter::HandleLocationCgi()
 	if (!IsCgi(rerouted_filepath_))
 		return ;
 	cgi_ = true;
-	cgi_req_.script_filename = req_.path_;
-	cgi_req_.script_name = rerouted_filepath_;
+	cgi_req_.script_filename = rerouted_filepath_;
+	cgi_req_.script_name = req_.path_;
 }
 
 void HttpRouter::HandleLocation()
