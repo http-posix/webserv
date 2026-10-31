@@ -36,6 +36,25 @@ namespace {
 		}
 		return AddrToStr(local.sin_addr.s_addr);
 	}
+
+	std::string ReventsToString(short revents) {
+		std::string out;
+
+		if (revents & POLLIN)
+			out += "POLLIN|";
+		if (revents & POLLOUT)
+			out += "POLLOUT|";
+		if (revents & POLLHUP)
+			out += "POLLHUP|";
+		if (revents & POLLERR)
+			out += "POLLERR|";
+		if (revents & POLLNVAL)
+			out += "POLLNVAL|";
+		if (out.empty())
+			return "0";
+		out.pop_back(); // remove trailing '|'
+		return out;
+	}
 }
 
 /* ========================================================================== */
@@ -174,6 +193,9 @@ void	EventLoop::AcceptConnection(int entry_fd, const Server& l){
 				};
 	connections_.emplace(fd, 
 				Connection(std::move(accepted_socket), info, l.srv_id(), l.server_config()));
+	LOG_DEBUG("accept: new client fd=" + std::to_string(fd)
+				+ " from " + info.addr,
+				l.srv_id());
 	pm_.Watch(fd, POLLIN);
 }
 
@@ -190,12 +212,24 @@ void	EventLoop::HandleConnectionEvent(const pollfd entry){
 	InstructionList	instructions;
 
 	// First resolve is it cgi or not, then check what happened
-	if (entry.fd != owner_fd)
+	if (entry.fd != owner_fd){
+		LOG_DEBUG("We are going to OnCgi fd=" + std::to_string(entry.fd)
+					+ " revents=" + ReventsToString(entry.revents),
+					connection.srv_id());
 		instructions = connection.OnCgi();
-	else if (entry.revents & POLLIN)
+	}
+	else if (entry.revents & POLLIN){
+		LOG_DEBUG("We are going to OnReadable fd=" + std::to_string(entry.fd)
+					+ " revents=" + ReventsToString(entry.revents),
+					connection.srv_id());
 		instructions = connection.OnReadable();
-	else if (entry.revents & POLLOUT)
+	}
+	else if (entry.revents & POLLOUT){
+		LOG_DEBUG("We are going to OnWritable fd=" + std::to_string(entry.fd)
+					+ " revents=" + ReventsToString(entry.revents),
+					connection.srv_id());
 		instructions = connection.OnWritable();
+	}
 	else {
 		LOG_DEBUG("error branch in connection", connection.srv_id());
 		// TODO: proper POLLERR/POLLHUP/POLLNVAL handling (different for cgi pipe vs client fd)
