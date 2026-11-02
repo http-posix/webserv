@@ -142,7 +142,7 @@ void	EventLoop::HandleWatched(int ready_count){
 /*int accept(int socket, struct sockaddr *restrict address,
        socklen_t *restrict address_len);*/
 
-void	EventLoop::HandleListener(const pollfd poll_entry, [[maybe_unused]] size_t i){
+void	EventLoop::HandleListener(const pollfd poll_entry, size_t i){
 	// Contract 
 	assert(i < size_listeners_);
 	assert(poll_entry.fd == listeners_[i].fd());
@@ -150,7 +150,7 @@ void	EventLoop::HandleListener(const pollfd poll_entry, [[maybe_unused]] size_t 
 	const Server& l = listeners_[i];
 
 	// early return
-		if (poll_entry.revents & (POLLHUP | POLLERR | POLLNVAL)){
+	if (poll_entry.revents & (POLLHUP | POLLERR | POLLNVAL)){
 		std::string prefix;
 		if (poll_entry.revents & POLLNVAL)
 			prefix = "Listener fd invalid (bug: fd closed but still in poll set): ";
