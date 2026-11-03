@@ -5,11 +5,16 @@
 #include "http/router/router.hpp"
 #include "config/parser/parser.hpp"
 #include "cgi/cgi.hpp"
+#include "utils/posix/posix.hpp"
 
 #include <sys/socket.h>
 #include <unistd.h>
 #include <array>
 #include <cassert>
+
+/* ========================================================================== */
+/*                             Anonymous Namespace                            */
+/* ========================================================================== */
 
 namespace {
 	// TODO: how this could be replaced this with reasponse http?
@@ -153,6 +158,24 @@ InstructionList	Connection::OnCgi(){
 
 const std::string	Connection::srv_id() const noexcept {
 	return srv_id_;
+}
+
+bool	Connection::InStateCgi() const noexcept {
+	return std::holds_alternative<StateCGI>(state_);
+}
+
+int	Connection::cgi_read_fd() const noexcept {
+	const StateCGI* state_cgi = std::get_if<StateCGI>(&state_);
+	if (!state_cgi)
+		return posix::kInvalidFd;
+	return state_cgi->pipe_read_fd;
+}
+
+pid_t	Connection::cgi_pid() const noexcept {
+	const StateCGI* state_cgi = std::get_if<StateCGI>(&state_);
+	if (!state_cgi)
+		return posix::kInvalidPid;
+	return state_cgi->child_pid;
 }
 
 // const ServerConfig&	Connection::server_config() const noexcept{

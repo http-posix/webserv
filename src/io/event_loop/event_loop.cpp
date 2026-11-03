@@ -3,6 +3,8 @@
 #include "io/event_loop/signal_handler.hpp"
 #include "io/socket/socket.hpp"
 #include "io/instruction.hpp"
+#include "utils/posix/posix.hpp"
+
 
 #include <cerrno>
 #include <cstddef>
@@ -10,6 +12,7 @@
 #include <sys/socket.h>
 #include <cstring>
 #include <arpa/inet.h>
+#include <unistd.h>
 // #include <netinet/in.h>
 
 /* ========================================================================== */
@@ -231,7 +234,9 @@ void	EventLoop::HandleConnectionEvent(const pollfd entry){
 		instructions = connection.OnWritable();
 	}
 	else {
-		LOG_DEBUG("error branch in connection", connection.srv_id());
+		LOG_DEBUG("hangup/error on fd=" + std::to_string(entry.fd)
+					+ " revents=" + ReventsToString(entry.revents),
+					connection.srv_id());
 		// TODO: proper POLLERR/POLLHUP/POLLNVAL handling (different for cgi pipe vs client fd)
 		CloseConnection(owner_fd);
 		return ;
@@ -274,6 +279,7 @@ void	EventLoop::ApplyInstructions(const InstructionList& instructions, int owner
 			case Action::WatchCgi:
 				pm_.Watch(fd, POLLIN);
 				cgi_owners_[fd] = owner_fd;
+				pm_.SetEvents(owner_fd, 0); // connection is paused until the CGI finishes
 				break;
 			case Action::StopWatching:
 				pm_.Unwatch(fd);
@@ -291,8 +297,26 @@ void	EventLoop::CloseConnection(int fd){
 	if (it == connections_.end())
 		return; // Already closed
 	
-		// CGI ?
+	Connection&	conn = it->second;
 	const std::string ctx = it->second.srv_id();
+
+	if (conn.InStateCgi()){
+		const int	pipe_fd = conn.cgi_read_fd();
+		const pid_t	pid = conn.cgi_pid();
+
+		pm_.Unwatch(pipe_fd);
+		cgi_owners_.erase(pipe_fd);
+		// TODO move this to posix namespace
+		if (pipe_fd != posix::kInvalidFd){
+			::close(pipe_fd);
+			// pipe_fd = posix::kInvalidFd;
+		}
+		// TODO kill pid + schedule reap child
+		// if (pid > 0)
+		LOG_DEBUG("cgi aborted process pid=" + std::to_string(pid)
+					+ " fd=" + std::to_string(fd),
+					ctx);
+	}
 	pm_.Unwatch(fd);
 	connections_.erase(it);
 	LOG_DEBUG("closed connection fd=" + std::to_string(fd), ctx);
