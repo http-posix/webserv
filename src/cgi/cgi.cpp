@@ -4,6 +4,7 @@
 
 #include <unistd.h>
 #include <cstdlib>
+#include <fcntl.h>
 
 /* ========================================================================== */
 /*                             Anonymous Namespace                            */
@@ -19,6 +20,14 @@ namespace {
 			return {"/", path.substr(1)};
 		return {path.substr(0, slash), path.substr(slash + 1)};
 		}
+
+	bool	RedirectStdinToDevNull(){
+		int	dev_null = ::open("/dev/null", O_RDONLY);
+		if (dev_null == -1 || ::dup2(dev_null, STDIN_FILENO) == -1)
+			return false;
+		::close(dev_null);
+		return true;
+	}
 }
 
 /* ========================================================================== */
@@ -67,6 +76,10 @@ HttpStatusCode	Cgi::SpawnChild(){
 		if (chdir(script_dir_.c_str()) == posix::kSyscallError)
 			std::_Exit(1);
 		Signal::SetupDefaultSignals();
+		// TODO check how this will match with POST behavior
+		if (!RedirectStdinToDevNull())
+			std::_Exit(1);
+
 		execve(interpreter_.c_str(), argv_, cgi_env_.Envp());
 		std::_Exit(127);
 	}
