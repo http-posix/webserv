@@ -9,6 +9,8 @@
 #include "config/parser/parser.hpp"
 #include "http/http_status_code.hpp"
 
+#include <sys/types.h>
+
 class Connection{
 	public:
 		Connection() = delete;
@@ -30,6 +32,9 @@ class Connection{
 
 
 		const std::string	srv_id() const noexcept;
+		bool				InStateCgi() const noexcept;
+		int					cgi_read_fd() const noexcept;
+		pid_t				cgi_pid() const noexcept;
 		// const ServerConfig&	server_config() const noexcept;
 
 	private:
