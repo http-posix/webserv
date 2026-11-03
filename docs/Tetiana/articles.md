@@ -35,6 +35,9 @@
 	- [Linux man-pages: Socket(7)](https://man7.org/linux/man-pages/man7/socket.7.html)
 	- [The Open Group: <poll.h>](https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/poll.h.html)
 	- [The Open Group: poll, ppoll — input/output multiplexing](https://pubs.opengroup.org/onlinepubs/9799919799/functions/poll.html)
+	- [poll() System Call in Linux – How It Works and How It Compares to select()](https://embeddedpathashala.com/poll-system-call-in-linux-how-it-works-and-how-it-compares-to-select/)
+	- [The Linux Programming Interface 63.2.2](https://man7.org/tlpi/)
+	- [The problem with select() vs. poll()](https://beesbuzz.biz/code/5739-The-problem-with-select-vs.-poll)
 
 - network
 	- [Human Augmented: Ports and Sockets explained](https://www.youtube.com/watch?v=jnHHpNRrdwA)
