@@ -95,3 +95,6 @@
 	- [HTTP Request Smuggling](https://www.imperva.com/learn/application-security/http-request-smuggling/)
 	- [Wikipedia: HTTP Request Smuggling](https://en.wikipedia.org/wiki/HTTP_request_smuggling)
 	- [Hypertext Transfer Protocol (HTTP) Field Name Registry](iana.org/assignments/http-fields)
+
+- bash / scripts
+	[AWK command in Linux](https://www.geeksforgeeks.org/linux-unix/awk-command-unixlinux-examples/)
