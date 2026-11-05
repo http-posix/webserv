@@ -52,6 +52,7 @@ class Connection{
 		InstructionList ProcessReceivedBytes(const char* buf);
 		InstructionList	HandleCompleteRequest();
 		InstructionList	ProcessCgiOutput(StateCGI& cgi);
+		InstructionList	DiscardWhileCgi(ssize_t recv_bytes);
 
-		// bool				keep_alive;
+		//bool				keep_alive_ ;
 	};

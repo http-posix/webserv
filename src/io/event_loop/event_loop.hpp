@@ -3,6 +3,7 @@
 #include "app/server/server.hpp"
 #include "io/event_loop/poll_manager.hpp"
 #include "io/connection/connection.hpp"
+#include "io/event_loop/child_reaper.hpp"
 
 #include <cstddef>
 #include <unordered_map>
@@ -21,6 +22,7 @@ class EventLoop{
 		const size_t						size_listeners_;
 		static constexpr int				kPollTimeoutMs = 1000; // additional timeout needed for (60-75 sec in NGINX – we need ms(!))
 		PollManager							pm_;
+		ChildReaper							reaper_;
 		std::unordered_map<int, Connection>	connections_;
 		std::unordered_map<int, int>		cgi_owners_;
 
@@ -40,6 +42,6 @@ class EventLoop{
 		void		CloseConnection(int fd);
 		int			FindOwner(int fd);
 		void		ApplyInstructions(const InstructionList& instructions, int owner_fd);
-
+		void		CleanupCgiBeforeShutdown();
 };
 

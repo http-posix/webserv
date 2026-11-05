@@ -74,14 +74,18 @@ InstructionList	Connection::OnReadable(){
 		instructions.Add(Action::CloseConnection, socket_.fd());
 		return instructions;
 	}
+	// if Connection disrupted with ctrl+C we go here too
 	if (recv_bytes == 0){
 		LOG_DEBUG("reading: client closed connection, closing fd=" + std::to_string(socket_.fd()), srv_id_);
 		instructions.Add(Action::CloseConnection, socket_.fd());
 		return instructions;
 	}
+	if (InStateCgi()){
+		return DiscardWhileCgi(recv_bytes);
+	}
 
 	LOG_DEBUG("reading: recv fd=" + std::to_string(socket_.fd())
-		+ " recv_bytes=" + std::to_string(recv_bytes), srv_id_);
+					+ " recv_bytes=" + std::to_string(recv_bytes), srv_id_);
 	buf[recv_bytes] = '\0';
 	return ProcessReceivedBytes(buf);
 }
@@ -135,11 +139,10 @@ InstructionList	Connection::OnCgi(){
 		LOG_ERROR("cgi: read failed fd=" + std::to_string(socket_.fd())
 				+ " pid=" + std::to_string(state_cgi.child_pid),
 				srv_id_);
-		// TODO stop child
 		instructions.Add(Action::StopWatching, state_cgi.pipe_read_fd);
 		instructions.Add(Action::WaitWritable, socket_.fd());
-
-		::close(state_cgi.pipe_read_fd);
+		instructions.AddPid(Action::KillChild, state_cgi.child_pid);
+		::close(state_cgi.pipe_read_fd); // Add proper close after fd-posix-refactoring
 
 		// TODO check is code proper for this type of error
 		state_ = StateWriting{BuildCgiError(HttpStatusCode::BadGateway), 0};
@@ -252,9 +255,9 @@ InstructionList	Connection::ProcessCgiOutput(StateCGI& state_cgi){
 
 	instructions.Add(Action::StopWatching, state_cgi.pipe_read_fd);
 	instructions.Add(Action::WaitWritable, socket_.fd());
+	instructions.AddPid(Action::ReapChild, pid);
 
-	::close(state_cgi.pipe_read_fd);
-	// TODO: reap child
+	::close(state_cgi.pipe_read_fd); // Add proper close after fd-posix-refactoring
 
 	if (!HasHeaderEnd(state_cgi.output)){
 		LOG_WARN("cgi: no headers in output pid=" + std::to_string(pid)
@@ -270,4 +273,10 @@ InstructionList	Connection::ProcessCgiOutput(StateCGI& state_cgi){
 	}
 
 	return instructions;
+}
+
+InstructionList	Connection::DiscardWhileCgi([[maybe_unused]]ssize_t recv_bytes){
+	LOG_DEBUG("reading: data during CGI discarded fd=" + std::to_string(socket_.fd())
+				+ " recv_bytes=" + std::to_string(recv_bytes), srv_id_);
+	return {};
 }
