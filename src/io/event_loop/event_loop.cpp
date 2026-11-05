@@ -40,7 +40,7 @@ namespace {
 		return AddrToStr(local.sin_addr.s_addr);
 	}
 
-	std::string ReventsToString(short revents) {
+	[[maybe_unused]] std::string ReventsToString(short revents) {
 		std::string out;
 
 		if (revents & POLLIN)
@@ -81,6 +81,7 @@ void	EventLoop::run(){
 	while (Signal::g_signal_running){
 		int ready_count = pm_.Poll(kPollTimeoutMs);
 		
+		reaper_.CheckChildren();
 		// check timeout once here, because if I'll do it in the end I'll never get there if I'll in if-continue loop
 
 		// early return for readability & branch prediction make it cheap
@@ -95,6 +96,7 @@ void	EventLoop::run(){
 		// happy path logic
 		HandleWatched(ready_count);
 	}
+	CleanupCgiBeforeShutdown();
 }
 
 /* ========================================================================== */
@@ -216,7 +218,8 @@ void	EventLoop::HandleConnectionEvent(const pollfd entry){
 
 	// First resolve is it cgi or not, then check what happened
 	if (entry.fd != owner_fd){
-		LOG_DEBUG("We are going to OnCgi fd=" + std::to_string(entry.fd)
+		LOG_DEBUG("We are going to OnCgi fd=" + std::to_string(owner_fd)
+					+ " pipe_fd=" + std::to_string(entry.fd)
 					+ " revents=" + ReventsToString(entry.revents),
 					connection.srv_id());
 		instructions = connection.OnCgi();
@@ -268,7 +271,9 @@ void	EventLoop::ApplyInstructions(const InstructionList& instructions, int owner
 	// There could be queue of instructions if this is cgi
 	// For common connection we expected only 1 instruction
 	for (int i = 0; i < instructions.count; i++){
-		int fd = instructions.list[i].target_fd;
+		int		fd = instructions.list[i].target_fd;
+		pid_t	pid = instructions.list[i].pid;
+
 		switch (instructions.list[i].action){
 			case Action::WaitReadable:
 				pm_.SetEvents(fd, POLLIN);
@@ -279,7 +284,6 @@ void	EventLoop::ApplyInstructions(const InstructionList& instructions, int owner
 			case Action::WatchCgi:
 				pm_.Watch(fd, POLLIN);
 				cgi_owners_[fd] = owner_fd;
-				pm_.SetEvents(owner_fd, 0); // connection is paused until the CGI finishes
 				break;
 			case Action::StopWatching:
 				pm_.Unwatch(fd);
@@ -288,6 +292,12 @@ void	EventLoop::ApplyInstructions(const InstructionList& instructions, int owner
 			case Action::CloseConnection:
 				CloseConnection(owner_fd); // Check logic when CGI will work
 				return;
+			case Action::ReapChild:
+				reaper_.Track(pid);
+				break;
+			case Action::KillChild:
+				reaper_.Abort(pid);
+				break;
 		}
 	}
 }
@@ -311,8 +321,7 @@ void	EventLoop::CloseConnection(int fd){
 			::close(pipe_fd);
 			// pipe_fd = posix::kInvalidFd;
 		}
-		// TODO kill pid + schedule reap child
-		// if (pid > 0)
+		reaper_.Abort(pid);
 		LOG_DEBUG("cgi aborted process pid=" + std::to_string(pid)
 					+ " fd=" + std::to_string(fd),
 					ctx);
@@ -320,4 +329,12 @@ void	EventLoop::CloseConnection(int fd){
 	pm_.Unwatch(fd);
 	connections_.erase(it);
 	LOG_DEBUG("closed connection fd=" + std::to_string(fd), ctx);
+}
+
+void	EventLoop::CleanupCgiBeforeShutdown(){
+	for (const auto& [fd, conn] : connections_){
+		if (conn.InStateCgi())
+			reaper_.Track(conn.cgi_pid());
+	}
+	reaper_.KillAndWaitAll();
 }
