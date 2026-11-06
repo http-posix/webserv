@@ -10,7 +10,7 @@
 #include "http/http_status_code.hpp"
 #include "http/request.hpp"
 
-std::string	HttpResponse::OpenFile(std::string filename)
+std::string	HttpResponse::ReadFile(std::string filename)
 {
 	std::ifstream		inputFile(filename.c_str());
 	std::stringstream	buffer;
@@ -197,7 +197,7 @@ void HttpResponse::HandleErrorPage(int status_code)
 	{
 		try
 		{
-			body_ = OpenFile(it->second);
+			body_ = ReadFile(it->second);
 		}
 		catch (HttpResponseException& e)
 		{
@@ -212,7 +212,7 @@ void HttpResponse::HandleGet(const RoutedRequest& req)
 	if (req.autoindex == true)
 		HandleAutoIndex(req.uri);
 	else
-		body_ = OpenFile(req.uri);
+		body_ = ReadFile(req.uri);
 	headers_["Content-Type"] = DetermineContentType(req.uri);
 	LOG_DEBUG("GET Request for file: " + req.uri);
 }
