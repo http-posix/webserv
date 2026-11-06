@@ -197,6 +197,12 @@ void HttpRouter::HandleLocationCgi()
 	cgi_req_.script_name = rerouted_filepath_;
 }
 
+void HttpRouter::HandleLocationUploadEnable()
+{
+	upload_enable_ = loc_->upload_enable;
+	upload_location_ = loc_->upload_location;
+}
+
 void HttpRouter::HandleLocation()
 {
 	HandleLocationRedirection();
@@ -204,6 +210,8 @@ void HttpRouter::HandleLocation()
 	HandleLocationRoot();
 	if (req_.method_ == Get)
 		HandleLocationIndex();
+	if (req_.method_ == Post)
+		HandleLocationUploadEnable();
 	HandleLocationCgi();
 };
 
