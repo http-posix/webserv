@@ -8,4 +8,10 @@ server
 	{
 		return 302 https://google.com/;
 	}
+	location /upload
+	{
+		methods POST;
+		upload_enable on;
+		upload_store temp/;
+	}
 }
