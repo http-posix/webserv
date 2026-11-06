@@ -19,6 +19,7 @@ class HttpResponse
 		std::string	body_;
 
 		std::string ReadFile(std::string filename);
+		void UploadFile(std::string filename, std::string body);
 		std::string DetermineContentType(const std::string& path);
 		void SetStatus(int status_code);
 
@@ -29,7 +30,7 @@ class HttpResponse
 		void HandleRedirection(std::string redirection);
 
 		void HandleGet(const RoutedRequest& req);
-		//void HandlePost();
+		void HandlePost(const RoutedRequest& req);
 		//void HandleDelete();
 	public :
 		class HttpResponseException : public std::exception {

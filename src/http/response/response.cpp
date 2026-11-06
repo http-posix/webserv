@@ -31,6 +31,19 @@ std::string	HttpResponse::ReadFile(std::string filename)
 	return (result);
 }
 
+void	HttpResponse::UploadFile(std::string filename, std::string body)
+{
+	std::ofstream createdFile(filename.c_str());
+
+	if (!createdFile.is_open())
+	{
+		LOG_DEBUG("Error in UploadFile for " + filename);
+		throw (HttpResponseException(InternalServerError));
+	}
+	createdFile << body;
+	createdFile.close();
+}
+
 std::string HttpResponse::DetermineContentType(const std::string& path)
 {
 	//find the last `.` starting from the right (reverse search).
@@ -217,6 +230,33 @@ void HttpResponse::HandleGet(const RoutedRequest& req)
 	LOG_DEBUG("GET Request for file: " + req.uri);
 }
 
+std::string FindFilename(std::map<std::string, std::string> headers)
+{
+	(void) headers;
+	//std::map<std::string, std::string>::iterator it;
+	//for (it = headers.begin(); it != headers.end(); it++)
+	return ("");
+}
+
+void HttpResponse::HandlePost(const RoutedRequest& req)
+{
+	static int i = 0;
+	if (req.upload_enable == false)
+		throw (HttpResponseException(Forbidden));
+	std::string filename = FindFilename(req.headers);
+	if (filename.empty())
+		filename = std::to_string(i++);
+	filename = req.upload_location + filename;
+
+	UploadFile(filename, req.body);
+	// Find the file name in headers.
+	// open upload_location + filename
+	// put body inside file
+	// close file
+	// setstatus 201 created. 
+	// Create additional information if needed.
+}
+
 void HttpResponse::BuildResponse(const RoutedRequest& req)
 {
 	try {
@@ -227,6 +267,11 @@ void HttpResponse::BuildResponse(const RoutedRequest& req)
 			case (Get) :
 			{
 				HandleGet(req);
+				break ;
+			}
+			case (Post) :
+			{
+				HandlePost(req);
 				break ;
 			}
 			default :
