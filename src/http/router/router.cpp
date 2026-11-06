@@ -239,6 +239,8 @@ void HttpRouter::BuildRoutedRequest()
 	rout_req_.version = req_.version_;
 	rout_req_.headers = req_.headers_;
 	rout_req_.body = req_.body_;
+	rout_req_.upload_enable = upload_enable_;
+	rout_req_.upload_location = upload_location_;
 
 	rout_req_.http_status_code = http_status_code_;
 	rout_req_.autoindex = autoindex_;
