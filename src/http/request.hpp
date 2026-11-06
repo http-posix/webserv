@@ -29,6 +29,8 @@ struct RoutedRequest
 	int http_status_code;
 	bool autoindex;
 	std::string redirection;
+	std::string upload_location;
+	bool upload_enable;
 };
 
 struct	HttpRequest
