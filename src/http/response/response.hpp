@@ -18,7 +18,7 @@ class HttpResponse
 		std::map<std::string, std::string>	headers_;
 		std::string	body_;
 
-		std::string OpenFile(std::string filename);
+		std::string ReadFile(std::string filename);
 		std::string DetermineContentType(const std::string& path);
 		void SetStatus(int status_code);
 
