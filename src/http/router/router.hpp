@@ -32,6 +32,9 @@ class HttpRouter
 		int http_status_code_;
 		std::string redirection_;
 
+		bool upload_enable_ = false;
+		std::string upload_location_;
+
 		CgiRequest cgi_req_;
 		RoutedRequest rout_req_;
 		
@@ -50,6 +53,7 @@ class HttpRouter
 		void HandleLocationRoot();
 		void HandleLocationIndex();
 		void HandleLocationCgi();
+		void HandleLocationUploadEnable();
 
 		// ReRouting FilePath with respect to configuration.
 		void ReplaceLocRoot();
