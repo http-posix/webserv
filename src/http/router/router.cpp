@@ -202,14 +202,16 @@ void HttpRouter::HandleLocation()
 	HandleLocationRedirection();
 	HandleLocationMethod();
 	HandleLocationRoot();
-	HandleLocationIndex();
+	if (req_.method_ == Get)
+		HandleLocationIndex();
 	HandleLocationCgi();
 };
 
 void HttpRouter::HandleNoLocation()
 {
 	PrefixServerRoot();
-	AppendIndex(srv_cfg_);
+	if (req_.method_ == Get)
+		AppendIndex(srv_cfg_);
 }
 
 // Does the cgi request not need to know whether it is get or post?
