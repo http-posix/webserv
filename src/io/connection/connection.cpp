@@ -139,14 +139,7 @@ InstructionList	Connection::OnCgi(){
 		LOG_ERROR("cgi: read failed fd=" + std::to_string(socket_.fd())
 				+ " pid=" + std::to_string(state_cgi.child_pid),
 				srv_id_);
-		instructions.Add(Action::StopWatching, state_cgi.pipe_read_fd);
-		instructions.Add(Action::WaitWritable, socket_.fd());
-		instructions.AddPid(Action::KillChild, state_cgi.child_pid);
-		::close(state_cgi.pipe_read_fd); // Add proper close after fd-posix-refactoring
-
-		// TODO check is code proper for this type of error
-		state_ = StateWriting{BuildCgiError(HttpStatusCode::BadGateway), 0};
-		return instructions;
+		return AbortCgi(state_cgi, HttpStatusCode::BadGateway);
 	}
 	if (bytes > 0){
 		state_cgi.output.append(buf.data(), bytes); // bytes automatically will be casted to the size_t
@@ -280,3 +273,17 @@ InstructionList	Connection::DiscardWhileCgi([[maybe_unused]]ssize_t recv_bytes){
 				+ " recv_bytes=" + std::to_string(recv_bytes), srv_id_);
 	return {};
 }
+
+InstructionList	Connection::AbortCgi(const StateCGI& state_cgi, const HttpStatusCode code){
+	InstructionList	instructions;
+
+	instructions.Add(Action::StopWatching, state_cgi.pipe_read_fd);
+	instructions.Add(Action::WaitWritable, socket_.fd());
+	instructions.AddPid(Action::KillChild, state_cgi.child_pid);
+
+	::close(state_cgi.pipe_read_fd); // Add proper close after fd-posix-refactoring
+
+	state_ = StateWriting{BuildCgiError(code), 0};
+	return instructions;
+}
+
