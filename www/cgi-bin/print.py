@@ -1,39 +1,40 @@
 # Minimal CGI script for GET testing.
 # Shows what the server passed via environment variables (RFC 3875).
 
+import html
 import os
-import sys
-from urllib.parse import parse_qs
+
+CGI_VARS = {
+	"GATEWAY_INTERFACE", "QUERY_STRING", "REMOTE_ADDR", "REMOTE_HOST",
+	"REQUEST_METHOD", "SCRIPT_NAME", "SERVER_NAME", "SERVER_PORT",
+	"SERVER_PROTOCOL", "SERVER_SOFTWARE",
+	"CONTENT_LENGTH", "CONTENT_TYPE", "PATH_INFO",
+}
+
+
+def is_ours(key):
+	return key in CGI_VARS or key.startswith("HTTP_")
+
+
+def print_header():
+	print("Content-Type: text/html\r\n\r\n", end="")
+
+def print_our_vars():
+	print("<h2>CGI env (set by webserv)</h2><ul>")
+	for key in sorted(k for k in os.environ if is_ours(k)):
+		print(f"<li>{html.escape(key)} = {html.escape(os.environ[key])}</li>")
+	print("</ul>")
+
+
+def print_other_names():
+	others = sorted(k for k in os.environ if not is_ours(k))
+	names = ", ".join(html.escape(k) for k in others) or "none"
+	print(f"<p><small>Not from webserv: {names}</small></p>")
 
 def main():
-	method = os.environ.get("REQUEST_METHOD", "")
-	query = os.environ.get("QUERY_STRING", "")
-	params = parse_qs(query)
-
-	body = []
-	body.append("<html><body>")
-	body.append("<h1>Hello from Python CGI</h1>")
-	body.append(f"<p>REQUEST_METHOD: {method}</p>")
-	body.append(f"<p>QUERY_STRING: {query}</p>")
-
-	if params:
-		body.append("<ul>")
-		for key, values in params.items():
-			body.append(f"<li>{key} = {', '.join(values)}</li>")
-		body.append("</ul>")
-
-	body.append("<h2>CGI env</h2><ul>")
-	for key, value in sorted(os.environ.items()):
-		body.append(f"<li>{key} = {value}</li>")
-	body.append("</ul></body></html>")
-
-	html = "\n".join(body)
-
-	# CGI output: headers, empty line, body
-	sys.stdout.write("Content-Type: text/html\r\n")
-	sys.stdout.write(f"Content-Length: {len(html.encode())}\r\n")
-	sys.stdout.write("\r\n")
-	sys.stdout.write(html)
+	print_header()
+	print_our_vars()
+	print_other_names()
 
 if __name__ == "__main__":
 	main()
