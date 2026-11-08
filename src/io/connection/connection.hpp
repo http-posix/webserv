@@ -12,6 +12,17 @@
 #include <sys/types.h>
 #include <chrono>
 
+/**
+ * One client connection as a state machine: Reading -> (CGI) -> Writing.
+ *
+ * - Owns the client socket and the HTTP parser.
+ * - Reacts to events (readable, writable, CGI pipe readable, CGI deadline)
+ *   and returns instructions; it does not change the poll set itself.
+ * - CGI: collects the output (max kMaxCgiOutput), aborts with 502 on a
+ *   read error or too large output, and with 504 after kCgiTimeout.
+ * - Data from the client during CGI is read and discarded, so a client
+ *   disconnect is still seen.
+ */
 class Connection{
 	public:
 		Connection() = delete;

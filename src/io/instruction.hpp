@@ -19,9 +19,10 @@ enum class Action {
 	StopWatching, // CGI finished + Connection is keep_alive
 	CloseConnection, // Timeout or error from Connection, notCGI
 	ReapChild, // pid is a target, child catch EOF
-	KillChild // --//--  kill now, then reap (read error)
+	KillChild // pid is a target, kill now, then reap (CGI aborted)
 };
 
+// An instruction targets either an fd (Add) or a pid (AddPid), never both.
 struct Instruction {
 	Action	action;
 	int		target_fd = posix::kInvalidFd;

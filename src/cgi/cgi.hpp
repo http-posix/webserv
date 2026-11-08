@@ -8,7 +8,17 @@
 #include <sys/types.h>
 #include <array>
 
-
+/**
+ * Starts one CGI script as a child process.
+ *
+ * - Builds argv (interpreter + script file) and the RFC 3875 environment.
+ * - Child: stdout -> pipe, stdin -> /dev/null, chdir to the script dir,
+ *   execve(interpreter).
+ * - Parent: keeps the non-blocking read end and the pid.
+ *
+ * Short-lived: lives only inside Connection::HandleCompleteRequest().
+ * Ownership of the pipe fd and the pid moves to StateCGI.
+ */
 class Cgi{
 	public:
 		Cgi() = delete;

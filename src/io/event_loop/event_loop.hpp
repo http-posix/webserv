@@ -8,6 +8,17 @@
 #include <cstddef>
 #include <unordered_map>
 
+/**
+ * Single-threaded poll() loop. Owns all listeners and connections.
+ *
+ * - Accepts clients and routes poll events to the owning Connection
+ *   (a CGI pipe fd is mapped to its client fd in cgi_owners_).
+ * - Applies the InstructionList that Connection returns: poll set changes
+ *   go to PollManager, kill/reap of CGI children goes to ChildReaper.
+ *   Connection never calls them directly.
+ * - Once per iteration: reaps finished children, checks CGI timeouts.
+ * - On shutdown: kills and waits for all CGI children that are left.
+ */
 class EventLoop{
 	public:
 		EventLoop() = delete;

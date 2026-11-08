@@ -3,10 +3,18 @@
 #include <sys/types.h>
 #include <unordered_set>
 
-/*
- * Manage child-process with waitpid without blocking the loop
- * 
-*/
+/**
+ * Collects CGI child processes without blocking the loop.
+ *
+ * - Track(): the child is expected to exit by itself (pipe EOF).
+ * - Abort(): SIGKILL now, reap later.
+ * - CheckChildren(): waitpid(WNOHANG) for every tracked pid, once per tick.
+ * - KillAndWaitAll(): shutdown only, blocking.
+ *
+ * Invariant: pending_ holds only pids that are not reaped yet.
+ * A pid is erased right after waitpid(): after reaping, the system can
+ * give the same pid to another process, and we must not kill it.
+ */
 class ChildReaper{
 	public:
 		ChildReaper() = default;
