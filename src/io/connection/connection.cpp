@@ -148,6 +148,16 @@ InstructionList	Connection::OnCgi(){
 	return ProcessCgiOutput(state_cgi);
 }
 
+InstructionList	Connection::HandleCgiDeadline(const Clock::time_point now){
+	if (!InStateCgi())
+		return {};
+	const StateCGI&	state_cgi = std::get<StateCGI>(state_);
+	if (now < state_cgi.deadline_point)
+		return {};
+	LOG_WARN("cgi: timeout, pid=" + std::to_string(state_cgi.child_pid), srv_id_);
+	return AbortCgi(state_cgi, HttpStatusCode::GatewayTimeout);
+}
+
 /* ========================================================================== */
 /*                             Accessors & Mutators                           */
 /* ========================================================================== */
@@ -232,7 +242,7 @@ InstructionList	Connection::HandleCompleteRequest(){
 		}
 		else{
 			instructions.Add(Action::WatchCgi, cgi.pipe_read_fd());
-			state_ = StateCGI{cgi.pipe_read_fd(), cgi.child_pid()};
+			state_ = StateCGI{cgi.pipe_read_fd(), cgi.child_pid(), {}, {Clock::now() + kCgiTimeout}};
 			LOG_DEBUG("reading: cgi request parsed -> cgi fd=" + std::to_string(socket_.fd())
 					+ " pid=" + std::to_string(cgi.child_pid()),
 					srv_id_);
