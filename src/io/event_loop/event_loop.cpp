@@ -6,6 +6,7 @@
 #include "utils/posix/posix.hpp"
 
 
+
 #include <cerrno>
 #include <cstddef>
 #include <sys/poll.h>
@@ -58,6 +59,11 @@ namespace {
 		out.pop_back(); // remove trailing '|'
 		return out;
 	}
+
+	struct	PendingInstructions{
+		int				owner_fd;
+		InstructionList	instructions;
+	};
 }
 
 /* ========================================================================== */
@@ -82,7 +88,7 @@ void	EventLoop::run(){
 		int ready_count = pm_.Poll(kPollTimeoutMs);
 		
 		reaper_.CheckChildren();
-		// check timeout once here, because if I'll do it in the end I'll never get there if I'll in if-continue loop
+		CheckCgiTimeouts();
 
 		// early return for readability & branch prediction make it cheap
 		if (ready_count < 0 /*&& !timeout?*/){
@@ -337,4 +343,19 @@ void	EventLoop::CleanupCgiBeforeShutdown(){
 			reaper_.Track(conn.cgi_pid());
 	}
 	reaper_.KillAndWaitAll();
+}
+
+void	EventLoop::CheckCgiTimeouts(){
+	const Clock::time_point				now = Clock::now();
+	std::vector<PendingInstructions>	to_apply;
+
+	for (auto& [fd, conn] : connections_){
+		InstructionList	instructions = conn.HandleCgiDeadline(now);
+		if (instructions.count > 0)
+			to_apply.push_back({fd, instructions});
+	}
+
+	for (const auto& item : to_apply){
+		ApplyInstructions(item.instructions, item.owner_fd);
+	}
 }

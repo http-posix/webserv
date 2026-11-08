@@ -43,5 +43,6 @@ class EventLoop{
 		int			FindOwner(int fd);
 		void		ApplyInstructions(const InstructionList& instructions, int owner_fd);
 		void		CleanupCgiBeforeShutdown();
+		void		CheckCgiTimeouts();
 };
 

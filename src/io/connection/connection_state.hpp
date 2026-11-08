@@ -5,6 +5,9 @@
 #include <sys/types.h>
 #include <variant>
 #include <string>
+#include <chrono>
+
+using Clock = std::chrono::steady_clock;
 
 struct StateReading {};
 
@@ -14,9 +17,10 @@ struct StateWriting {
 };
 
 struct StateCGI {
-	int			pipe_read_fd = posix::kInvalidFd;
-	pid_t		child_pid = posix::kInvalidPid;
-	std::string	output{};
+	int					pipe_read_fd = posix::kInvalidFd;
+	pid_t				child_pid = posix::kInvalidPid;
+	std::string			output{};
+	Clock::time_point	deadline_point{};
 };
 
 // using here is type alias

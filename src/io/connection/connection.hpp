@@ -10,6 +10,7 @@
 #include "http/http_status_code.hpp"
 
 #include <sys/types.h>
+#include <chrono>
 
 class Connection{
 	public:
@@ -29,6 +30,7 @@ class Connection{
 		InstructionList	OnReadable();
 		InstructionList	OnWritable();
 		InstructionList	OnCgi();
+		InstructionList	HandleCgiDeadline(Clock::time_point now);
 
 
 		const std::string	srv_id() const noexcept;
@@ -38,7 +40,8 @@ class Connection{
 		// const ServerConfig&	server_config() const noexcept;
 
 	private:
-		static constexpr size_t	kBufSize = 4096;
+		static constexpr size_t					kBufSize = 4096;
+		static constexpr std::chrono::seconds	kCgiTimeout{20};
 
 		Socket				socket_;
 		ConnInfo			conn_info_;
@@ -54,5 +57,6 @@ class Connection{
 		InstructionList	ProcessCgiOutput(StateCGI& cgi);
 		InstructionList	DiscardWhileCgi(ssize_t recv_bytes);
 		InstructionList	AbortCgi(const StateCGI& state_cgi, HttpStatusCode code);
+		
 		//bool				keep_alive_ ;
 	};
