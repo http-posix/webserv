@@ -42,6 +42,7 @@ class Connection{
 	private:
 		static constexpr size_t					kBufSize = 4096;
 		static constexpr std::chrono::seconds	kCgiTimeout{20};
+		static constexpr size_t					kMaxCgiOutput = 10 * 1024 * 1024; // 2^10 = 1024 
 
 		Socket				socket_;
 		ConnInfo			conn_info_;

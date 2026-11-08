@@ -142,6 +142,10 @@ InstructionList	Connection::OnCgi(){
 		return AbortCgi(state_cgi, HttpStatusCode::BadGateway);
 	}
 	if (bytes > 0){
+		if (state_cgi.output.size() + bytes > kMaxCgiOutput){
+			LOG_WARN("cgi: output too large, pid=" + std::to_string(state_cgi.child_pid), srv_id_);
+			return AbortCgi(state_cgi, HttpStatusCode::BadGateway);
+		}
 		state_cgi.output.append(buf.data(), bytes); // bytes automatically will be casted to the size_t
 		return instructions; // like in OnReadable() no instructions, because we are waiting for more data
 	}
