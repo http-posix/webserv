@@ -95,6 +95,8 @@
 	- [HTTP Request Smuggling](https://www.imperva.com/learn/application-security/http-request-smuggling/)
 	- [Wikipedia: HTTP Request Smuggling](https://en.wikipedia.org/wiki/HTTP_request_smuggling)
 	- [Hypertext Transfer Protocol (HTTP) Field Name Registry](iana.org/assignments/http-fields)
+	- [Wikipedia: HTTP status codes](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes)
+	- [IANA: HTTP Status Codes](https://www.iana.org/assignments/http-status-codes)
 
 - bash / scripts
-	[AWK command in Linux](https://www.geeksforgeeks.org/linux-unix/awk-command-unixlinux-examples/)
+	- [AWK command in Linux](https://www.geeksforgeeks.org/linux-unix/awk-command-unixlinux-examples/)
