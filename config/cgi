@@ -13,6 +13,7 @@ server
 	location /cgi-bin
 	{
 		methods GET POST;
-		cgi .py /usr/bin/python3;
+		cgi .zxc /usr/zxc;
+		# cgi .py /usr/bin/python3;
 	}
 }
