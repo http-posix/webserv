@@ -53,6 +53,6 @@ class Connection{
 		InstructionList	HandleCompleteRequest();
 		InstructionList	ProcessCgiOutput(StateCGI& cgi);
 		InstructionList	DiscardWhileCgi(ssize_t recv_bytes);
-
+		InstructionList	AbortCgi(const StateCGI& state_cgi, HttpStatusCode code);
 		//bool				keep_alive_ ;
 	};
