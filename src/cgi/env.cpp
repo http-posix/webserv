@@ -1,5 +1,6 @@
 #include "cgi/env.hpp"
 #include "utils/logger/logger.hpp"
+#include <string>
 
 /* ========================================================================== */
 /*                             Anonymous Namespace                            */
@@ -60,6 +61,10 @@ CgiEnv::CgiEnv(const ConnInfo& info,
 
 
 	AddToEnv("REMOTE_HOST", info.addr);
+
+	if (!req.body_.empty())
+		AddToEnv("CONTENT_LENGTH", std::to_string(req.body_.size()));
+
 	AddHttpHeaders(req.headers_);
 
 	// waiting while it will be added into src/http/request.hpp
@@ -78,10 +83,10 @@ void	CgiEnv::AddToEnv(const std::string& key, const std::string& value){
 
 void	CgiEnv::AddHttpHeaders(const std::map<std::string, std::string>& headers){
 	for (const auto& [name, value] : headers){
-		if (name == "content-length")
-			AddToEnv("CONTENT_LENGTH", value);
-		else if( name == "content-type")
+		if (name == "content-type")
 			AddToEnv("CONTENT_TYPE", value);
+		else if( name == "content-length" || name == "transfer-encoding")
+			continue;
 		else if (IsSafeHeader(name))
 			AddToEnv(HeaderToEnvName(name), value);
 	}

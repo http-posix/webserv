@@ -33,6 +33,13 @@ RFC -> "must if"
 #include <string>
 #include <vector>
 
+/**
+ * Builds the RFC 3875 environment for CGI script.
+ *
+ * - env keeps the "KEY=value" strings; envp points into env and ends
+ *   with nullptr, ready for execve().
+ * - Lives inside Cgi; envp is valid only while this object exists.
+ */
 struct CgiEnv {
 	CgiEnv() = delete;
 	CgiEnv(const ConnInfo& info, const HttpRequest& req, const CgiRequest& cgi_info);
