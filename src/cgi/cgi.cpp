@@ -1,6 +1,8 @@
 #include "cgi/cgi.hpp"
+#include "http/http_status_code.hpp"
 #include "utils/logger/logger.hpp"
 #include "io/event_loop/signal_handler.hpp"
+#include "utils/posix/posix.hpp"
 
 #include <unistd.h>
 #include <cstdlib>
@@ -40,7 +42,8 @@ Cgi::Cgi(const ConnInfo& info,
 		const std::string& srv_id):
 	srv_id_(srv_id),
 	cgi_env_(info, req, cgi_info),
-	interpreter_(cgi_info.interpreter)
+	interpreter_(cgi_info.interpreter),
+	has_body_(!req.body_.empty())
 {
 	BuildArgv(cgi_info.script_filename);
 }
@@ -50,40 +53,47 @@ Cgi::Cgi(const ConnInfo& info,
 /* ========================================================================== */
 
 HttpStatusCode	Cgi::SpawnChild(){
-	
-	if (::pipe(pipe_fds_.data()) == posix::kSyscallError){
-		LOG_ERROR("Failed pipe() ", srv_id_);
+	if (!OpenPipe(stdout_pipe_, kReadEnd, "stdout_pipe"))
+		return HttpStatusCode::InternalServerError;
+	if (has_body_ && !OpenPipe(stdin_pipe_, kWriteEnd, "stdin_pipe")){
+		ClosePipeFds(stdout_pipe_);
 		return HttpStatusCode::InternalServerError;
 	}
-	if (!posix::SetNonBlockingMode(pipe_fds_[kReadEnd], "pipe fd", srv_id_)){
-		ClosePipeFds();
-		return HttpStatusCode::InternalServerError;
-	}
+
 	pid_ = ::fork();
 	if (pid_ == posix::kInvalidPid){
 		LOG_ERROR("Failed fork() ", srv_id_);
-		ClosePipeFds();
+		ClosePipeFds(stdout_pipe_);
+		ClosePipeFds(stdin_pipe_);
 		return HttpStatusCode::InternalServerError;
 	}
 	// who check access to script - here or in http parser?
-	// TODO: access(F_OK) -> 404, access(R_OK) -> 403. Do it BEFORE pipe() (here or router), otherwise missing script = 502
+	// TODO: access(F_OK) -> 404, access(R_OK) -> 403. 
+	// Do it BEFORE pipe() (here or router), otherwise missing script = 502
 	if (pid_ == posix::kForkChild){
-		if (dup2(pipe_fds_[kWriteEnd], STDOUT_FILENO) == posix::kSyscallError){
+		if (::dup2(stdout_pipe_[kWriteEnd], STDOUT_FILENO) == posix::kSyscallError){
 			LOG_ERROR("dup2() failed",  srv_id_);
 			std::_Exit(1);
+		}
+		if (has_body_){
+			if (::dup2(stdin_pipe_[kReadEnd], STDIN_FILENO) == posix::kSyscallError){
+				LOG_ERROR("dup2() failed", srv_id_);
+				std::_Exit(1);
+			}
 		}
 		CloseInheritedFds();
 		if (chdir(script_dir_.c_str()) == posix::kSyscallError)
 			std::_Exit(1);
 		Signal::SetupDefaultSignals();
-		// TODO check how this will match with POST behavior
-		if (!RedirectStdinToDevNull())
+		if (!has_body_ && !RedirectStdinToDevNull())
 			std::_Exit(1);
 
 		execve(interpreter_.c_str(), argv_, cgi_env_.Envp());
 		std::_Exit(127);
 	}
-	CloseFd(pipe_fds_[kWriteEnd]);
+	CloseFd(stdout_pipe_[kWriteEnd]);
+	if (has_body_)
+		CloseFd(stdin_pipe_[kReadEnd]);
 	return HttpStatusCode::OK;
 }
 
@@ -92,11 +102,15 @@ HttpStatusCode	Cgi::SpawnChild(){
 /* ========================================================================== */
 
 int	Cgi::pipe_read_fd() const noexcept{
-	return pipe_fds_[kReadEnd];
+	return stdout_pipe_[kReadEnd];
 }
 
 pid_t	Cgi::child_pid() const noexcept{
 	return pid_;
+}
+
+int	Cgi::pipe_write_fd() const noexcept{
+	return stdin_pipe_[kWriteEnd];
 }
 
 /* ========================================================================== */
@@ -116,8 +130,8 @@ void	Cgi::CloseFd(int& fd){
 	fd = posix::kInvalidFd;
 }
 
-void	Cgi::ClosePipeFds(){
-	for (int& fd : pipe_fds_){
+void	Cgi::ClosePipeFds(std::array<int, 2>& fds){
+	for (int& fd : fds){
 		if (fd != posix::kInvalidFd)
 			CloseFd(fd);
 	}
@@ -126,4 +140,16 @@ void	Cgi::ClosePipeFds(){
 void	Cgi::CloseInheritedFds(){
 	for (int fd = 3; fd < kAssumedMaxFds; fd++)
 		::close(fd);
+}
+
+bool	Cgi::OpenPipe(std::array<int, 2>& fds, int server_end, const char* name){
+	if (::pipe(fds.data()) == posix::kSyscallError){
+		LOG_ERROR(std::string("Failed pipe() for ") + name, srv_id_);
+		return false;
+	}
+	if (!posix::SetNonBlockingMode(fds[server_end], "pipe fd", srv_id_)){
+		ClosePipeFds(fds);
+		return false;
+	}
+	return true;
 }
