@@ -37,18 +37,21 @@ class Cgi{
 		HttpStatusCode		SpawnChild();
 		pid_t				child_pid() const noexcept;
 		int					pipe_read_fd() const noexcept;
+		int					pipe_write_fd() const noexcept;
 
 	private:
 		static constexpr int	kAssumedMaxFds = 1024;
 		static constexpr int	kReadEnd = 0;
 		static constexpr int	kWriteEnd = 1;
 
-		std::array<int, 2>		pipe_fds_ = {posix::kInvalidFd, posix::kInvalidFd};
+		std::array<int, 2>		stdout_pipe_ = {posix::kInvalidFd, posix::kInvalidFd};
 		pid_t					pid_ = posix::kInvalidPid;
+		std::array<int, 2>		stdin_pipe_ = {posix::kInvalidFd, posix::kInvalidFd};
 
 		std::string		srv_id_;
 		CgiEnv			cgi_env_;
 		std::string		interpreter_;// "/usr/bin/python3" for execve() and argv[0]
+		bool			has_body_;
 
 		std::string		script_dir_;// "./www/cgi-bin" for chdir()
 		std::string		script_file_;// "hello.py" for argv[1] after chdir()
@@ -56,7 +59,8 @@ class Cgi{
 
 		//methods
 		void	BuildArgv(const std::string& script_filename);
-		void	ClosePipeFds();
+		void	ClosePipeFds(std::array<int, 2>& fds);
 		void	CloseFd(int& fd);
 		void	CloseInheritedFds();
+		bool	OpenPipe(std::array<int, 2>& fds, int server_end, const char* name);
 	};
