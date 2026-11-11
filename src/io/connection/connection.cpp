@@ -127,7 +127,7 @@ InstructionList	Connection::OnWritable(){
 	return instructions;
 }
 
-InstructionList	Connection::OnCgi(){
+InstructionList	Connection::OnCgiReadable(){
 	InstructionList					instructions;
 
 	StateCGI&						state_cgi = std::get<StateCGI>(state_);
@@ -162,6 +162,33 @@ InstructionList	Connection::HandleCgiDeadline(const Clock::time_point now){
 	return AbortCgi(state_cgi, HttpStatusCode::GatewayTimeout);
 }
 
+InstructionList	Connection::OnCgiWritable(){
+	InstructionList	instructions;
+	StateCGI&		state_cgi = std::get<StateCGI>(state_);
+	
+	if (state_cgi.pipe_write_fd == posix::kInvalidFd){
+		return instructions;
+	}
+
+	const char*		data = state_cgi.body.data() + state_cgi.body_offset;
+	size_t			len = state_cgi.body.size() - state_cgi.body_offset;
+
+	ssize_t			write_bytes = ::write(state_cgi.pipe_write_fd, data, len);
+
+	if (write_bytes < 0){
+		LOG_WARN("cgi: write failed, fd=" + std::to_string(socket_.fd())
+						+ " pid=" + std::to_string(state_cgi.child_pid),
+						srv_id_);
+		return CloseCgiWriteFd(state_cgi);
+	}
+
+	state_cgi.body_offset += write_bytes;
+	if (state_cgi.body_offset == state_cgi.body.size()){
+		return CloseCgiWriteFd(state_cgi);
+	}
+	return instructions;
+}
+
 /* ========================================================================== */
 /*                             Accessors & Mutators                           */
 /* ========================================================================== */
@@ -180,6 +207,14 @@ int	Connection::cgi_read_fd() const noexcept {
 		return posix::kInvalidFd;
 	return state_cgi->pipe_read_fd;
 }
+
+int	Connection::cgi_write_fd() const noexcept {
+	const StateCGI* state_cgi = std::get_if<StateCGI>(&state_);
+	if (!state_cgi)
+		return posix::kInvalidFd;
+	return state_cgi->pipe_write_fd;
+}
+
 
 pid_t	Connection::cgi_pid() const noexcept {
 	const StateCGI* state_cgi = std::get_if<StateCGI>(&state_);
@@ -245,10 +280,20 @@ InstructionList	Connection::HandleCompleteRequest(){
 			LOG_WARN("reading: cgi spawn failed fd=" + std::to_string(socket_.fd()), srv_id_);
 		}
 		else{
-			instructions.Add(Action::WatchCgi, cgi.pipe_read_fd());
-			state_ = StateCGI{cgi.pipe_read_fd(), cgi.child_pid(), {}, {Clock::now() + kCgiTimeout}};
+			if (cgi.pipe_write_fd() != posix::kInvalidFd)
+				instructions.Add(Action::WatchCgiWrite, cgi.pipe_write_fd());
+			instructions.Add(Action::WatchCgiRead, cgi.pipe_read_fd());
+			state_ = StateCGI{cgi.pipe_read_fd(), 
+								cgi.child_pid(),
+								{},
+								{Clock::now() + kCgiTimeout},
+								cgi.pipe_write_fd(),
+								request.body_,
+								0
+							};
 			LOG_DEBUG("reading: cgi request parsed -> cgi fd=" + std::to_string(socket_.fd())
-					+ " pid=" + std::to_string(cgi.child_pid()),
+					+ " pid=" + std::to_string(cgi.child_pid())
+					+ " body_size=" + std::to_string(request.body_.size()),
 					srv_id_);
 		}
 	}
@@ -260,6 +305,7 @@ InstructionList	Connection::ProcessCgiOutput(StateCGI& state_cgi){
 
 	const pid_t			pid = state_cgi.child_pid;
 
+	instructions = CloseCgiWriteFd(state_cgi);
 	instructions.Add(Action::StopWatching, state_cgi.pipe_read_fd);
 	instructions.Add(Action::WaitWritable, socket_.fd());
 	instructions.AddPid(Action::ReapChild, pid);
@@ -294,10 +340,24 @@ InstructionList	Connection::AbortCgi(const StateCGI& state_cgi, const HttpStatus
 	instructions.Add(Action::StopWatching, state_cgi.pipe_read_fd);
 	instructions.Add(Action::WaitWritable, socket_.fd());
 	instructions.AddPid(Action::KillChild, state_cgi.child_pid);
-
+	if (state_cgi.pipe_write_fd != posix::kInvalidFd){
+		instructions.Add(Action::StopWatching, state_cgi.pipe_write_fd);
+		::close(state_cgi.pipe_write_fd); // Add proper close after fd-posix-refactoring
+	}
 	::close(state_cgi.pipe_read_fd); // Add proper close after fd-posix-refactoring
 
 	state_ = StateWriting{BuildCgiError(code), 0};
 	return instructions;
 }
 
+InstructionList	Connection::CloseCgiWriteFd(StateCGI& state_cgi){
+	InstructionList instructions;
+
+	if (state_cgi.pipe_write_fd == posix::kInvalidFd)
+		return instructions;
+
+	instructions.Add(Action::StopWatching, state_cgi.pipe_write_fd);
+	::close(state_cgi.pipe_write_fd);
+	state_cgi.pipe_write_fd = posix::kInvalidFd;
+	return instructions;
+}

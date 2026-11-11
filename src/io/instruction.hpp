@@ -15,7 +15,8 @@
 enum class Action {
 	WaitReadable, // For keep_alive, after OnWritable() is finished
 	WaitWritable, // After parser return Complete
-	WatchCgi, // Add pipe fd to PollManager pm_
+	WatchCgiRead, // Add pipe fd to PollManager pm_
+	WatchCgiWrite, // Add pipe write fd to PollManager pm_ 
 	StopWatching, // CGI finished + Connection is keep_alive
 	CloseConnection, // Timeout or error from Connection, notCGI
 	ReapChild, // pid is a target, child catch EOF
@@ -30,7 +31,7 @@ struct Instruction {
 };
 
 struct InstructionList{
-	static constexpr int						kMaxInstructions = 3;
+	static constexpr int						kMaxInstructions = 4;
 	std::array<Instruction, kMaxInstructions>	list;
 	int											count = 0;
 

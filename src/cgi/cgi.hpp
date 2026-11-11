@@ -12,9 +12,11 @@
  * Starts one CGI script as a child process.
  *
  * - Builds argv (interpreter + script file) and the RFC 3875 environment.
- * - Child: stdout -> pipe, stdin -> /dev/null, chdir to the script dir,
+ * - Child: stdout -> pipe, stdin -> pipe if the request has a body,
+ *   otherwise /dev/null; chdir to the script dir,
  *   execve(interpreter).
- * - Parent: keeps the non-blocking read end and the pid.
+ * - Parent: keeps the non-blocking read end of stdout_pipe_, the
+ *   non-blocking write end of stdin_pipe_ (only with a body) and the pid.
  *
  * Short-lived: lives only inside Connection::HandleCompleteRequest().
  * Ownership of the pipe fd and the pid moves to StateCGI.
