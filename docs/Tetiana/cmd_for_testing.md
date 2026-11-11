@@ -69,3 +69,12 @@ check pipelining during cgi
 ```bash
 (printf 'GET / HTTP/1.1\r\nHost: localhost\r\n\r\nGET / HTTP/1.1\r\nHost: localhost\r\n\r\n'; sleep 3) | nc 127.0.0.1 8080
 ```
+
+--max-time5 while our parser didn't track amount of bytes
+
+```bash
+curl -s --max-time 5 -d "hello=world" http://127.0.0.1:8080/cgi-bin/echo_body.py
+curl -s --max-time 5 -d "a=12&b=5&op=div" http://127.0.0.1:8080/cgi-bin/calc.py
+
+```
+
