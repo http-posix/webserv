@@ -100,3 +100,6 @@
 
 - bash / scripts
 	- [AWK command in Linux](https://www.geeksforgeeks.org/linux-unix/awk-command-unixlinux-examples/)
+
+- cybersecurity
+	- [Slowloris](https://www.cloudflare.com/learning/ddos/ddos-attack-tools/slowloris/)
