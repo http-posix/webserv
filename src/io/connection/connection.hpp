@@ -16,8 +16,11 @@
  * One client connection as a state machine: Reading -> (CGI) -> Writing.
  *
  * - Owns the client socket and the HTTP parser.
- * - Reacts to events (readable, writable, CGI pipe readable, CGI deadline)
+ * - Reacts to events (readable, writable, CGI pipe readable/writable, CGI deadline)
  *   and returns instructions; it does not change the poll set itself.
+ * - CGI with a request body: the body is written to the script stdin in
+ *   chunks; the write end is closed after the last byte, so the script
+ *   sees EOF.
  * - CGI: collects the output (max kMaxCgiOutput), aborts with 502 on a
  *   read error or too large output, and with 504 after kCgiTimeout.
  * - Data from the client during CGI is read and discarded, so a client
@@ -40,13 +43,15 @@ class Connection{
 		// methods
 		InstructionList	OnReadable();
 		InstructionList	OnWritable();
-		InstructionList	OnCgi();
+		InstructionList	OnCgiReadable();
+		InstructionList	OnCgiWritable();
 		InstructionList	HandleCgiDeadline(Clock::time_point now);
 
 
 		const std::string	srv_id() const noexcept;
 		bool				InStateCgi() const noexcept;
 		int					cgi_read_fd() const noexcept;
+		int					cgi_write_fd() const noexcept;
 		pid_t				cgi_pid() const noexcept;
 		// const ServerConfig&	server_config() const noexcept;
 
@@ -69,6 +74,7 @@ class Connection{
 		InstructionList	ProcessCgiOutput(StateCGI& cgi);
 		InstructionList	DiscardWhileCgi(ssize_t recv_bytes);
 		InstructionList	AbortCgi(const StateCGI& state_cgi, HttpStatusCode code);
-		
+		InstructionList CloseCgiWriteFd(StateCGI& state_cgi);
+
 		//bool				keep_alive_ ;
 	};

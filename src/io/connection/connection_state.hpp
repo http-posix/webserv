@@ -21,6 +21,9 @@ struct StateCGI {
 	pid_t				child_pid = posix::kInvalidPid;
 	std::string			output{};
 	Clock::time_point	deadline_point{};
+	int					pipe_write_fd = posix::kInvalidFd;
+	std::string			body{};
+	size_t				body_offset = 0;
 };
 
 // using here is type alias

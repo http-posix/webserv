@@ -224,11 +224,20 @@ void	EventLoop::HandleConnectionEvent(const pollfd entry){
 
 	// First resolve is it cgi or not, then check what happened
 	if (entry.fd != owner_fd){
-		LOG_DEBUG("We are going to OnCgi fd=" + std::to_string(owner_fd)
-					+ " pipe_fd=" + std::to_string(entry.fd)
-					+ " revents=" + ReventsToString(entry.revents),
-					connection.srv_id());
-		instructions = connection.OnCgi();
+		if (entry.fd == connection.cgi_read_fd()){
+			LOG_DEBUG("We are going to OnCgiReadable fd=" + std::to_string(owner_fd)
+						+ " pipe_fd=" + std::to_string(entry.fd)
+						+ " revents=" + ReventsToString(entry.revents),
+						connection.srv_id());
+			instructions = connection.OnCgiReadable();
+		}
+		else if (entry.fd == connection.cgi_write_fd()){
+			LOG_DEBUG("We are going to OnCgiWritable fd=" + std::to_string(owner_fd)
+						+ " pipe_fd=" + std::to_string(entry.fd)
+						+ " revents=" + ReventsToString(entry.revents),
+						connection.srv_id());
+			instructions = connection.OnCgiWritable();
+		}
 	}
 	else if (entry.revents & POLLIN){
 		LOG_DEBUG("We are going to OnReadable fd=" + std::to_string(entry.fd)
@@ -287,8 +296,12 @@ void	EventLoop::ApplyInstructions(const InstructionList& instructions, int owner
 			case Action::WaitWritable:
 				pm_.SetEvents(fd, POLLOUT);
 				break;
-			case Action::WatchCgi:
+			case Action::WatchCgiRead:
 				pm_.Watch(fd, POLLIN);
+				cgi_owners_[fd] = owner_fd;
+				break;
+			case Action::WatchCgiWrite:
+				pm_.Watch(fd, POLLOUT);
 				cgi_owners_[fd] = owner_fd;
 				break;
 			case Action::StopWatching:
@@ -318,6 +331,7 @@ void	EventLoop::CloseConnection(int fd){
 
 	if (conn.InStateCgi()){
 		const int	pipe_fd = conn.cgi_read_fd();
+		const int	pipe_write_fd = conn.cgi_write_fd();
 		const pid_t	pid = conn.cgi_pid();
 
 		pm_.Unwatch(pipe_fd);
@@ -326,6 +340,11 @@ void	EventLoop::CloseConnection(int fd){
 		if (pipe_fd != posix::kInvalidFd){
 			::close(pipe_fd);
 			// pipe_fd = posix::kInvalidFd;
+		}
+		if (pipe_write_fd != posix::kInvalidFd){
+			pm_.Unwatch(pipe_write_fd);
+			cgi_owners_.erase(pipe_write_fd);
+			::close(pipe_write_fd);
 		}
 		reaper_.Abort(pid);
 		LOG_DEBUG("cgi aborted process pid=" + std::to_string(pid)
