@@ -3,6 +3,8 @@
 enum HttpStatusCode
 {
 	OK = 200,
+	Created = 201,
+	NoContent = 204,
 	MovedPermanently = 301,
 	Found = 302,
 	TemporaryRedirect = 307,
