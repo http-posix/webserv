@@ -293,6 +293,29 @@ std::string FindFilename(std::map<std::string, std::string> headers)
 	return (filename);
 }
 
+/*
+1. Check if `upload_enable` flag is actually on.
+2. Check if we have an upload location where we can actually upload.
+
+3. Check if the upload location actually exists. 
+4. Check if the upload location is an actual directory.
+
+NB: 3 & 4 can be done in the config parser as well!
+
+5. Get the header for `content-type`.
+6. Get the header for `conten-disposition`.
+
+7. Sanitize the `content-disposition` header into the filename.
+8. Create filepath by upload_location + filename.
+        Check if filepath is not empty. Otherwise Internal Server Error.
+
+9. Upload the File to the server. Aka Upload the Payload to Filepath.
+
+10. Set location header for response as Filepath. (request_path + filepath?)
+
+11. Set Status as Created.
+*/
+
 void HttpResponse::HandlePost(const RoutedRequest& req)
 {
 	static int i = 0;
