@@ -318,7 +318,6 @@ NB: 3 & 4 can be done in the config parser as well!
 
 void HttpResponse::HandlePost(const RoutedRequest& req)
 {
-	static int i = 0;
 	if (req.upload_enable == false)
 		throw (HttpResponseException(Forbidden));
 	if (req.upload_location.empty())
