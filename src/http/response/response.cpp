@@ -235,6 +235,16 @@ void HttpResponse::HandleGet(const RoutedRequest& req)
 	LOG_DEBUG("GET Request for file: " + req.uri);
 }
 
+std::string CreateNewFilename()
+{
+	static int identifier = 1;
+	std::string result = "upload-";
+
+	result.append(std::to_string(identifier));
+	// while file exists; increment identifier.
+	return (result);
+}
+
 std::string FindFilename(std::map<std::string, std::string> headers)
 {
 	(void) headers;
