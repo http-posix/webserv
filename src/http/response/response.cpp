@@ -33,15 +33,20 @@ std::string	HttpResponse::ReadFile(std::string filename)
 
 void	HttpResponse::UploadFile(std::string filename, std::string body)
 {
-	std::ofstream createdFile(filename.c_str());
+	std::ofstream createdFile(filename.c_str(), std::ios::trunc);
 
 	if (!createdFile.is_open())
 	{
 		LOG_DEBUG("Error in UploadFile for " + filename);
 		throw (HttpResponseException(InternalServerError));
 	}
-	createdFile << body;
+	createdFile.write(body.data(), body.size());
 	createdFile.close();
+	if (!createdFile)
+	{
+		LOG_DEBUG("Error while uploading file for" + filename);
+		throw (HttpResponseException(InternalServerError));
+	}
 }
 
 std::string HttpResponse::DetermineContentType(const std::string& path)
