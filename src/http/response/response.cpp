@@ -245,6 +245,38 @@ std::string CreateNewFilename()
 	return (result);
 }
 
+std::string ExtractFromContentDisposition(std::string str)
+{
+	std::string result;
+	size_t pos = str.find("filename=");
+	if (pos == std::string::npos)
+		return "";
+	pos += std::string("filename=").size();
+
+	int quote = 0;
+	size_t end = pos;
+	while (end < str.size())
+	{
+		char c = str[end];
+		if (quote != 0)
+		{
+			if (c == quote)
+				break ;
+		}
+		else if (c == '"' || c == '\'')
+			quote = c;
+		else if (c == ';')
+			break;
+		end++;
+	}
+	if (quote != 0)
+		result = str.substr(pos, end - pos);
+	else 
+		result = str.substr(pos + 1, end - pos + 1);
+		
+	return (result);
+}
+
 std::string FindFilename(std::map<std::string, std::string> headers)
 {
 	(void) headers;
