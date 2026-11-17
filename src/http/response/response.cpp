@@ -321,9 +321,11 @@ void HttpResponse::HandlePost(const RoutedRequest& req)
 	static int i = 0;
 	if (req.upload_enable == false)
 		throw (HttpResponseException(Forbidden));
+	if (req.upload_location.empty())
+		throw(HttpResponseException(InternalServerError));
 	std::string filename = FindFilename(req.headers);
 	if (filename.empty())
-		filename = std::to_string(i++);
+		throw(HttpResponseException(InternalServerError));
 	filename = req.upload_location + filename;
 
 	UploadFile(filename, req.body);
