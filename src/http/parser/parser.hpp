@@ -8,7 +8,8 @@ enum HttpParserState
 {
 	NeedMoreData,
 	Complete,
-	InvalidRequest
+	InvalidRequest,
+	ContentLengthTooLarge
 };
 
 class HttpParser
