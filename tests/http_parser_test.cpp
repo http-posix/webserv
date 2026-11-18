@@ -259,6 +259,32 @@ TEST_CASE("Invalid Content-Length (non-numeric value)") {
 	CHECK(p.GetExternalState() == InvalidRequest);
 }
 
+TEST_CASE("Content-Length at client max body size") {
+	HttpParser p(5);
+
+	p.Feed("POST /upload HTTP/1.1\r\n");
+	p.Feed("Content-Length: 5\r\n");
+	p.Feed("\r\n");
+	p.Feed("Hello");
+
+	CHECK(p.GetExternalState() == Complete);
+	CHECK(p.GetBody() == "Hello");
+}
+
+TEST_CASE("Content-Length above client max body size") {
+	HttpParser p(4);
+
+	p.Feed("POST /upload HTTP/1.1\r\n");
+	p.Feed("Content-Length: 5\r\n");
+	p.Feed("\r\n");
+
+	CHECK(p.GetExternalState() == RequestEntityTooLarge);
+	CHECK(p.GetBody().empty());
+
+	p.Feed("Hello");
+	CHECK(p.GetExternalState() == RequestEntityTooLarge);
+}
+
 TEST_CASE("GET request with query string") {
 	HttpParser p;
 
