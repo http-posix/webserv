@@ -48,6 +48,10 @@ class Connection{
 		InstructionList	OnCgiWritable();
 		InstructionList	HandleTimeouts(Clock::time_point now);
 
+		InstructionList	OnCgi();
+		InstructionList ProcessReceivedBytes(const char* buf);
+		InstructionList	HandleCompleteRequest();
+		InstructionList	HandleErrorResponse(int status_code);
 
 		const std::string	srv_id() const noexcept;
 		bool				InStateCgi() const noexcept;
@@ -74,8 +78,6 @@ class Connection{
 		HttpParser			http_parser_; // Not in StateReadable to keep buffer with 2 dif requests
 
 		// methods
-		InstructionList ProcessReceivedBytes(const char* buf);
-		InstructionList	HandleCompleteRequest();
 		InstructionList	ProcessCgiOutput(StateCGI& cgi);
 		InstructionList	DiscardWhileCgi(ssize_t recv_bytes);
 		InstructionList	AbortCgi(const StateCGI& state_cgi, HttpStatusCode code);
