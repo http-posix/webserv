@@ -3,6 +3,7 @@
 #include "utils/logger/logger.hpp"
 #include "http/response/response.hpp"
 #include "http/router/router.hpp"
+#include "http/http_status_code.hpp"
 #include "config/parser/parser.hpp"
 
 #include <sys/socket.h>
@@ -21,7 +22,8 @@ Connection::Connection(Socket socket, std::string srv_id, const ServerConfig& se
 		socket_(std::move(socket)),
 		srv_id_(srv_id),
 		server_config_(&server_config),
-		state_(StateReading{})
+		state_(StateReading{}),
+		http_parser_(server_config.client_max_body_size)
 { }
 
 /* ========================================================================== */

@@ -33,12 +33,13 @@ static bool string_has_non_token_character(const std::string& str)
 	return (false);
 }
 
-HttpParser::HttpParser(void)
+HttpParser::HttpParser(size_t client_max_body_size)
 {
 	method_ = None;
 	state_ = RequestLine;
 	external_state_ = NeedMoreData;
 	body_expected_len_ = 0;
+	client_max_body_size_ = client_max_body_size;
 	chunked_ = false;
 }
 
