@@ -288,19 +288,19 @@ std::string ExtractFromContentDisposition(std::string str)
 	return (result);
 }
 
-std::string FindFilename(std::map<std::string, std::string> headers)
+std::string HttpResponse::FindFilename(const RoutedRequest& req)
 {
-	std::map<std::string, std::string>::iterator it;
+	std::map<std::string, std::string>::const_iterator it;
 	std::string content_disposition = "";
 	std::string filename;
-	for (it = headers.begin(); it != headers.end(); it++)
+	for (it = req.headers.begin(); it != req.headers.end(); it++)
 	{
 		if (it->first == "content-disposition")
 			content_disposition = it->second;
 	}
 	filename = ExtractFromContentDisposition(content_disposition);
 	if (filename.empty())
-		filename = CreateNewFilename();
+		filename = CreateNewFilename(req.upload_location);
 	return (filename);
 }
 
