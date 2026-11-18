@@ -404,3 +404,8 @@ void HttpResponse::BuildResponse(const RoutedRequest& req)
 	}
 	LOG_DEBUG("BuildResponse resulted in Code: " + std::to_string(status_code_));
 }
+
+void HttpResponse::BuildErrorResponse(int status_code)
+{
+	HandleErrorPage(status_code);
+}

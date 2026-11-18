@@ -43,6 +43,7 @@ class HttpResponse
 		};
 		
 		void BuildResponse(const RoutedRequest& req);
+		void BuildErrorResponse(int status_code);
 		HttpResponse(const ServerConfig* cfg) : srv_cfg_(cfg){};
 		// Serializes the response into a raw HTTP/1.1 wire format string
 		std::string	Serialize() const;
