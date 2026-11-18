@@ -143,6 +143,7 @@ void HttpResponse::SetStatus(int status_code)
 		case (Forbidden) : status_text_ = "Forbidden"; break;
 		case (FileNotFound) : status_text_ = "Not Found"; break ;
 		case (MethodNotAllowed) : status_text_ = "Method Not Allowed"; break ;
+		case (PayloadTooLarge) : status_text_ = "Payload Too Large"; break ;
 		case (UnsupportedMediaType) : status_text_ = "Unsupported Media Type"; break ;
 		default :
 			{
@@ -173,6 +174,9 @@ void HttpResponse::HardcodeErrorPage()
 			break ;
 		case (MethodNotAllowed) :
 			description = "You tried to either GET/POST/DELETE in a location that does not allow it.";
+			break ;
+		case (PayloadTooLarge) :
+			description = "The request body is larger than the server allows.";
 			break ;
 		case (UnsupportedMediaType) :
 			description = "The requested file has an extension that we do not support. (fe. .java)";
