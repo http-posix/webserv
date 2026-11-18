@@ -349,9 +349,10 @@ void HttpResponse::HandlePost(const RoutedRequest& req)
 	std::string filename = FindFilename(req);
 	if (filename.empty())
 		throw(HttpResponseException(InternalServerError));
-	filename = req.upload_location + filename;
 
 	UploadFile(filename, req.body);
+	headers_["location"] = filename;
+	throw(HttpResponseException(Created));
 	// Find the file name in headers.
 	// open upload_location + filename
 	// put body inside file
