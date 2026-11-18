@@ -186,6 +186,19 @@ InstructionList Connection::HandleErrorResponse(int status_code)
 	return instructions;
 }
 
+InstructionList Connection::HandleErrorResponse(int status_code)
+{
+	InstructionList		instructions;
+	HttpResponse		response(server_config_);
+
+	response.BuildErrorResponse(status_code);
+	instructions.Add(Action::WaitWritable, socket_.fd());
+	state_ = StateWriting{response.Serialize(), 0};
+	LOG_DEBUG("reading: error " + std::to_string(status_code) + " -> writing fd="
+		+ std::to_string(socket_.fd()), srv_id_);
+	return instructions;
+}
+
 // ssize_t send(size_t size;
                     //   int sockfd, const void buf[size], size_t size,
 					//  int flags);
