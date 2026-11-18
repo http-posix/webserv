@@ -13,6 +13,7 @@ enum HttpStatusCode
 	Forbidden = 403,
 	FileNotFound = 404,
 	MethodNotAllowed = 405,
+	PayloadTooLarge = 413,
 	UnsupportedMediaType = 415,
 	InternalServerError = 500,
 	BadGateway = 502,

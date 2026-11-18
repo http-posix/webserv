@@ -115,6 +115,9 @@ InstructionList Connection::ProcessReceivedBytes(const char* buf){
 			LOG_DEBUG("reading: invalid request, closing fd=" + std::to_string(socket_.fd()), srv_id_);
 			instructions.Add(Action::CloseConnection, socket_.fd());
 			break;
+		case HttpParserState::ContentLengthTooLarge:
+			instructions = HandleErrorResponse(PayloadTooLarge);
+			break;
 	}
 	return instructions;
 }
