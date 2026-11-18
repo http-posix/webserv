@@ -327,13 +327,26 @@ NB: 3 & 4 can be done in the config parser as well!
 11. Set Status as Created.
 */
 
+void CreateUploadLocation(const std::string& loc)
+{
+	try 
+	{
+		std::filesystem::create_directories(loc);
+	}
+	catch (const std::filesystem::filesystem_error& e)
+	{
+		LOG_DEBUG(e.what());
+	}
+}
+
 void HttpResponse::HandlePost(const RoutedRequest& req)
 {
 	if (req.upload_enable == false)
 		throw (HttpResponseException(Forbidden));
 	if (req.upload_location.empty())
 		throw(HttpResponseException(InternalServerError));
-	std::string filename = FindFilename(req.headers);
+	CreateUploadLocation(req.upload_location);
+	std::string filename = FindFilename(req);
 	if (filename.empty())
 		throw(HttpResponseException(InternalServerError));
 	filename = req.upload_location + filename;
