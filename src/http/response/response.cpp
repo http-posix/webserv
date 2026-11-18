@@ -164,6 +164,9 @@ void HttpResponse::HardcodeErrorPage()
 		case (Forbidden) :
 			description = "We understand what you want, but we refuse to process it.";
 			break ;
+		case (InternalServerError) :
+			description = "We messed up. Please contact the admin if this keeps happening.";
+			break ;
 		case (FileNotFound) :
 			description = "The file you tried to access could not be found or openend.";
 			break ;
