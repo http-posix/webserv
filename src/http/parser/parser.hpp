@@ -36,6 +36,7 @@ class HttpParser
 		std::map<std::string, std::string> headers_;
 		std::string body_;
 		size_t body_expected_len_;
+		size_t client_max_body_size_;
 		bool chunked_;
 
 		int ParseRequestLine();
@@ -51,7 +52,7 @@ class HttpParser
 		static std::string ToLower(std::string s);
 		static bool ParseDecimalSize(const std::string& s, size_t* out);
 	public:
-		HttpParser(void);
+		HttpParser(size_t client_max_body_size = 0);
 		~HttpParser(void);
 		HttpParser(const HttpParser& other) = delete;
 		HttpParser& operator=(const HttpParser& other) = delete;

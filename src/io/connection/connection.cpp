@@ -4,6 +4,7 @@
 #include "utils/logger/logger.hpp"
 #include "http/response/response.hpp"
 #include "http/router/router.hpp"
+#include "http/http_status_code.hpp"
 #include "config/parser/parser.hpp"
 #include "cgi/cgi.hpp"
 #include "utils/posix/posix.hpp"
@@ -59,7 +60,9 @@ Connection::Connection(Socket socket, const ConnInfo& conn_info,
 		srv_id_(srv_id),
 		server_config_(&server_config),
 		accepted_at_(Clock::now()),
-		last_activity_(accepted_at_)
+		last_activity_(accepted_at_),
+		state_(StateReading{}),
+		http_parser_(server_config.client_max_body_size)
 { }
 
 /* ========================================================================== */
