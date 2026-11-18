@@ -1,4 +1,5 @@
 #include <fstream>
+#include <atomic>
 #include <sstream>
 #include <unordered_map>
 #include <sys/stat.h>
@@ -240,7 +241,7 @@ void HttpResponse::HandleGet(const RoutedRequest& req)
 
 std::string CreateNewFilename(std::string dir)
 {
-	static int identifier = 1;
+	static std::atomic<int> identifier = 1;
 	std::string result = dir + "upload-";
 
 	result.append(std::to_string(identifier));
