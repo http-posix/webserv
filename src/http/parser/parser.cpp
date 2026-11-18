@@ -1,5 +1,6 @@
 #include "http/parser/parser.hpp"
 #include "http/request.hpp"
+#include "utils/logger/logger.hpp"
 
 #include <iostream>
 #include <vector>
@@ -281,6 +282,13 @@ int HttpParser::ParseHeaders()
 			return (-1);
 		}
 		body_expected_len_ = len;
+		if (client_max_body_size_ > 0 && body_expected_len_ > client_max_body_size_)
+		{
+			LOG_DEBUG("Length of request larger than allowed max");
+			state_ = Error;
+			external_state_ = ContentLengthTooLarge;
+			return (-1);
+		}
 		// If both TE: chunked and Content-Length are present, we don't implement it yet.
 		if (chunked_)
 		{
