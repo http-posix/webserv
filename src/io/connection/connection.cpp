@@ -1,5 +1,5 @@
-#include "io/connection/connection.hpp"
 #include "io/connection/connection_state.hpp"
+#include "io/connection/connection.hpp"
 #include "io/instruction.hpp"
 #include "utils/logger/logger.hpp"
 #include "http/response/response.hpp"
@@ -97,6 +97,66 @@ InstructionList	Connection::OnReadable(){
 					+ " recv_bytes=" + std::to_string(recv_bytes), srv_id_);
 	buf[recv_bytes] = '\0';
 	return ProcessReceivedBytes(buf);
+}
+
+InstructionList Connection::ProcessReceivedBytes(const char* buf){
+	InstructionList		instructions;
+	HttpParserState	status = http_parser_.Feed(buf);
+
+	switch (status){
+		case HttpParserState::NeedMoreData:
+			LOG_DEBUG("reading: request incomplete, waiting for more data fd="
+				+ std::to_string(socket_.fd()), srv_id_);
+			break; // No instructions => fd goes through run loop again + keep StateReading
+		case HttpParserState::Complete:
+			instructions = HandleCompleteRequest();
+			break;
+		case HttpParserState::InvalidRequest:
+			LOG_DEBUG("reading: invalid request, closing fd=" + std::to_string(socket_.fd()), srv_id_);
+			instructions.Add(Action::CloseConnection, socket_.fd());
+			break;
+	}
+	return instructions;
+}
+
+InstructionList	Connection::HandleCompleteRequest(){
+	InstructionList			instructions;
+	const HttpRequest&		request = http_parser_.GetRequest();
+	HttpRouter				router(request, server_config_);
+	HttpResponse			response(server_config_);
+
+	auto routed_request = router.GetRoutedRequest();
+	if (routed_request != std::nullopt)
+	{
+		response.BuildResponse(*routed_request);
+		instructions.Add(Action::WaitWritable, socket_.fd());
+		state_ = StateWriting{response.Serialize(), 0};
+		LOG_DEBUG("reading: request parsed -> writing fd=" + std::to_string(socket_.fd()), srv_id_);
+	}
+
+	// if (CGI == true){
+	// 	Cgi	cgi(request, response, server_config_, srv_id_);
+	// 	instructions.Add(Action::WatchCgi, cgi.pipe_fd());
+	// 	state_ = StateCGI{cgi.pipe_fd(), cgi.process_num()};
+		// LOG_DEBUG("reading: request parsed -> cgi fd=" + std::to_string(socket_.fd()), srv_id_);
+	// }
+	// else{
+	// }
+
+	return instructions;
+}
+
+InstructionList Connection::HandleErrorResponse(int status_code)
+{
+	InstructionList		instructions;
+	HttpResponse		response(server_config_);
+
+	response.BuildErrorResponse(status_code);
+	instructions.Add(Action::WaitWritable, socket_.fd());
+	state_ = StateWriting{response.Serialize(), 0};
+	LOG_DEBUG("reading: error " + std::to_string(status_code) + " -> writing fd="
+		+ std::to_string(socket_.fd()), srv_id_);
+	return instructions;
 }
 
 // ssize_t send(size_t size;
