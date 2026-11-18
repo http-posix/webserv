@@ -20,6 +20,7 @@ class HttpResponse
 
 		std::string ReadFile(std::string filename);
 		void UploadFile(std::string filename, std::string body);
+		std::string FindFilename(const RoutedRequest& req);
 		std::string DetermineContentType(const std::string& path);
 		void SetStatus(int status_code);
 
