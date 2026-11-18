@@ -27,6 +27,7 @@ class Connection{
 		InstructionList	OnCgi();
 		InstructionList ProcessReceivedBytes(const char* buf);
 		InstructionList	HandleCompleteRequest();
+		InstructionList	HandleErrorResponse(int status_code);
 
 		const std::string	srv_id() const noexcept;
 		// const ServerConfig&	server_config() const noexcept;
