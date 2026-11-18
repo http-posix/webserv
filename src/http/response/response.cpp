@@ -235,13 +235,24 @@ void HttpResponse::HandleGet(const RoutedRequest& req)
 	LOG_DEBUG("GET Request for file: " + req.uri);
 }
 
-std::string CreateNewFilename()
+std::string CreateNewFilename(std::string dir)
 {
 	static int identifier = 1;
-	std::string result = "upload-";
+	std::string result = dir + "upload-";
 
 	result.append(std::to_string(identifier));
+	while (std::filesystem::exists(result) && identifier < 999)
+	{
+		identifier++;
+		result = dir + "upload-" + std::to_string(identifier);
+	}
+	if (std::filesystem::exists(result))
+	{
+		LOG_DEBUG("Identifier likely reached its maximum. i: " + std::to_string(identifier));
+		return ("");
+	}
 	// while file exists; increment identifier.
+	LOG_DEBUG("New Filename created as " + result);
 	return (result);
 }
 
