@@ -56,7 +56,9 @@ InstructionList	Connection::OnReadable(){
 
 	LOG_DEBUG("reading: recv fd=" + std::to_string(socket_.fd())
 		+ " recv_bytes=" + std::to_string(recv_bytes), srv_id_);
-	return ProcessReceivedBytes(buf);
+	// Passing recv_bytes (instead of relying on '\0') allows chunk data to
+	// contain binary bytes.
+	return ProcessReceivedBytes(buf, static_cast<size_t>(recv_bytes));
 }
 
 InstructionList Connection::ProcessReceivedBytes(const char* buf, size_t length){
