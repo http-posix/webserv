@@ -56,7 +56,6 @@ InstructionList	Connection::OnReadable(){
 
 	LOG_DEBUG("reading: recv fd=" + std::to_string(socket_.fd())
 		+ " recv_bytes=" + std::to_string(recv_bytes), srv_id_);
-	buf[recv_bytes] = '\0';
 	return ProcessReceivedBytes(buf);
 }
 
