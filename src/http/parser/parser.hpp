@@ -73,6 +73,9 @@ class HttpParser
 		HttpParser& operator=(HttpParser&& other) noexcept = default;
 
 		HttpParserState Feed(const char *str);
+		// The length is needed because chunk data may contain '\0' bytes.
+		// The older Feed() overload above is kept for string literals and tests.
+		HttpParserState Feed(const char *str, size_t length);
 
 		HttpRequest GetRequest();
 
