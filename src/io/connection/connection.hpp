@@ -25,7 +25,7 @@ class Connection{
 		InstructionList	OnReadable();
 		InstructionList	OnWritable();
 		InstructionList	OnCgi();
-		InstructionList ProcessReceivedBytes(const char* buf);
+		InstructionList ProcessReceivedBytes(const char* buf, size_t length);
 		InstructionList	HandleCompleteRequest();
 		InstructionList	HandleErrorResponse(int status_code);
 

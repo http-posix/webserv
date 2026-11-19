@@ -60,9 +60,9 @@ InstructionList	Connection::OnReadable(){
 	return ProcessReceivedBytes(buf);
 }
 
-InstructionList Connection::ProcessReceivedBytes(const char* buf){
+InstructionList Connection::ProcessReceivedBytes(const char* buf, size_t length){
 	InstructionList		instructions;
-	HttpParserState	status = http_parser_.Feed(buf);
+	HttpParserState	status = http_parser_.Feed(buf, length);
 
 	switch (status){
 		case HttpParserState::NeedMoreData:
