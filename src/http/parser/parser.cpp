@@ -151,6 +151,33 @@ bool HttpParser::ParseDecimalSize(const std::string& s, size_t* out)
 	return true;
 }
 
+bool HttpParser::ParseHexSize(const std::string& s, size_t* out)
+{
+	if (!out || s.empty())
+		return false;
+	size_t n = 0;
+	for (size_t i = 0; i < s.size(); i++)
+	{
+		unsigned char c = static_cast<unsigned char>(s[i]);
+		size_t digit;
+		if (c >= '0' && c <= '9')
+			digit = static_cast<size_t>(c - '0');
+		else if (c >= 'a' && c <= 'f')
+			digit = static_cast<size_t>(c - 'a' + 10);
+		else if (c >= 'A' && c <= 'F')
+			digit = static_cast<size_t>(c - 'A' + 10);
+		else
+			return false;
+		// Chunk sizes are hexadecimal, but the overflow check works the same way
+		// as the one in ParseDecimalSize.
+		if (n > (std::numeric_limits<size_t>::max() - digit) / 16)
+			return false;
+		n = n * 16 + digit;
+	}
+	*out = n;
+	return true;
+}
+
 // TODO
 // The requirements on HeaderLines are rather strict. 
 // I believe the current implementation is insufficient and
