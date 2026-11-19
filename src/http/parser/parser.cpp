@@ -42,6 +42,9 @@ HttpParser::HttpParser(size_t client_max_body_size)
 	body_expected_len_ = 0;
 	client_max_body_size_ = client_max_body_size;
 	chunked_ = false;
+	// These values are only used when Transfer-Encoding: chunked is present.
+	chunk_state_ = ChunkSize;
+	chunk_size_ = 0;
 }
 
 //HttpParser::HttpParser(const HttpParser& other)

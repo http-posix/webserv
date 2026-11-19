@@ -24,6 +24,16 @@ class HttpParser
 			Done
 		};
 
+		// A chunked body is read in small steps. Each step remembers which part
+		// of the chunked format we are currently waiting for.
+		enum ChunkState
+		{
+			ChunkSize,
+			ChunkData,
+			ChunkDataEnd,
+			Trailer
+		};
+
 		std::string input_buffer_;
 		size_t input_i_;
 		IntState state_;
@@ -38,6 +48,8 @@ class HttpParser
 		size_t body_expected_len_;
 		size_t client_max_body_size_;
 		bool chunked_;
+		ChunkState chunk_state_;
+		size_t chunk_size_;
 
 		int ParseRequestLine();
 		int ParseMethod(std::string str);
