@@ -300,10 +300,17 @@ int HttpParser::ParseHeaders()
 	{
 		// Set value to lower just in case.
 		// NB: We are not editing the value itself; we make a copy.
-		std::string te = ToLower(it->second);
-		// Minimal detection: if it contains "chunked", treat as chunked.
-		if (te.find("chunked") != std::string::npos)
-			chunked_ = true;
+		std::string te = ToLower(TrimOWS(it->second));
+		// Only plain "chunked" is supported. Other codings (for example gzip)
+		// would need another decoder, so we reject them instead of guessing.
+		if (te != "chunked")
+		{
+			state_ = Error;
+			external_state_ = InvalidRequest;
+			return (-1);
+		}
+		chunked_ = true;
+		LOG_DEBUG("Request with \"Transfer-Encoding: chunked\" received");
 	}
 
 	// We do a similar thing for the content-length (when we have a body)
