@@ -58,11 +58,13 @@ class HttpParser
 		int ParseHeaders();
 		int ParseSingleHeaderLine(const std::string& header_line);
 		int ParseBody();
+		int ParseChunkedBody();
 
 		static bool IsOWS(char c);
 		static std::string TrimOWS(const std::string& s);
 		static std::string ToLower(std::string s);
 		static bool ParseDecimalSize(const std::string& s, size_t* out);
+		static bool ParseHexSize(const std::string& s, size_t* out);
 	public:
 		HttpParser(size_t client_max_body_size = 0);
 		~HttpParser(void);
