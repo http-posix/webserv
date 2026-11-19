@@ -252,9 +252,9 @@ InstructionList Connection::ProcessReceivedBytes(const char* buf){
 }
 
 InstructionList	Connection::HandleCompleteRequest(){
-	InstructionList			instructions;
-	const HttpRequest&		request = http_parser_.GetRequest();
-	HttpRouter				router(request, server_config_);
+	InstructionList		instructions;
+	HttpRequest		request = http_parser_.GetRequest();
+	HttpRouter			router(request, server_config_);
 
 	auto routed_request = router.GetRoutedRequest();
 	if (routed_request != std::nullopt){
@@ -283,17 +283,18 @@ InstructionList	Connection::HandleCompleteRequest(){
 			if (cgi.pipe_write_fd() != posix::kInvalidFd)
 				instructions.Add(Action::WatchCgiWrite, cgi.pipe_write_fd());
 			instructions.Add(Action::WatchCgiRead, cgi.pipe_read_fd());
+			[[maybe_unused]] size_t body_size = request.body_.size();
 			state_ = StateCGI{cgi.pipe_read_fd(), 
 								cgi.child_pid(),
 								{},
 								{Clock::now() + kCgiTimeout},
 								cgi.pipe_write_fd(),
-								request.body_,
+								std::move(request.body_),
 								0
 							};
 			LOG_DEBUG("reading: cgi request parsed -> cgi fd=" + std::to_string(socket_.fd())
 					+ " pid=" + std::to_string(cgi.child_pid())
-					+ " body_size=" + std::to_string(request.body_.size()),
+					+ " body_size=" + std::to_string(body_size),
 					srv_id_);
 		}
 	}
