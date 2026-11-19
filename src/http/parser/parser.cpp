@@ -67,7 +67,14 @@ HttpParser::~HttpParser(void)
 
 HttpParserState HttpParser::Feed(const char *str)
 {
-	input_buffer_ += str;
+	// This overload assumes a NUL-terminated string.
+	return (Feed(str, std::strlen(str)));
+}
+
+HttpParserState HttpParser::Feed(const char *str, size_t length)
+{
+	// append() copies exactly length bytes, so chunk data may contain '\0'.
+	input_buffer_.append(str, length);
 	int	loop = 0;
 
 	while (loop == 0)
