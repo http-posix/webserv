@@ -49,7 +49,7 @@ class Connection{
 		InstructionList	HandleTimeouts(Clock::time_point now);
 
 		InstructionList	OnCgi();
-		InstructionList ProcessReceivedBytes(const char* buf);
+		InstructionList ProcessReceivedBytes(const char* buf, size_t length);
 		InstructionList	HandleCompleteRequest();
 		InstructionList	HandleErrorResponse(int status_code);
 
