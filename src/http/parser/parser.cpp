@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <limits>
+#include <cstring>
 
 static bool is_token_char(unsigned char c)
 {
@@ -364,7 +365,10 @@ int HttpParser::ParseHeaders()
 
 int HttpParser::ParseBody()
 {
-	// We only support Content-Length bodies for now.
+	// Chunked bodies have their own small state machine because they arrive as
+	// several pieces instead of one block with a known length.
+	if (chunked_)
+		return (ParseChunkedBody());
 	if (input_buffer_.size() < body_expected_len_)
 	{
 		return (-1);
@@ -377,6 +381,82 @@ int HttpParser::ParseBody()
 	}
 	body_ = input_buffer_.substr(0, body_expected_len_);
 	input_buffer_ = input_buffer_.substr(body_expected_len_);
+	external_state_ = Complete;
+	state_ = Done;
+	return (-1);
+}
+
+int HttpParser::ParseChunkedBody()
+{
+	if (chunk_state_ == ChunkSize)
+	{
+		size_t eol = input_buffer_.find("\r\n");
+		if (eol == std::string::npos)
+			return (-1);
+
+		std::string line = input_buffer_.substr(0, eol);
+		// Chunk extensions start with ';'. We do not need them to read the body.
+		size_t extension = line.find(';');
+		if (extension != std::string::npos)
+			line = line.substr(0, extension);
+		line = TrimOWS(line);
+		if (!ParseHexSize(line, &chunk_size_))
+		{
+			state_ = Error;
+			external_state_ = InvalidRequest;
+			return (-1);
+		}
+		input_buffer_ = input_buffer_.substr(eol + 2);
+		if (client_max_body_size_ > 0
+			&& chunk_size_ > client_max_body_size_ - body_.size())
+		{
+			// Reuse the existing "too large" state to get the same 413 response
+			// that Content-Length bodies already produce.
+			LOG_DEBUG("Chunked body larger than allowed max");
+			state_ = Error;
+			external_state_ = ContentLengthTooLarge;
+			return (-1);
+		}
+		chunk_state_ = chunk_size_ == 0 ? Trailer : ChunkData;
+		return (0);
+	}
+	if (chunk_state_ == ChunkData)
+	{
+		if (input_buffer_.size() < chunk_size_)
+			return (-1);
+		// append() with a length keeps binary data intact.
+		body_.append(input_buffer_.data(), chunk_size_);
+		input_buffer_ = input_buffer_.substr(chunk_size_);
+		chunk_state_ = ChunkDataEnd;
+		return (0);
+	}
+	if (chunk_state_ == ChunkDataEnd)
+	{
+		if (input_buffer_.size() < 2)
+			return (-1);
+		if (input_buffer_.compare(0, 2, "\r\n") != 0)
+		{
+			state_ = Error;
+			external_state_ = InvalidRequest;
+			return (-1);
+		}
+		// Every chunk ends with CRLF after its data.
+		input_buffer_ = input_buffer_.substr(2);
+		chunk_state_ = ChunkSize;
+		return (0);
+	}
+	// Trailers use the same line format as headers. An empty line ends them,
+	// and therefore ends the whole chunked body.
+	size_t eol = input_buffer_.find("\r\n");
+	if (eol == std::string::npos)
+		return (-1);
+	// Last trailer signifies the end of the Chunked Request
+	// It is signified by having an "empty" eol.
+	// (aka only an eol)
+	bool last_trailer = (eol == 0);
+	input_buffer_ = input_buffer_.substr(eol + 2);
+	if (!last_trailer)
+		return (0);
 	external_state_ = Complete;
 	state_ = Done;
 	return (-1);
