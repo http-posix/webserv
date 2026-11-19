@@ -317,6 +317,14 @@ int HttpParser::ParseHeaders()
 	it = headers_.find("content-length");
 	if (it != headers_.end())
 	{
+		// A request with both headers is ambiguous. RFC says Transfer-Encoding
+		// wins, but rejecting it is simpler and keeps the parser strict.
+		if (chunked_)
+		{
+			state_ = Error;
+			external_state_ = InvalidRequest;
+			return (-1);
+		}
 		size_t len = 0;
 		// In case we have an invalid entry for content-length we result in an error.
 		if (!ParseDecimalSize(it->second, &len))
@@ -333,13 +341,6 @@ int HttpParser::ParseHeaders()
 			external_state_ = ContentLengthTooLarge;
 			return (-1);
 		}
-		// If both TE: chunked and Content-Length are present, we don't implement it yet.
-		if (chunked_)
-		{
-			state_ = Error;
-			external_state_ = InvalidRequest;
-			return (-1);
-		}
 		// If the length of the body is 0, we done and we don't need to (try to) parse it.
 		if (body_expected_len_ == 0)
 		{
@@ -348,6 +349,14 @@ int HttpParser::ParseHeaders()
 			state_ = Done;
 			return (0);
 		}
+	}
+	// For chunked requests there is no Content-Length. The terminating
+	// "0\r\n\r\n" still has to be read before the request is complete.
+	if (chunked_)
+	{
+		body_.clear();
+		chunk_state_ = ChunkSize;
+		chunk_size_ = 0;
 	}
 	state_ = Body;
 	return (0);
