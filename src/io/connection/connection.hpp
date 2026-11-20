@@ -29,7 +29,8 @@
 class Connection{
 	public:
 		Connection() = delete;
-		Connection(Socket socket, const ConnInfo& conn_info, const std::string& srv_id, const ServerConfig& server_config);
+		Connection(Socket socket, const ConnInfo& conn_info,
+					const std::string& srv_id, const ServerConfig& server_config);
 		~Connection() = default;
 
 		// copy
@@ -45,7 +46,7 @@ class Connection{
 		InstructionList	OnWritable();
 		InstructionList	OnCgiReadable();
 		InstructionList	OnCgiWritable();
-		InstructionList	HandleCgiDeadline(Clock::time_point now);
+		InstructionList	HandleTimeouts(Clock::time_point now);
 
 
 		const std::string	srv_id() const noexcept;
@@ -57,6 +58,8 @@ class Connection{
 
 	private:
 		static constexpr size_t					kBufSize = 4096;
+		static constexpr std::chrono::seconds	kIdleTimeout{30};
+		static constexpr std::chrono::seconds	kHeaderTimeout{60};
 		static constexpr std::chrono::seconds	kCgiTimeout{20};
 		static constexpr size_t					kMaxCgiOutput = 10 * 1024 * 1024; // 2^10 = 1024 
 
@@ -64,6 +67,8 @@ class Connection{
 		ConnInfo			conn_info_;
 		std::string			srv_id_;
 		const ServerConfig*	server_config_;
+		Clock::time_point	accepted_at_;
+		Clock::time_point	last_activity_;
 
 		ConnectionState		state_ = StateReading{};
 		HttpParser			http_parser_; // Not in StateReadable to keep buffer with 2 dif requests
@@ -75,6 +80,9 @@ class Connection{
 		InstructionList	DiscardWhileCgi(ssize_t recv_bytes);
 		InstructionList	AbortCgi(const StateCGI& state_cgi, HttpStatusCode code);
 		InstructionList CloseCgiWriteFd(StateCGI& state_cgi);
+		InstructionList	HandleReadTimeout(const Clock::time_point now);
+		InstructionList	HandleWriteTimeout(const Clock::time_point now);
+		InstructionList	HandleCgiDeadline(const Clock::time_point now);
 
 		//bool				keep_alive_ ;
 	};

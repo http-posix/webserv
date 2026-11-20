@@ -88,7 +88,7 @@ void	EventLoop::run(){
 		int ready_count = pm_.Poll(kPollTimeoutMs);
 		
 		reaper_.CheckChildren();
-		CheckCgiTimeouts();
+		CheckTimeouts();
 
 		// early return for readability & branch prediction make it cheap
 		if (ready_count < 0 /*&& !timeout?*/){
@@ -364,12 +364,12 @@ void	EventLoop::CleanupCgiBeforeShutdown(){
 	reaper_.KillAndWaitAll();
 }
 
-void	EventLoop::CheckCgiTimeouts(){
+void	EventLoop::CheckTimeouts(){
 	const Clock::time_point				now = Clock::now();
 	std::vector<PendingInstructions>	to_apply;
 
 	for (auto& [fd, conn] : connections_){
-		InstructionList	instructions = conn.HandleCgiDeadline(now);
+		InstructionList	instructions = conn.HandleTimeouts(now);
 		if (instructions.count > 0)
 			to_apply.push_back({fd, instructions});
 	}

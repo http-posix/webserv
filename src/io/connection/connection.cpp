@@ -1,4 +1,5 @@
 #include "io/connection/connection.hpp"
+#include "io/connection/connection_state.hpp"
 #include "io/instruction.hpp"
 #include "utils/logger/logger.hpp"
 #include "http/response/response.hpp"
@@ -7,6 +8,7 @@
 #include "cgi/cgi.hpp"
 #include "utils/posix/posix.hpp"
 
+#include <string>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <array>
@@ -50,11 +52,14 @@ namespace {
 /*                          Constructors & Destructors                        */
 /* ========================================================================== */
 
-Connection::Connection(Socket socket, const ConnInfo& conn_info, const std::string& srv_id, const ServerConfig& server_config) : 
+Connection::Connection(Socket socket, const ConnInfo& conn_info,
+						const std::string& srv_id, const ServerConfig& server_config) : 
 		socket_(std::move(socket)),
 		conn_info_(conn_info),
 		srv_id_(srv_id),
-		server_config_(&server_config)
+		server_config_(&server_config),
+		accepted_at_(Clock::now()),
+		last_activity_(accepted_at_)
 { }
 
 /* ========================================================================== */
@@ -84,6 +89,7 @@ InstructionList	Connection::OnReadable(){
 		return DiscardWhileCgi(recv_bytes);
 	}
 
+	last_activity_ = Clock::now();
 	LOG_DEBUG("reading: recv fd=" + std::to_string(socket_.fd())
 					+ " recv_bytes=" + std::to_string(recv_bytes), srv_id_);
 	buf[recv_bytes] = '\0';
@@ -110,6 +116,7 @@ InstructionList	Connection::OnWritable(){
 		return instructions;
 	}
 
+	last_activity_ = Clock::now();
 	w.offset += send_bytes;
 	LOG_DEBUG("writing: send fd=" + std::to_string(socket_.fd())
 			+ " send_bytes=" + std::to_string(send_bytes)
@@ -152,14 +159,12 @@ InstructionList	Connection::OnCgiReadable(){
 	return ProcessCgiOutput(state_cgi);
 }
 
-InstructionList	Connection::HandleCgiDeadline(const Clock::time_point now){
-	if (!InStateCgi())
-		return {};
-	const StateCGI&	state_cgi = std::get<StateCGI>(state_);
-	if (now < state_cgi.deadline_point)
-		return {};
-	LOG_WARN("cgi: timeout, pid=" + std::to_string(state_cgi.child_pid), srv_id_);
-	return AbortCgi(state_cgi, HttpStatusCode::GatewayTimeout);
+InstructionList	Connection::HandleTimeouts(Clock::time_point now){
+	if (std::holds_alternative<StateReading>(state_))
+		return HandleReadTimeout((now));
+	if (std::holds_alternative<StateWriting>(state_))
+		return HandleWriteTimeout(now);
+	return HandleCgiDeadline(now);
 }
 
 InstructionList	Connection::OnCgiWritable(){
@@ -326,6 +331,7 @@ InstructionList	Connection::ProcessCgiOutput(StateCGI& state_cgi){
 					srv_id_);
 	}
 
+	last_activity_ = Clock::now();
 	return instructions;
 }
 
@@ -348,6 +354,7 @@ InstructionList	Connection::AbortCgi(const StateCGI& state_cgi, const HttpStatus
 	::close(state_cgi.pipe_read_fd); // Add proper close after fd-posix-refactoring
 
 	state_ = StateWriting{BuildCgiError(code), 0};
+	last_activity_ = Clock::now();
 	return instructions;
 }
 
@@ -360,5 +367,44 @@ InstructionList	Connection::CloseCgiWriteFd(StateCGI& state_cgi){
 	instructions.Add(Action::StopWatching, state_cgi.pipe_write_fd);
 	::close(state_cgi.pipe_write_fd);
 	state_cgi.pipe_write_fd = posix::kInvalidFd;
+	return instructions;
+}
+
+InstructionList	Connection::HandleCgiDeadline(const Clock::time_point now){
+	if (!InStateCgi())
+		return {};
+	const StateCGI&	state_cgi = std::get<StateCGI>(state_);
+	if (now < state_cgi.deadline_point)
+		return {};
+	LOG_WARN("cgi: timeout, pid=" + std::to_string(state_cgi.child_pid), srv_id_);
+	return AbortCgi(state_cgi, HttpStatusCode::GatewayTimeout);
+}
+
+InstructionList	Connection::HandleReadTimeout(const Clock::time_point now){
+	InstructionList	instructions;
+	bool		idle = now - last_activity_ > kIdleTimeout;
+	bool		slow_headers = false;
+	
+	if (!http_parser_.HeadersComplete() && now - accepted_at_ > kHeaderTimeout)
+		slow_headers = true;
+
+	if (idle || slow_headers){
+		std::string	reason = "idle read";
+		if (slow_headers)
+			reason = "headers";
+		LOG_WARN(std::string("timeout: ") + reason
+					+ ", fd=" + std::to_string(socket_.fd()), srv_id_);
+		instructions.Add(Action::CloseConnection, socket_.fd());
+	}
+	return instructions;
+}
+
+InstructionList	Connection::HandleWriteTimeout(const Clock::time_point now){
+	InstructionList	instructions;
+
+	if (now - last_activity_ > kIdleTimeout){
+		LOG_WARN("timeout: idle send, fd=" + std::to_string(socket_.fd()), srv_id_);
+		instructions.Add(Action::CloseConnection, socket_.fd());
+	}
 	return instructions;
 }
