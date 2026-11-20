@@ -20,6 +20,9 @@
 	- [Microsoft Build 2026: Constructors (explicit & Inheriting constructors)](https://learn.microsoft.com/en-us/cpp/cpp/constructors-cpp?view=msvc-180)
 	- [CPPLearn: Global Scope Resolution](https://www.learncpp.com/cpp-tutorial/user-defined-namespaces-and-the-scope-resolution-operator/)
 	- [Microsoft Build 2026: Scope C++](https://learn.microsoft.com/en-us/cpp/cpp/scope-visual-cpp?view=msvc-170)
+	- [Cppreference: std::is_trivially_copyable](https://en.cppreference.com/cpp/types/is_trivially_copyable)
+	- [abseil: C++ tips: #109 Meaningful `const` in Function Declarations](https://abseil.io/tips/109)
+	- [abseil: C++ tips: #234: Pass by Value, by Pointer, or by Reference?](abseil.io/tips/234)
 
 - design patterns
 	- [Object Oriented Design](https://www.oodesign.com/)
