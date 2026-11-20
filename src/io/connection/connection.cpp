@@ -341,7 +341,7 @@ InstructionList	Connection::DiscardWhileCgi([[maybe_unused]]ssize_t recv_bytes){
 	return {};
 }
 
-InstructionList	Connection::AbortCgi(const StateCGI& state_cgi, const HttpStatusCode code){
+InstructionList	Connection::AbortCgi(const StateCGI& state_cgi, HttpStatusCode code){
 	InstructionList	instructions;
 
 	instructions.Add(Action::StopWatching, state_cgi.pipe_read_fd);
@@ -370,7 +370,7 @@ InstructionList	Connection::CloseCgiWriteFd(StateCGI& state_cgi){
 	return instructions;
 }
 
-InstructionList	Connection::HandleCgiDeadline(const Clock::time_point now){
+InstructionList	Connection::HandleCgiDeadline(Clock::time_point now){
 	const StateCGI&	state_cgi = std::get<StateCGI>(state_);
 	if (now < state_cgi.deadline_point)
 		return {};
@@ -378,7 +378,7 @@ InstructionList	Connection::HandleCgiDeadline(const Clock::time_point now){
 	return AbortCgi(state_cgi, HttpStatusCode::GatewayTimeout);
 }
 
-InstructionList	Connection::HandleReadTimeout(const Clock::time_point now){
+InstructionList	Connection::HandleReadTimeout(Clock::time_point now){
 	InstructionList	instructions;
 	bool		idle = now - last_activity_ > kIdleTimeout;
 	bool		slow_headers = false;
@@ -397,7 +397,7 @@ InstructionList	Connection::HandleReadTimeout(const Clock::time_point now){
 	return instructions;
 }
 
-InstructionList	Connection::HandleWriteTimeout(const Clock::time_point now){
+InstructionList	Connection::HandleWriteTimeout(Clock::time_point now){
 	InstructionList	instructions;
 
 	if (now - last_activity_ > kIdleTimeout){
