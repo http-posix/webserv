@@ -371,8 +371,6 @@ InstructionList	Connection::CloseCgiWriteFd(StateCGI& state_cgi){
 }
 
 InstructionList	Connection::HandleCgiDeadline(const Clock::time_point now){
-	if (!InStateCgi())
-		return {};
 	const StateCGI&	state_cgi = std::get<StateCGI>(state_);
 	if (now < state_cgi.deadline_point)
 		return {};
