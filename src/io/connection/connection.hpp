@@ -80,9 +80,9 @@ class Connection{
 		InstructionList	DiscardWhileCgi(ssize_t recv_bytes);
 		InstructionList	AbortCgi(const StateCGI& state_cgi, HttpStatusCode code);
 		InstructionList CloseCgiWriteFd(StateCGI& state_cgi);
-		InstructionList	HandleReadTimeout(const Clock::time_point now);
-		InstructionList	HandleWriteTimeout(const Clock::time_point now);
-		InstructionList	HandleCgiDeadline(const Clock::time_point now);
+		InstructionList	HandleReadTimeout(Clock::time_point now);
+		InstructionList	HandleWriteTimeout(Clock::time_point now);
+		InstructionList	HandleCgiDeadline(Clock::time_point now);
 
 		//bool				keep_alive_ ;
 	};
