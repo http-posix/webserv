@@ -78,3 +78,11 @@ curl -s --max-time 5 -d "a=12&b=5&op=div" http://127.0.0.1:8080/cgi-bin/calc.py
 
 ```
 
+idle send
+to create /big.binm change root to www or what is in config: `dd if=/dev/zero of=<root>/big.bin bs=1m count=50`
+```bash
+(printf 'GET /big.bin HTTP/1.1\r\nHost: localhost\r\n\r\n'; sleep 120) | nc localhost 8080 | sleep 120
+# or 
+python3 www/cgi-bin/idle_send.py 
+```
+

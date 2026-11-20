@@ -46,6 +46,7 @@
 	- [Microsoft: Protocol Basics: Listen, Connect, Accept](https://learn.microsoft.com/en-us/windows/win32/winsock/protocol-basics-listen-connect-accept-2)
 	- [dartmouth: CS 60 Computer Networks - Socket Programming](https://www.cs.dartmouth.edu/~campbell/cs60/socketprogramming.html)
 	- [Code(Quoi); Sockets and Network Programming in C](https://www.codequoi.com/en/sockets-and-network-programming-in-c/#preparing-sockets)
+	- [Netcat](https://nc110.sourceforge.io/)
 
 
 - version contorl
