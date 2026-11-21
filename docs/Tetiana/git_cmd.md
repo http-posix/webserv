@@ -143,7 +143,7 @@ git cherry-pick --continue
 git cherry-pick --abort             # cancel, restore original state
 ```
 
-> **Note:** The `^` inclusive range syntax (`hash1^..hash2`) works correctly on Unix-based systems (macOS, Linux). On Windows PowerShell, escape it as `` `^ `` or use `--stdin` with a range instead.
+> **Note:** The `^` inclusive range syntax (`hash1^..hash2`) works correctly on Unix-based systems (macOS, Linux). On Windows it's different  
 
 > ⚠️ Creates a **new commit** with a different hash — it's a copy, not a move. Avoid cherry-picking the same commit into multiple long-lived branches; it causes duplicate history.
 
@@ -245,26 +245,6 @@ git blame --since="2 weeks ago" file.js
 ```
 
 Output per line: `<hash> (<author> <date>) <code>`
-
----
-
-## tag
-
-Mark a specific commit permanently — typically for releases.
-
-```bash
-git tag v1.0.0                          # lightweight tag (pointer only)
-git tag -a v1.0.0 -m "Release 1.0.0"   # annotated tag (includes author + date)
-git tag -a v1.0.0 <hash>               # tag a past commit
-
-git tag                                 # list all tags
-git show v1.0.0                         # tag details + commit info
-
-git push origin v1.0.0                  # push one tag (tags don't push automatically)
-git push origin --tags                  # push all tags
-git tag -d v1.0.0                       # delete local tag
-git push origin --delete v1.0.0         # delete remote tag
-```
 
 ---
 
