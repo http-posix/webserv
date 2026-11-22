@@ -9,20 +9,22 @@ void run_app(int argc, char **argv);
 
 int main(int argc, char **argv){
 	
-	int	status = 0;
+	int	status = 1;
 	
 	Signal::SetupSignalHandlers();
 
 	try{
 		run_app(argc, argv);
+		status = 0;
 	}
 	catch(const std::bad_alloc& error){
-		status = 1;
 		std::cerr << "Error: can't allocate memory " << error.what() << "\n";
 	}
 	catch(const AppException& error){
-		status = 1;
 		LOG_ERROR(std::string("AppException: ") + error.what());
+	}
+	catch (const std::exception& error){
+		LOG_ERROR(std::string("Unexpected exception: ") + error.what());
 	}
 	return status;
 }

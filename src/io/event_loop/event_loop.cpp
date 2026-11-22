@@ -4,7 +4,7 @@
 #include "io/socket/socket.hpp"
 #include "io/instruction.hpp"
 #include "utils/posix/posix.hpp"
-
+#include "utils/app_exception/app_exception.hpp"
 
 
 #include <cerrno>
@@ -79,50 +79,60 @@ EventLoop::EventLoop(std::vector<Server>&& listeners):
 	}
 }
 
+// RAII - clean up CGI processes on any exit from run()
+EventLoop::~EventLoop(){
+	for (const auto& [fd, conn] : connections_){
+		if (conn.InStateCgi())
+			reaper_.Track(conn.cgi_pid());
+	}
+	reaper_.KillAndWaitAll();
+}
+
 /* ========================================================================== */
 /*                               Public Methods                               */
 /* ========================================================================== */
 
 void	EventLoop::run(){
 	while (Signal::g_signal_running){
-		int ready_count = pm_.Poll(kPollTimeoutMs);
-		
+		ProcessEvents();
 		reaper_.CheckChildren();
 		CheckTimeouts();
-
-		// early return for readability & branch prediction make it cheap
-		if (ready_count < 0 /*&& !timeout?*/){
-			if (HandlePollError() == Severity::Critical) // just mock, needs check
-				break;
-			continue;
-		}
-		if (ready_count == 0 /*&& !timeout*/)
-			continue;
-
-		// happy path logic
-		HandleWatched(ready_count);
 	}
-	CleanupCgiBeforeShutdown();
 }
 
 /* ========================================================================== */
 /*                              Private Methods                               */
 /* ========================================================================== */
 
-EventLoop::Severity	EventLoop::HandlePollError(){
-	if (errno == EAGAIN || errno == EINTR) // Resource temporarily unavailable || signal catched
-		return Severity::NonCritical;
-	if (errno == EINVAL){
-		LOG_ERROR("poll() failed due timeout: " + std::string(strerror(errno)));
-		return Severity::Critical;
-	}
-	// to handle amount of poll_fds_ I can set my own restriction
-	// like MAX_POLLFDS = 1024 and then 2 strategy 
-	// => accept() check_max_pollfds => close() 
-	//  or shutdown evenloop
-	// ====> set fd to wait -> need to investigate this approach
 
-	return Severity::NonCritical; // ?????
+// 	// to handle amount of poll_fds_ I can set my own restriction
+// 	// like MAX_POLLFDS = 1024 and then 2 strategy
+// 	// => accept() check_max_pollfds => close()
+// 	//  or shutdown evenloop
+// 	// ====> set fd to wait -> need to investigate this approach
+
+
+void	EventLoop::ProcessEvents(){
+	int ready_count = pm_.Poll(kPollTimeoutMs);
+
+	if (ready_count < 0)
+		return HandlePollError();
+	if (ready_count == 0)
+		return ;
+	HandleWatched(ready_count);
+}
+
+void	EventLoop::HandlePollError(){
+	int err = errno;
+
+	if (err == EINTR){
+		LOG_DEBUG("poll() interrupted by signal");
+		return ;
+	}
+	if (err == EINVAL || err == EFAULT){
+		throw ServerException("poll failed: " + std::string(strerror(err)));
+	}
+	LOG_WARN("poll failed, retrying: " + std::string(strerror(err)));
 }
 
 void	EventLoop::HandleWatched(int ready_count){
@@ -354,14 +364,6 @@ void	EventLoop::CloseConnection(int fd){
 	pm_.Unwatch(fd);
 	connections_.erase(it);
 	LOG_DEBUG("closed connection fd=" + std::to_string(fd), ctx);
-}
-
-void	EventLoop::CleanupCgiBeforeShutdown(){
-	for (const auto& [fd, conn] : connections_){
-		if (conn.InStateCgi())
-			reaper_.Track(conn.cgi_pid());
-	}
-	reaper_.KillAndWaitAll();
 }
 
 void	EventLoop::CheckTimeouts(){

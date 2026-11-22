@@ -23,7 +23,7 @@ class EventLoop{
 	public:
 		EventLoop() = delete;
 		explicit EventLoop(std::vector<Server>&& listeners);
-		~EventLoop() = default;
+		~EventLoop();
 
 		void run();
 
@@ -37,13 +37,9 @@ class EventLoop{
 		std::unordered_map<int, Connection>	connections_;
 		std::unordered_map<int, int>		cgi_owners_;
 
-		enum class Severity{
-			NonCritical,
-			Critical
-		};
-
 		// methods
-		Severity	HandlePollError();
+		void		ProcessEvents();
+		void		HandlePollError();
 		void		HandleWatched(int ready_count);
 		void		HandleListener(pollfd poll_entry, size_t i);
 		void		HandleConnectionEvent(const pollfd poll_entry);
@@ -53,7 +49,6 @@ class EventLoop{
 		void		CloseConnection(int fd);
 		int			FindOwner(int fd);
 		void		ApplyInstructions(const InstructionList& instructions, int owner_fd);
-		void		CleanupCgiBeforeShutdown();
 		void		CheckTimeouts();
 };
 
