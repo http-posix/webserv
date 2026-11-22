@@ -273,6 +273,9 @@ git worktree add ../feature-temp -b feat/experiment   # new folder + new branch
 
 git worktree list                           # show all active worktrees
 git worktree remove ../hotfix-branch        # remove when done
+
+git worktree prune -n -v   # dry run: show which stale entries would be removed
+git worktree prune         # remove entries for worktrees whose folders were deleted manually
 ```
 
 __________

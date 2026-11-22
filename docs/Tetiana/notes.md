@@ -70,3 +70,43 @@ if (addr.ss_family == AF_INET)        // IPv4
 else if (addr.ss_family == AF_INET6)  // IPv6
 	auto* v6 = reinterpret_cast<sockaddr_in6*>(&addr);
 ```
+
+## Signals
+
+**SIGINT**  
+ `ctrl-c`
+ `kill -INT <pid>`
+
+**SIGTERM**  
+`kill <pid>`
+`killall webserv` / `pkill webserv`
+e.g. docker stop will send SIGTERM
+
+
+check processes
+```bash
+ps                      # only processes of the current terminal
+ps -u $USER             # all processes of your user (no system ones)
+pgrep -l webserv        # find by name -> pid + name
+pgrep -P <pid>          # children of a process (handy for CGI)
+```
+
+for cgi check
+```bash
+kill <server_pid>
+ps -o pid,ppid,stat,comm -u $USER
+```
+
+check ports
+```
+lsof -i :8080           # who is holding port 8080
+```
+
+```bash
+echo $? # run right after the server stops
+```
+- `130` = 128 + 2 (SIGINT) -> killed by the signal itself, no handler
+- `0` / other -> signal was handled, program exited on its own
+
+
+`strace -f ./webserv` - Linux, not MacOS
