@@ -218,8 +218,10 @@ void HttpRouter::HandleLocation()
 void HttpRouter::HandleNoLocation()
 {
 	PrefixServerRoot();
-	if (req_.method_ == Get)
-		AppendIndex(srv_cfg_);
+	// All methods except for GET need to be specified (and allowed) for specific location settings.
+	if (req_.method_ != Get)
+		throw(HttpStatusException(Forbidden));
+	AppendIndex(srv_cfg_);
 }
 
 // Does the cgi request not need to know whether it is get or post?
