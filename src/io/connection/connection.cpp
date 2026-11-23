@@ -59,10 +59,10 @@ Connection::Connection(Socket socket, const ConnInfo& conn_info,
 		conn_info_(conn_info),
 		srv_id_(srv_id),
 		server_config_(&server_config),
+		accepted_at_(Clock::now()),
+		last_activity_(accepted_at_),
 		state_(StateReading{}),
 		http_parser_(server_config.client_max_body_size)
-		accepted_at_(Clock::now()),
-		last_activity_(accepted_at_)
 { }
 
 /* ========================================================================== */
