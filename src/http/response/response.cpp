@@ -137,6 +137,8 @@ void HttpResponse::SetStatus(int status_code)
 	{
 		case (OK) :	status_text_ = "OK"; break ;
 		case (Created) : status_text_ = "Created"; break ;
+		case (NoContent) : status_text_ = "No Content"; break ;
+		case (InternalServerError) : status_text_ = "Internal Server Error"; break ;
 		case (MovedPermanently) : status_text_ = "Moved Permanently"; break ;
 		case (Found) : status_text_ = "Found"; break ;
 		case (PermanentRedirect): status_text_ = "Permanent Redirect"; break ;
