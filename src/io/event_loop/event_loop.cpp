@@ -3,36 +3,68 @@
 #include "io/event_loop/signal_handler.hpp"
 #include "io/socket/socket.hpp"
 #include "io/instruction.hpp"
+#include "utils/posix/posix.hpp"
+
+
 
 #include <cerrno>
 #include <cstddef>
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <cstring>
+#include <arpa/inet.h>
+#include <unistd.h>
+// #include <netinet/in.h>
 
-/* 
-POLLIN
-The file descriptor is ready for reading data other than high-priority data.
-POLLRDNORM
-The file descriptor is ready for reading normal data.
-POLLRDBAND
-The file descriptor is ready for reading priority data.
-POLLPRI
-The file descriptor is ready for reading high-priority data.
-POLLOUT
-The file descriptor is ready for writing normal data.
-POLLWRNORM
-Equivalent to POLLOUT.
-POLLWRBAND
-The file descriptor is ready for writing priority data.
-POLLERR
-An error condition is present on the file descriptor. All error conditions that arise solely from the state of the object underlying the open file description and would be diagnosed by a return of -1 from a read() or write() call on the file descriptor shall be reported as a POLLERR event. This flag is only valid in the revents bitmask; it shall be ignored in the events member.
-POLLHUP
-A device has been disconnected, or a pipe or FIFO has been closed by the last process that had it open for writing. Once set, the hangup state of a FIFO shall persist until some process opens the FIFO for writing or until all read-only file descriptors for the FIFO are closed. This event and POLLOUT are mutually-exclusive. However, this event and POLLIN, POLLRDNORM, POLLRDBAND, or POLLPRI are not mutually-exclusive. This flag is only valid in the revents bitmask; it shall be ignored in the events member.
-POLLNVAL
-The specified fd value is not an open file descriptor. This flag is only valid in the revents member; it shall be ignored in the events member.
-*/
+/* ========================================================================== */
+/*                             Anonymous Namespace                            */
+/* ========================================================================== */
 
+namespace {
+	std::string AddrToStr(const in_addr_t& addr){
+		uint32_t ip = ntohl(addr);
+		std::string	str = std::to_string(ip >> 24 & 0xFF) + '.'
+						+ std::to_string(ip >> 16 & 0xFF) + '.'
+						+ std::to_string(ip >> 8 & 0xFF) + '.'
+						+ std::to_string(ip & 0xFF);
+		return str;
+	}
+
+	std::string	ResolveServerAddr(int fd, const std::string& fallback){
+		sockaddr_in	local{};
+		socklen_t	local_len = sizeof(local);
+
+		if (::getsockname(fd, reinterpret_cast<sockaddr*>(&local), &local_len)){
+			LOG_WARN("getsockname failed, using configured host");
+			return fallback;
+		}
+		return AddrToStr(local.sin_addr.s_addr);
+	}
+
+	[[maybe_unused]] std::string ReventsToString(short revents) {
+		std::string out;
+
+		if (revents & POLLIN)
+			out += "POLLIN|";
+		if (revents & POLLOUT)
+			out += "POLLOUT|";
+		if (revents & POLLHUP)
+			out += "POLLHUP|";
+		if (revents & POLLERR)
+			out += "POLLERR|";
+		if (revents & POLLNVAL)
+			out += "POLLNVAL|";
+		if (out.empty())
+			return "0";
+		out.pop_back(); // remove trailing '|'
+		return out;
+	}
+
+	struct	PendingInstructions{
+		int				owner_fd;
+		InstructionList	instructions;
+	};
+}
 
 /* ========================================================================== */
 /*                          Constructors & Destructors                        */
@@ -47,24 +79,6 @@ EventLoop::EventLoop(std::vector<Server>&& listeners):
 	}
 }
 
-
-
-/*
-ERRORS
-The poll() and ppoll() functions shall fail if:
-
-[EAGAIN]
-The allocation of internal data structures failed but a subsequent request may succeed.
-[EINTR]
-A signal was caught during poll() or ppoll().
-[EINVAL]
-The nfds argument is greater than {OPEN_MAX}.
-The ppoll() function shall fail if:
-
-[EINVAL]
-An invalid timeout interval was specified.
-*/
-
 /* ========================================================================== */
 /*                               Public Methods                               */
 /* ========================================================================== */
@@ -73,11 +87,12 @@ void	EventLoop::run(){
 	while (Signal::g_signal_running){
 		int ready_count = pm_.Poll(kPollTimeoutMs);
 		
-		// check timeout once here, because if I'll do it in the end I'll never get there if I'll in if-continue loop
+		reaper_.CheckChildren();
+		CheckTimeouts();
 
 		// early return for readability & branch prediction make it cheap
 		if (ready_count < 0 /*&& !timeout?*/){
-			if (HandlePollError() == Severity::Critical) // просто заглушка, треба рефактор
+			if (HandlePollError() == Severity::Critical) // just mock, needs check
 				break;
 			continue;
 		}
@@ -87,6 +102,7 @@ void	EventLoop::run(){
 		// happy path logic
 		HandleWatched(ready_count);
 	}
+	CleanupCgiBeforeShutdown();
 }
 
 /* ========================================================================== */
@@ -137,59 +153,61 @@ void	EventLoop::HandleWatched(int ready_count){
 /*int accept(int socket, struct sockaddr *restrict address,
        socklen_t *restrict address_len);*/
 
-void	EventLoop::HandleListener(const pollfd poll_entry, [[maybe_unused]] size_t i){
+void	EventLoop::HandleListener(const pollfd poll_entry, size_t i){
 	// Contract 
 	assert(i < size_listeners_);
 	assert(poll_entry.fd == listeners_[i].fd());
 
+	const Server& l = listeners_[i];
+
 	// early return
-		if (poll_entry.revents & (POLLHUP | POLLERR | POLLNVAL)){
+	if (poll_entry.revents & (POLLHUP | POLLERR | POLLNVAL)){
 		std::string prefix;
 		if (poll_entry.revents & POLLNVAL)
 			prefix = "Listener fd invalid (bug: fd closed but still in poll set): ";
 		else
 			prefix = "Listener failure: ";
-		LOG_ERROR(prefix + " poll_fd=" + std::to_string(poll_entry.fd), listeners_[i].srv_id());
+		LOG_ERROR(prefix + " poll_fd=" + std::to_string(poll_entry.fd), l.srv_id());
 		RequestShutdown();// TODO: add ADR immediate shutdown + maybe later add drain mode
 		return ;
 	}
 
 	// Happy path
-	int accepted_fd = AcceptConnection(poll_entry.fd);
+	AcceptConnection(poll_entry.fd, l);
+}
+
+void	EventLoop::AcceptConnection(int entry_fd, const Server& l){
+	sockaddr_in		addr{};
+	socklen_t		addr_len = sizeof(addr);
+
+	int accepted_fd = ::accept(entry_fd, reinterpret_cast<sockaddr*>(&addr), &addr_len);
 
 	// https://man7.org/linux/man-pages/man2/accept.2.html
 	if (accepted_fd < 0){
 		if (errno == EMFILE || errno == ENFILE){
 			LOG_WARN("fd limit reached, cannot accept new connections, active: " +
-						std::to_string(connections_.size()), listeners_[i].srv_id());
+						std::to_string(connections_.size()), l.srv_id());
 		}
 		return ;
 	}
+	
 	Socket	accepted_socket = Socket::adopt(accepted_fd);
 	if (accepted_socket.fd() < 0){
+		LOG_WARN("Failed to adopt accepted client fd", l.srv_id());
 		return ;// fd was closed in adopt() in case of fail
 	}
-	// HttpParser should have move ctor too
 
-	// To avoid loosing data 'cause of unspecified 
-	// order of evaluation of function arguments
 	int fd = accepted_socket.fd();
-	const Server& l = listeners_[i];
-	connections_.emplace(fd, Connection(std::move(accepted_socket), l.srv_id(), l.server_config()));
+	ConnInfo info{AddrToStr(addr.sin_addr.s_addr),
+					ResolveServerAddr(fd, l.server_host()),
+					std::to_string(l.server_port())
+				};
+	connections_.emplace(fd, 
+				Connection(std::move(accepted_socket), info, l.srv_id(), l.server_config()));
+	LOG_DEBUG("accept: new client fd=" + std::to_string(fd)
+				+ " from " + info.addr,
+				l.srv_id());
 	pm_.Watch(fd, POLLIN);
-}
-
-// nullptr, nullptr - if I don't want to keep info about IP, but I want
-// type punning via a common prefix
-// prefix-based type punning == common-prefix type punning
-// for IPv4 & IPv6 struct starts from the same field sa_family_t sa_family
-// https://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/socket.h.html
-int	EventLoop::AcceptConnection(int listener_fd){
-	sockaddr_storage	addr{};
-	socklen_t			addr_len = sizeof(addr);
-
-	int fd = ::accept(listener_fd, reinterpret_cast<sockaddr*>(&addr), &addr_len);
-	return fd;
 }
 
 void	EventLoop::HandleConnectionEvent(const pollfd entry){
@@ -205,14 +223,38 @@ void	EventLoop::HandleConnectionEvent(const pollfd entry){
 	InstructionList	instructions;
 
 	// First resolve is it cgi or not, then check what happened
-	if (entry.fd != owner_fd)
-		instructions = connection.OnCgi();
-	else if (entry.revents & POLLIN)
+	if (entry.fd != owner_fd){
+		if (entry.fd == connection.cgi_read_fd()){
+			LOG_DEBUG("We are going to OnCgiReadable fd=" + std::to_string(owner_fd)
+						+ " pipe_fd=" + std::to_string(entry.fd)
+						+ " revents=" + ReventsToString(entry.revents),
+						connection.srv_id());
+			instructions = connection.OnCgiReadable();
+		}
+		else if (entry.fd == connection.cgi_write_fd()){
+			LOG_DEBUG("We are going to OnCgiWritable fd=" + std::to_string(owner_fd)
+						+ " pipe_fd=" + std::to_string(entry.fd)
+						+ " revents=" + ReventsToString(entry.revents),
+						connection.srv_id());
+			instructions = connection.OnCgiWritable();
+		}
+	}
+	else if (entry.revents & POLLIN){
+		LOG_DEBUG("We are going to OnReadable fd=" + std::to_string(entry.fd)
+					+ " revents=" + ReventsToString(entry.revents),
+					connection.srv_id());
 		instructions = connection.OnReadable();
-	else if (entry.revents & POLLOUT)
+	}
+	else if (entry.revents & POLLOUT){
+		LOG_DEBUG("We are going to OnWritable fd=" + std::to_string(entry.fd)
+					+ " revents=" + ReventsToString(entry.revents),
+					connection.srv_id());
 		instructions = connection.OnWritable();
+	}
 	else {
-		LOG_DEBUG("error branch in connection", connection.srv_id());
+		LOG_DEBUG("hangup/error on fd=" + std::to_string(entry.fd)
+					+ " revents=" + ReventsToString(entry.revents),
+					connection.srv_id());
 		// TODO: proper POLLERR/POLLHUP/POLLNVAL handling (different for cgi pipe vs client fd)
 		CloseConnection(owner_fd);
 		return ;
@@ -244,7 +286,9 @@ void	EventLoop::ApplyInstructions(const InstructionList& instructions, int owner
 	// There could be queue of instructions if this is cgi
 	// For common connection we expected only 1 instruction
 	for (int i = 0; i < instructions.count; i++){
-		int fd = instructions.list[i].target_fd;
+		int		fd = instructions.list[i].target_fd;
+		pid_t	pid = instructions.list[i].pid;
+
 		switch (instructions.list[i].action){
 			case Action::WaitReadable:
 				pm_.SetEvents(fd, POLLIN);
@@ -252,8 +296,12 @@ void	EventLoop::ApplyInstructions(const InstructionList& instructions, int owner
 			case Action::WaitWritable:
 				pm_.SetEvents(fd, POLLOUT);
 				break;
-			case Action::WatchCgi:
+			case Action::WatchCgiRead:
 				pm_.Watch(fd, POLLIN);
+				cgi_owners_[fd] = owner_fd;
+				break;
+			case Action::WatchCgiWrite:
+				pm_.Watch(fd, POLLOUT);
 				cgi_owners_[fd] = owner_fd;
 				break;
 			case Action::StopWatching:
@@ -263,6 +311,12 @@ void	EventLoop::ApplyInstructions(const InstructionList& instructions, int owner
 			case Action::CloseConnection:
 				CloseConnection(owner_fd); // Check logic when CGI will work
 				return;
+			case Action::ReapChild:
+				reaper_.Track(pid);
+				break;
+			case Action::KillChild:
+				reaper_.Abort(pid);
+				break;
 		}
 	}
 }
@@ -272,9 +326,55 @@ void	EventLoop::CloseConnection(int fd){
 	if (it == connections_.end())
 		return; // Already closed
 	
-		// CGI ?
+	Connection&	conn = it->second;
 	const std::string ctx = it->second.srv_id();
+
+	if (conn.InStateCgi()){
+		const int	pipe_fd = conn.cgi_read_fd();
+		const int	pipe_write_fd = conn.cgi_write_fd();
+		const pid_t	pid = conn.cgi_pid();
+
+		pm_.Unwatch(pipe_fd);
+		cgi_owners_.erase(pipe_fd);
+		// TODO move this to posix namespace
+		if (pipe_fd != posix::kInvalidFd){
+			::close(pipe_fd);
+			// pipe_fd = posix::kInvalidFd;
+		}
+		if (pipe_write_fd != posix::kInvalidFd){
+			pm_.Unwatch(pipe_write_fd);
+			cgi_owners_.erase(pipe_write_fd);
+			::close(pipe_write_fd);
+		}
+		reaper_.Abort(pid);
+		LOG_DEBUG("cgi aborted process pid=" + std::to_string(pid)
+					+ " fd=" + std::to_string(fd),
+					ctx);
+	}
 	pm_.Unwatch(fd);
 	connections_.erase(it);
 	LOG_DEBUG("closed connection fd=" + std::to_string(fd), ctx);
+}
+
+void	EventLoop::CleanupCgiBeforeShutdown(){
+	for (const auto& [fd, conn] : connections_){
+		if (conn.InStateCgi())
+			reaper_.Track(conn.cgi_pid());
+	}
+	reaper_.KillAndWaitAll();
+}
+
+void	EventLoop::CheckTimeouts(){
+	const Clock::time_point				now = Clock::now();
+	std::vector<PendingInstructions>	to_apply;
+
+	for (auto& [fd, conn] : connections_){
+		InstructionList	instructions = conn.HandleTimeouts(now);
+		if (instructions.count > 0)
+			to_apply.push_back({fd, instructions});
+	}
+
+	for (const auto& item : to_apply){
+		ApplyInstructions(item.instructions, item.owner_fd);
+	}
 }

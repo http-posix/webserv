@@ -1,4 +1,4 @@
-# Part 1
+<!-- # Part 1 -->
 
 ---
 
@@ -294,3 +294,58 @@ git worktree add ../feature-temp -b feat/experiment   # new folder + new branch
 git worktree list                           # show all active worktrees
 git worktree remove ../hotfix-branch        # remove when done
 ```
+
+__________
+## Fixup commits - fix a small mistake inside an older commit.
+Like insted of if (!check) you wrote if(check). 
+This will be important for bisect.  
+**When:** an earlier commit on my branch has a small bug (typo, syntax error,
+forgotten include), and I want to fix it *in that commit*, not in a new "fix typo" commit on top.
+
+grep -rn "getsockname failed" src/      # find from where it comes
+git blame -L <рядок>,+3 src/...         # who and when write it down
+git commit --fixup <hash>
+
+### Steps
+
+1. Find the commit that broke it:
+   ```bash
+   git log --oneline
+   # a1b2c3d feat(cgi): spawn CGI child process   <- broken here
+   ```
+   `git blame -L 120,125 src/io/event_loop.cpp`
+   `git log -S 'getsockname(' --oneline` - when specific test appear or dissappear
+
+2. Fix the code, stage only the fix:
+   ```bash
+   git add <file>
+   ```
+
+3. Create a fixup commit pointing to the broken one:
+   ```bash
+   git commit --fixup a1b2c3d
+   # creates commit "fixup! feat(cgi): spawn CGI child process"
+   ```
+
+4. Fold it into the broken commit:
+   ```bash
+   git rebase -i --autosquash a1b2c3d~1
+   ```
+   - `~1` = the commit *before* the broken one, so the broken one is included
+     in the list.
+   - Editor opens; the `fixup!` line is already moved under the target commit.
+     Just save and close.
+
+5. Check and push:
+   ```bash
+   git log --oneline   # the fixup! commit is gone, merged into a1b2c3d
+   make
+   git push --force-with-lease   # history changed, so force is needed
+   ```
+
+### Rules
+- Only on my own feature branch, never on `main`.
+- If the branch is already pushed → `--force-with-lease` after rebase.
+- Optional: `git config --global rebase.autoSquash true` → then plain
+  `git rebase -i <hash>~1` does the autosquash itself.
+__________

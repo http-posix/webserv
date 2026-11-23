@@ -1,44 +1,78 @@
 #include "io/connection/connection.hpp"
+#include "io/connection/connection_state.hpp"
 #include "io/instruction.hpp"
 #include "utils/logger/logger.hpp"
 #include "http/response/response.hpp"
 #include "http/router/router.hpp"
 #include "http/http_status_code.hpp"
 #include "config/parser/parser.hpp"
+#include "cgi/cgi.hpp"
+#include "utils/posix/posix.hpp"
 
+#include <string>
 #include <sys/socket.h>
+#include <unistd.h>
+#include <array>
+#include <cassert>
+
+/* ========================================================================== */
+/*                             Anonymous Namespace                            */
+/* ========================================================================== */
+
+namespace {
+	// TODO: how this could be replaced this with reasponse http?
+	std::string	BuildCgiError(const HttpStatusCode code){
+		std::string	body = std::to_string(code) + "\n";
+
+		return "HTTP/1.1 " + std::to_string(code) + " \r\n"
+			"Content-Type: text/plain\r\n"
+			"Content-Length: " + std::to_string(body.size()) + "\r\n"
+			"Connection: close\r\n"
+			"\r\n" + body;
+	}
+
+	// Later need to check which code returned in the header
+	std::string	BuildCgiResponse(const std::string& cgi_output){
+		std::string	mock_header = "HTTP/1.1 200 OK\r\n";
+		return mock_header + cgi_output;
+	}
+
+	bool	HasHeaderEnd(const std::string& output){
+		return output.find("\r\n\r\n") != std::string::npos
+			|| output.find("\n\n") != std::string::npos;
+	}
+}
 
 // to catch possible bug is we'll forget to move fd from map
 // auto [it, inserted] = clients_.emplace(fd, Connection(std::move(connection)));
 // if (!inserted){
-// 	// TODO: LOG_ERROR — дублікат fd у clients_, це баг у логіці закриття з'єднань
+// 	// TODO: LOG_ERROR — duplicate fd in clients_
 // }
 
 /* ========================================================================== */
 /*                          Constructors & Destructors                        */
 /* ========================================================================== */
 
-Connection::Connection(Socket socket, std::string srv_id, const ServerConfig& server_config) : 
+Connection::Connection(Socket socket, const ConnInfo& conn_info,
+						const std::string& srv_id, const ServerConfig& server_config) : 
 		socket_(std::move(socket)),
+		conn_info_(conn_info),
 		srv_id_(srv_id),
 		server_config_(&server_config),
 		state_(StateReading{}),
 		http_parser_(server_config.client_max_body_size)
+		accepted_at_(Clock::now()),
+		last_activity_(accepted_at_)
 { }
 
 /* ========================================================================== */
 /*                               Public Methods                               */
 /* ========================================================================== */
 
-// ssize_t recv(size_t size;
-//                         int sockfd, void buf[size], size_t size,
-//                         int flags);
-
 // Variable result is defined by default ctor with 0 size
 // That give us "no option return" so fd would be active and wait for next check
 InstructionList	Connection::OnReadable(){
 	InstructionList		instructions;
-	constexpr size_t	kBufSize = 4096;
 	char				buf[kBufSize];
 
 	ssize_t recv_bytes = ::recv(socket_.fd(), buf, kBufSize - 1, 0);
@@ -48,12 +82,17 @@ InstructionList	Connection::OnReadable(){
 		instructions.Add(Action::CloseConnection, socket_.fd());
 		return instructions;
 	}
+	// if Connection disrupted with ctrl+C we go here too
 	if (recv_bytes == 0){
 		LOG_DEBUG("reading: client closed connection, closing fd=" + std::to_string(socket_.fd()), srv_id_);
 		instructions.Add(Action::CloseConnection, socket_.fd());
 		return instructions;
 	}
+	if (InStateCgi()){
+		return DiscardWhileCgi(recv_bytes);
+	}
 
+	last_activity_ = Clock::now();
 	LOG_DEBUG("reading: recv fd=" + std::to_string(socket_.fd())
 		+ " recv_bytes=" + std::to_string(recv_bytes), srv_id_);
 	// Passing recv_bytes (instead of relying on '\0') allows chunk data to
@@ -144,6 +183,7 @@ InstructionList	Connection::OnWritable(){
 		return instructions;
 	}
 
+	last_activity_ = Clock::now();
 	w.offset += send_bytes;
 	LOG_DEBUG("writing: send fd=" + std::to_string(socket_.fd())
 			+ " send_bytes=" + std::to_string(send_bytes)
@@ -161,9 +201,63 @@ InstructionList	Connection::OnWritable(){
 	return instructions;
 }
 
-InstructionList	Connection::OnCgi(){
-	InstructionList	instructions;
+InstructionList	Connection::OnCgiReadable(){
+	InstructionList					instructions;
 
+	StateCGI&						state_cgi = std::get<StateCGI>(state_);
+	std::array <char, kBufSize>		buf;
+
+	ssize_t bytes = ::read(state_cgi.pipe_read_fd, buf.data(), buf.size());
+
+	if (bytes < 0){
+		LOG_ERROR("cgi: read failed fd=" + std::to_string(socket_.fd())
+				+ " pid=" + std::to_string(state_cgi.child_pid),
+				srv_id_);
+		return AbortCgi(state_cgi, HttpStatusCode::BadGateway);
+	}
+	if (bytes > 0){
+		if (state_cgi.output.size() + bytes > kMaxCgiOutput){
+			LOG_WARN("cgi: output too large, pid=" + std::to_string(state_cgi.child_pid), srv_id_);
+			return AbortCgi(state_cgi, HttpStatusCode::BadGateway);
+		}
+		state_cgi.output.append(buf.data(), bytes); // bytes automatically will be casted to the size_t
+		return instructions; // like in OnReadable() no instructions, because we are waiting for more data
+	}
+	return ProcessCgiOutput(state_cgi);
+}
+
+InstructionList	Connection::HandleTimeouts(Clock::time_point now){
+	if (std::holds_alternative<StateReading>(state_))
+		return HandleReadTimeout((now));
+	if (std::holds_alternative<StateWriting>(state_))
+		return HandleWriteTimeout(now);
+	return HandleCgiDeadline(now);
+}
+
+InstructionList	Connection::OnCgiWritable(){
+	InstructionList	instructions;
+	StateCGI&		state_cgi = std::get<StateCGI>(state_);
+	
+	if (state_cgi.pipe_write_fd == posix::kInvalidFd){
+		return instructions;
+	}
+
+	const char*		data = state_cgi.body.data() + state_cgi.body_offset;
+	size_t			len = state_cgi.body.size() - state_cgi.body_offset;
+
+	ssize_t			write_bytes = ::write(state_cgi.pipe_write_fd, data, len);
+
+	if (write_bytes < 0){
+		LOG_WARN("cgi: write failed, fd=" + std::to_string(socket_.fd())
+						+ " pid=" + std::to_string(state_cgi.child_pid),
+						srv_id_);
+		return CloseCgiWriteFd(state_cgi);
+	}
+
+	state_cgi.body_offset += write_bytes;
+	if (state_cgi.body_offset == state_cgi.body.size()){
+		return CloseCgiWriteFd(state_cgi);
+	}
 	return instructions;
 }
 
@@ -175,6 +269,137 @@ const std::string	Connection::srv_id() const noexcept {
 	return srv_id_;
 }
 
+bool	Connection::InStateCgi() const noexcept {
+	return std::holds_alternative<StateCGI>(state_);
+}
+
+int	Connection::cgi_read_fd() const noexcept {
+	const StateCGI* state_cgi = std::get_if<StateCGI>(&state_);
+	if (!state_cgi)
+		return posix::kInvalidFd;
+	return state_cgi->pipe_read_fd;
+}
+
+int	Connection::cgi_write_fd() const noexcept {
+	const StateCGI* state_cgi = std::get_if<StateCGI>(&state_);
+	if (!state_cgi)
+		return posix::kInvalidFd;
+	return state_cgi->pipe_write_fd;
+}
+
+
+pid_t	Connection::cgi_pid() const noexcept {
+	const StateCGI* state_cgi = std::get_if<StateCGI>(&state_);
+	if (!state_cgi)
+		return posix::kInvalidPid;
+	return state_cgi->child_pid;
+}
+
 // const ServerConfig&	Connection::server_config() const noexcept{
 // 	return *server_config_;
 // }
+
+/* ========================================================================== */
+/*                              Private Methods                               */
+/* ========================================================================== */
+
+InstructionList	Connection::ProcessCgiOutput(StateCGI& state_cgi){
+	InstructionList		instructions;
+
+	const pid_t			pid = state_cgi.child_pid;
+
+	instructions = CloseCgiWriteFd(state_cgi);
+	instructions.Add(Action::StopWatching, state_cgi.pipe_read_fd);
+	instructions.Add(Action::WaitWritable, socket_.fd());
+	instructions.AddPid(Action::ReapChild, pid);
+
+	::close(state_cgi.pipe_read_fd); // Add proper close after fd-posix-refactoring
+
+	if (!HasHeaderEnd(state_cgi.output)){
+		LOG_WARN("cgi: no headers in output pid=" + std::to_string(pid)
+					+ " fd=" + std::to_string(socket_.fd()),
+					srv_id_);
+		state_ = StateWriting{BuildCgiError(HttpStatusCode::BadGateway), 0};
+	}
+	else{
+		state_ = StateWriting{BuildCgiResponse(state_cgi.output), 0};
+		LOG_DEBUG("cgi: output ready -> writing pid=" + std::to_string(pid)
+					+ " fd=" + std::to_string(socket_.fd()),
+					srv_id_);
+	}
+
+	last_activity_ = Clock::now();
+	return instructions;
+}
+
+InstructionList	Connection::DiscardWhileCgi([[maybe_unused]]ssize_t recv_bytes){
+	LOG_DEBUG("reading: data during CGI discarded fd=" + std::to_string(socket_.fd())
+				+ " recv_bytes=" + std::to_string(recv_bytes), srv_id_);
+	return {};
+}
+
+InstructionList	Connection::AbortCgi(const StateCGI& state_cgi, HttpStatusCode code){
+	InstructionList	instructions;
+
+	instructions.Add(Action::StopWatching, state_cgi.pipe_read_fd);
+	instructions.Add(Action::WaitWritable, socket_.fd());
+	instructions.AddPid(Action::KillChild, state_cgi.child_pid);
+	if (state_cgi.pipe_write_fd != posix::kInvalidFd){
+		instructions.Add(Action::StopWatching, state_cgi.pipe_write_fd);
+		::close(state_cgi.pipe_write_fd); // Add proper close after fd-posix-refactoring
+	}
+	::close(state_cgi.pipe_read_fd); // Add proper close after fd-posix-refactoring
+
+	state_ = StateWriting{BuildCgiError(code), 0};
+	last_activity_ = Clock::now();
+	return instructions;
+}
+
+InstructionList	Connection::CloseCgiWriteFd(StateCGI& state_cgi){
+	InstructionList instructions;
+
+	if (state_cgi.pipe_write_fd == posix::kInvalidFd)
+		return instructions;
+
+	instructions.Add(Action::StopWatching, state_cgi.pipe_write_fd);
+	::close(state_cgi.pipe_write_fd);
+	state_cgi.pipe_write_fd = posix::kInvalidFd;
+	return instructions;
+}
+
+InstructionList	Connection::HandleCgiDeadline(Clock::time_point now){
+	const StateCGI&	state_cgi = std::get<StateCGI>(state_);
+	if (now < state_cgi.deadline_point)
+		return {};
+	LOG_WARN("cgi: timeout, pid=" + std::to_string(state_cgi.child_pid), srv_id_);
+	return AbortCgi(state_cgi, HttpStatusCode::GatewayTimeout);
+}
+
+InstructionList	Connection::HandleReadTimeout(Clock::time_point now){
+	InstructionList	instructions;
+	bool		idle = now - last_activity_ > kIdleTimeout;
+	bool		slow_headers = false;
+	
+	if (!http_parser_.HeadersComplete() && now - accepted_at_ > kHeaderTimeout)
+		slow_headers = true;
+
+	if (idle || slow_headers){
+		std::string	reason = "idle read";
+		if (slow_headers)
+			reason = "headers";
+		LOG_WARN(std::string("timeout: ") + reason
+					+ ", fd=" + std::to_string(socket_.fd()), srv_id_);
+		instructions.Add(Action::CloseConnection, socket_.fd());
+	}
+	return instructions;
+}
+
+InstructionList	Connection::HandleWriteTimeout(Clock::time_point now){
+	InstructionList	instructions;
+
+	if (now - last_activity_ > kIdleTimeout){
+		LOG_WARN("timeout: idle send, fd=" + std::to_string(socket_.fd()), srv_id_);
+		instructions.Add(Action::CloseConnection, socket_.fd());
+	}
+	return instructions;
+}

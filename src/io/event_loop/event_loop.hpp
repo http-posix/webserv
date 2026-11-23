@@ -3,12 +3,22 @@
 #include "app/server/server.hpp"
 #include "io/event_loop/poll_manager.hpp"
 #include "io/connection/connection.hpp"
+#include "io/event_loop/child_reaper.hpp"
 
 #include <cstddef>
 #include <unordered_map>
 
-/// Need to give locations from config to response
-
+/**
+ * Single-threaded poll() loop. Owns all listeners and connections.
+ *
+ * - Accepts clients and routes poll events to the owning Connection
+ *   (a CGI pipe fd is mapped to its client fd in cgi_owners_).
+ * - Applies the InstructionList that Connection returns: poll set changes
+ *   go to PollManager, kill/reap of CGI children goes to ChildReaper.
+ *   Connection never calls them directly.
+ * - Once per iteration: reaps finished children, checks CGI timeouts.
+ * - On shutdown: kills and waits for all CGI children that are left.
+ */
 class EventLoop{
 	public:
 		EventLoop() = delete;
@@ -23,6 +33,7 @@ class EventLoop{
 		const size_t						size_listeners_;
 		static constexpr int				kPollTimeoutMs = 1000; // additional timeout needed for (60-75 sec in NGINX – we need ms(!))
 		PollManager							pm_;
+		ChildReaper							reaper_;
 		std::unordered_map<int, Connection>	connections_;
 		std::unordered_map<int, int>		cgi_owners_;
 
@@ -33,15 +44,16 @@ class EventLoop{
 
 		// methods
 		Severity	HandlePollError();
-		void		HandleWatched(int ready_count);//finished
-		void		HandleListener(pollfd poll_entry, size_t i);//still need to check error behavior
+		void		HandleWatched(int ready_count);
+		void		HandleListener(pollfd poll_entry, size_t i);
 		void		HandleConnectionEvent(const pollfd poll_entry);
 		int			HandleCGI();
-		int			AcceptConnection(int listener);
+		void		AcceptConnection(int fd, const Server& l);
 		void		RequestShutdown();
 		void		CloseConnection(int fd);
 		int			FindOwner(int fd);
 		void		ApplyInstructions(const InstructionList& instructions, int owner_fd);
-
+		void		CleanupCgiBeforeShutdown();
+		void		CheckTimeouts();
 };
 

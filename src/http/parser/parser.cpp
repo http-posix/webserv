@@ -622,3 +622,7 @@ bool HttpParser::GetChunked() const
 {
 	return (this->chunked_);
 }
+
+bool	HttpParser::HeadersComplete() const{
+	return state_ == Body || state_ == Done;
+}

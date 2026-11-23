@@ -81,6 +81,8 @@ class HttpParser
 
 		HttpRequest GetRequest();
 
+		bool	HeadersComplete() const;
+
 		//Getters for Testing, ResponseGen and Good Practice
 		int GetInternalState() const;
 		HttpParserState GetExternalState() const;

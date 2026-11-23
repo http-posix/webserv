@@ -17,7 +17,7 @@ Non-blocking mode is set inside both of `Socket`'s constructors, right after the
 
 The two constructors handle failure differently, matching their call sites:
 - default constructor (listening socket): throws `ServerException` on any failure, including a failed non-blocking setup, and closes the fd manually first.
-- private constructor via `adopt()` (client sockets): never throws. `adopt()` requires the caller to pass an already-valid fd (`fd >= 0`, checked with `assert` — a programmer contract, not a runtime check) and returns a `Socket` that may still end up invalid (`socket_fd() == kInvalidFd`) if the internal fcntl setup fails. The caller (event loop) must check this before registering the fd with `poll()`.
+- private constructor via `adopt()` (client sockets): never throws. `adopt()` requires the caller to pass an already-valid fd (`fd >= 0`, checked with `assert` — a programmer contract, not a runtime check) and returns a `Socket` that may still end up invalid (`socket_fd() == posix::kInvalidFd`) if the internal fcntl setup fails. The caller (event loop) must check this before registering the fd with `poll()`.
 
 ## Alternatives
 

@@ -20,8 +20,11 @@
 	- [Microsoft Build 2026: Constructors (explicit & Inheriting constructors)](https://learn.microsoft.com/en-us/cpp/cpp/constructors-cpp?view=msvc-180)
 	- [CPPLearn: Global Scope Resolution](https://www.learncpp.com/cpp-tutorial/user-defined-namespaces-and-the-scope-resolution-operator/)
 	- [Microsoft Build 2026: Scope C++](https://learn.microsoft.com/en-us/cpp/cpp/scope-visual-cpp?view=msvc-170)
+	- [Cppreference: std::is_trivially_copyable](https://en.cppreference.com/cpp/types/is_trivially_copyable)
+	- [abseil: C++ tips: #109 Meaningful `const` in Function Declarations](https://abseil.io/tips/109)
+	- [abseil: C++ tips: #234: Pass by Value, by Pointer, or by Reference?](abseil.io/tips/234)
 
-- Design Patterns
+- design patterns
 	- [Object Oriented Design](https://www.oodesign.com/)
 
 - singleton pattern
@@ -35,13 +38,24 @@
 	- [Linux man-pages: Socket(7)](https://man7.org/linux/man-pages/man7/socket.7.html)
 	- [The Open Group: <poll.h>](https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/poll.h.html)
 	- [The Open Group: poll, ppoll — input/output multiplexing](https://pubs.opengroup.org/onlinepubs/9799919799/functions/poll.html)
+	- [poll() System Call in Linux – How It Works and How It Compares to select()](https://embeddedpathashala.com/poll-system-call-in-linux-how-it-works-and-how-it-compares-to-select/)
+	- [The Linux Programming Interface 63.2.2](https://man7.org/tlpi/)
+	- [The problem with select() vs. poll()](https://beesbuzz.biz/code/5739-The-problem-with-select-vs.-poll)
 
 - network
 	- [Human Augmented: Ports and Sockets explained](https://www.youtube.com/watch?v=jnHHpNRrdwA)
+	- [Beej's Guide to Network Programming](https://beej.us/guide/bgnet/)
+	- [Developerhelp: Introduction to TCP/IP (Part 4) - Sockets and Ports](https://developerhelp.microchip.com/xwiki/bin/view/applications/tcp-ip/sockets-ports/)
+	- [Microsoft: Protocol Basics: Listen, Connect, Accept](https://learn.microsoft.com/en-us/windows/win32/winsock/protocol-basics-listen-connect-accept-2)
+	- [dartmouth: CS 60 Computer Networks - Socket Programming](https://www.cs.dartmouth.edu/~campbell/cs60/socketprogramming.html)
+	- [Code(Quoi); Sockets and Network Programming in C](https://www.codequoi.com/en/sockets-and-network-programming-in-c/#preparing-sockets)
+	- [Netcat](https://nc110.sourceforge.io/)
+
 
 - version contorl
 	- [Pull Request Naming Guide](https://github.com/adobe/react-spectrum/wiki/Pull-Request-Naming-Guide)
 	- [Best practices for writing good pull request titles](https://graphite.com/guides/best-pr-title-guidelines)
+	- [Chris Beams: How to Write a Git Commit Message](https://cbea.ms/git-commit/)
 
 - general info
 	- [Regular Expressions](https://pubs.opengroup.org/onlinepubs/9799919799/)
@@ -50,8 +64,46 @@
 	- [GNU Make](https://www.gnu.org/software/make/manual/html_node/index.html)
 	- [for make Version 3.73 Beta. April 1995](https://www.math.utah.edu/docs/info/make_toc.html#SEC12)
 	- [BashGuide](https://mywiki.wooledge.org/BashGuide)
+	- [O'Reilly: Managing Projects with GNU Make, Third Edition by Robert Mecklenburg](https://www.oreilly.com/openbook/make3/book/)
 
-- Time / Logger
+- time / Logger
 	- [Stackoverflow: using std::chrono](https://stackoverflow.com/questions/17223096/outputting-date-and-time-in-c-using-stdchrono)
 	- [Codefinity: C++ Dates and Times](https://codefinity.com/courses/v2/c3f50a74-ac55-4a6d-9f34-0fd4c003bd69)
 	- [TechOverflow: COnvert to miliseconds](https://techoverflow.net/2023/07/31/how-to-convert-stdchronotime_point-to-milliseconds-since-epoch/)
+
+- C++ / data structure
+	- [Stackoverflow: unordered_map vs map](https://stackoverflow.com/questions/13799593/how-to-choose-between-map-and-unordered-map)
+	- [Dev.to: Unions & std::variant in C++](https://dev.to/pauljlucas/unions-stdvariant-in-c-2op1)
+	- [Dev.to: Unions in C](https://dev.to/pauljlucas/unions-in-c-1ojj)
+	- [Cppreference: Order of evaluation](https://en.cppreference.com/cpp/language/eval_order)
+	- [Cppscripts: Introduction to C++ Performance](https://cppscripts.com/category/performance)
+	- [Bjarne Stroustrup && Herb Sutter: C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines)
+	- [Bealy the C++: A blog talking about (usually bad) practices in C++](https://belaycpp.com/)
+	- [Cppreference: Structured binding](https://en.cppreference.com/cpp/language/structured_binding)
+
+- performance
+	- [johnnysswlab: Virtual functions - true price](https://johnnysswlab.com/the-true-price-of-virtual-functions-in-c/)
+
+- CGI / Common Gateway Interface
+	- [OReilly (openbook): CGI Programming on the World Wide Web](https://www.oreilly.com/openbook/cgi/)
+	- [RFC 3875: The Common Gateway Interface (CGI) Version 1.1](https://www.rfc-editor.org/info/rfc3875)
+	- [Purdue university CS: Intro CGI](https://www.cs.purdue.edu/homes/cs290w/perlLecs/PerlIntroCGI.html)
+	- [Dev.to: What is Common Gateway Interface(CGI)](https://dev.to/nitindahiyadev/what-is-common-gateway-interfacecgi-415m)
+	- [Apache: Module mod_cgi](https://httpd.apache.org/docs/current/mod/mod_cgi.html)
+
+- RFC
+	- [RFC 9112: STD 99: HTTP/1.1](https://www.rfc-editor.org/info/rfc9112/)
+	- [RFC 9110: STD 97: HTTP Semantics](https://www.rfc-editor.org/info/rfc9110/)
+
+- HTTP
+	- [HTTP Request Smuggling](https://www.imperva.com/learn/application-security/http-request-smuggling/)
+	- [Wikipedia: HTTP Request Smuggling](https://en.wikipedia.org/wiki/HTTP_request_smuggling)
+	- [Hypertext Transfer Protocol (HTTP) Field Name Registry](iana.org/assignments/http-fields)
+	- [Wikipedia: HTTP status codes](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes)
+	- [IANA: HTTP Status Codes](https://www.iana.org/assignments/http-status-codes)
+
+- bash / scripts
+	- [AWK command in Linux](https://www.geeksforgeeks.org/linux-unix/awk-command-unixlinux-examples/)
+
+- cybersecurity
+	- [Slowloris](https://www.cloudflare.com/learning/ddos/ddos-attack-tools/slowloris/)
