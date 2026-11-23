@@ -216,7 +216,10 @@ bool HttpRouter::HasDotDotSegment(const std::string& path)
 		if (end == std::string::npos)
 			end = path.size();
 		if (end - start == 2 && path.compare(start, 2, "..") == 0)
+		{
+			LOG_DEBUG("Double Dot Segment Found! (" + path + ")");
 			return (true);
+		}
 		start = end + 1;
 	}
 	return (false);

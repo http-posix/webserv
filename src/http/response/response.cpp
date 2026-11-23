@@ -321,7 +321,7 @@ std::string HttpResponse::FindFilename(const RoutedRequest& req)
 		return (CreateNewFilename(req.upload_location));
 	if (filename == ".." || HttpRouter::HasDotDotSegment(filename))
 	{
-		LOG_WARN("Invalid filename in requested method" + filename);
+		LOG_WARN("Uploaded filename tries to access out of directory (" + filename + ")");
 		throw (HttpResponseException(Forbidden));
 	}
 	return ((std::filesystem::path(req.upload_location) / filename).string());
