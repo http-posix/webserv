@@ -14,6 +14,7 @@
 #include <cstring>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <cassert>
 // #include <netinet/in.h>
 
 /* ========================================================================== */
@@ -42,6 +43,9 @@ namespace {
 	}
 
 	[[maybe_unused]] std::string ReventsToString(short revents) {
+		if (revents == 0)
+			return "0";
+
 		std::string out;
 
 		if (revents & POLLIN)
@@ -55,7 +59,7 @@ namespace {
 		if (revents & POLLNVAL)
 			out += "POLLNVAL|";
 		if (out.empty())
-			return "0";
+			return "unknown(" + std::to_string(revents) + ")";
 		out.pop_back(); // remove trailing '|'
 		return out;
 	}
@@ -97,6 +101,7 @@ void	EventLoop::run(){
 		ProcessEvents();
 		reaper_.CheckChildren();
 		CheckTimeouts();
+		RetryAcceptIfIdle();
 	}
 }
 
@@ -170,20 +175,25 @@ void	EventLoop::HandleListener(const pollfd poll_entry, size_t i){
 
 	const Server& l = listeners_[i];
 
-	// early return
 	if (poll_entry.revents & (POLLHUP | POLLERR | POLLNVAL)){
-		std::string prefix;
-		if (poll_entry.revents & POLLNVAL)
-			prefix = "Listener fd invalid (bug: fd closed but still in poll set): ";
-		else
-			prefix = "Listener failure: ";
-		LOG_ERROR(prefix + " poll_fd=" + std::to_string(poll_entry.fd), l.srv_id());
-		RequestShutdown();// TODO: add ADR immediate shutdown + maybe later add drain mode
+		LogListenerErrorAndShutdown(poll_entry, l.srv_id());
 		return ;
 	}
 
-	// Happy path
+	if (accept_paused_)
+		return;
 	AcceptConnection(poll_entry.fd, l);
+}
+
+void	EventLoop::LogListenerErrorAndShutdown(pollfd poll_entry, const std::string& srv_id){
+	std::string prefix;
+	if (poll_entry.revents & POLLNVAL)
+		prefix = "Listener fd invalid (bug: fd closed but still in poll set): ";
+	else
+		prefix = "Listener failure: ";
+	LOG_ERROR(prefix + "poll_fd=" + std::to_string(poll_entry.fd)
+				+ " revents=" + ReventsToString(poll_entry.revents), srv_id);
+	RequestShutdown();// TODO: add ADR immediate shutdown
 }
 
 void	EventLoop::AcceptConnection(int entry_fd, const Server& l){
@@ -192,12 +202,8 @@ void	EventLoop::AcceptConnection(int entry_fd, const Server& l){
 
 	int accepted_fd = ::accept(entry_fd, reinterpret_cast<sockaddr*>(&addr), &addr_len);
 
-	// https://man7.org/linux/man-pages/man2/accept.2.html
 	if (accepted_fd < 0){
-		if (errno == EMFILE || errno == ENFILE){
-			LOG_WARN("fd limit reached, cannot accept new connections, active: " +
-						std::to_string(connections_.size()), l.srv_id());
-		}
+		HandleAcceptError(errno, l);
 		return ;
 	}
 	
@@ -220,11 +226,38 @@ void	EventLoop::AcceptConnection(int entry_fd, const Server& l){
 	pm_.Watch(fd, POLLIN);
 }
 
-void	EventLoop::HandleConnectionEvent(const pollfd entry){
-	// Find owner - is this CGI connection or normal one
-	int owner_fd = FindOwner(entry.fd);
+void	EventLoop::HandleAcceptError(int err, const Server& l){
+	if (err == EMFILE || err == ENFILE){
+		LOG_WARN("fd limit reached, cannot accept new connections, active: " +
+					std::to_string(connections_.size()), l.srv_id());
+		PauseAccepting();
+		return;
+	}
+	// EAGAIN/EWOULDBLOCK, ECONNABORTED, EINTR are normal behaviour
+	if (err != EAGAIN && err != EWOULDBLOCK && err != ECONNABORTED && err != EINTR)
+		LOG_DEBUG("accept failed: " + std::string(strerror(err)), l.srv_id());
+}
 
-	// Find Connection instance
+void	EventLoop::PauseAccepting(){
+	if (accept_paused_)
+		return;
+	for (const Server& l : listeners_)
+		pm_.SetEvents(l.fd(), 0);
+	accept_paused_ = true;
+}
+
+void	EventLoop::ResumeAccepting(){
+	if (!accept_paused_)
+		return;
+	for (const Server& l : listeners_)
+		pm_.SetEvents(l.fd(), POLLIN);
+	accept_paused_ = false;
+	LOG_DEBUG("accept resumed");
+}
+
+void	EventLoop::HandleConnectionEvent(pollfd entry){
+	int owner_fd = FindOwner(entry.fd); // is this CGI connection or normal one
+
 	auto it = connections_.find(owner_fd);
 	if (it == connections_.end()) // Connection has been already closed
 		return;
@@ -232,45 +265,58 @@ void	EventLoop::HandleConnectionEvent(const pollfd entry){
 	Connection&		connection = it->second;
 	InstructionList	instructions;
 
-	// First resolve is it cgi or not, then check what happened
-	if (entry.fd != owner_fd){
-		if (entry.fd == connection.cgi_read_fd()){
-			LOG_DEBUG("We are going to OnCgiReadable fd=" + std::to_string(owner_fd)
-						+ " pipe_fd=" + std::to_string(entry.fd)
-						+ " revents=" + ReventsToString(entry.revents),
-						connection.srv_id());
-			instructions = connection.OnCgiReadable();
-		}
-		else if (entry.fd == connection.cgi_write_fd()){
-			LOG_DEBUG("We are going to OnCgiWritable fd=" + std::to_string(owner_fd)
-						+ " pipe_fd=" + std::to_string(entry.fd)
-						+ " revents=" + ReventsToString(entry.revents),
-						connection.srv_id());
-			instructions = connection.OnCgiWritable();
-		}
-	}
-	else if (entry.revents & POLLIN){
-		LOG_DEBUG("We are going to OnReadable fd=" + std::to_string(entry.fd)
-					+ " revents=" + ReventsToString(entry.revents),
-					connection.srv_id());
-		instructions = connection.OnReadable();
+	if (entry.fd == owner_fd)
+		instructions = HandleSocketEvent(entry, connection);
+	else
+		instructions = HandleCgiPipeEvent(entry, connection);
+	
+	ApplyInstructions(instructions, owner_fd);
+}
+
+InstructionList	EventLoop::HandleSocketEvent(pollfd entry, Connection& conn){
+	InstructionList	instructions;
+
+	if (entry.revents & POLLIN){
+		LOG_DEBUG("OnReadable fd=" + std::to_string(entry.fd)
+						+ " revents=" + ReventsToString(entry.revents), conn.srv_id());
+		instructions = conn.OnReadable();
 	}
 	else if (entry.revents & POLLOUT){
-		LOG_DEBUG("We are going to OnWritable fd=" + std::to_string(entry.fd)
-					+ " revents=" + ReventsToString(entry.revents),
-					connection.srv_id());
-		instructions = connection.OnWritable();
+		LOG_DEBUG("OnWritable fd=" + std::to_string(entry.fd)
+						+ " revents=" + ReventsToString(entry.revents), conn.srv_id());
+		instructions = conn.OnWritable();
 	}
-	else {
-		LOG_DEBUG("hangup/error on fd=" + std::to_string(entry.fd)
-					+ " revents=" + ReventsToString(entry.revents),
-					connection.srv_id());
-		// TODO: proper POLLERR/POLLHUP/POLLNVAL handling (different for cgi pipe vs client fd)
-		CloseConnection(owner_fd);
-		return ;
+	else{
+		// POLLERR/POLLHUP without POLLIN/POLLOUT: client is gone, nothing to answer
+		if (entry.revents & POLLNVAL) // bug: fd closed but still in poll set
+			LOG_ERROR("POLLNVAL fd=" + std::to_string(entry.fd), conn.srv_id());
+		else
+			LOG_DEBUG("hangup/error fd=" + std::to_string(entry.fd)
+						+ " revents=" + ReventsToString(entry.revents), conn.srv_id());
+		instructions.Add(Action::CloseConnection, entry.fd);
 	}
+	return instructions;
+}
 
-	ApplyInstructions(instructions, owner_fd);
+InstructionList	EventLoop::HandleCgiPipeEvent(pollfd entry, Connection& conn){
+	InstructionList	instructions;
+
+	if (entry.revents & POLLNVAL)
+		LOG_ERROR("POLLNVAL pipe_fd=" + std::to_string(entry.fd), conn.srv_id());
+	if (entry.fd == conn.cgi_read_fd()){
+			LOG_DEBUG("OnCgiReadable pipe_fd=" + std::to_string(entry.fd)
+						+ " revents=" + ReventsToString(entry.revents), conn.srv_id());
+		instructions = conn.OnCgiReadable();
+	}
+	else if (entry.fd == conn.cgi_write_fd()){
+		LOG_DEBUG("OnCgiWritable pipe_fd=" + std::to_string(entry.fd)
+						+ " revents=" + ReventsToString(entry.revents), conn.srv_id());
+		instructions = conn.OnCgiWritable();
+	}
+	else
+		LOG_ERROR("not a current cgi pipe, pipe_fd=" + std::to_string(entry.fd),
+						conn.srv_id());
+	return instructions;
 }
 
 void	EventLoop::RequestShutdown(){
@@ -317,9 +363,10 @@ void	EventLoop::ApplyInstructions(const InstructionList& instructions, int owner
 			case Action::StopWatching:
 				pm_.Unwatch(fd);
 				cgi_owners_.erase(fd);
+				ResumeAccepting();
 				break;
 			case Action::CloseConnection:
-				CloseConnection(owner_fd); // Check logic when CGI will work
+				CloseConnection(owner_fd);
 				return;
 			case Action::ReapChild:
 				reaper_.Track(pid);
@@ -340,15 +387,15 @@ void	EventLoop::CloseConnection(int fd){
 	const std::string ctx = it->second.srv_id();
 
 	if (conn.InStateCgi()){
-		const int	pipe_fd = conn.cgi_read_fd();
+		const int	pipe_read_fd = conn.cgi_read_fd();
 		const int	pipe_write_fd = conn.cgi_write_fd();
 		const pid_t	pid = conn.cgi_pid();
 
-		pm_.Unwatch(pipe_fd);
-		cgi_owners_.erase(pipe_fd);
 		// TODO move this to posix namespace
-		if (pipe_fd != posix::kInvalidFd){
-			::close(pipe_fd);
+		if (pipe_read_fd != posix::kInvalidFd){
+			pm_.Unwatch(pipe_read_fd);
+			cgi_owners_.erase(pipe_read_fd);
+			::close(pipe_read_fd);
 			// pipe_fd = posix::kInvalidFd;
 		}
 		if (pipe_write_fd != posix::kInvalidFd){
@@ -363,6 +410,7 @@ void	EventLoop::CloseConnection(int fd){
 	}
 	pm_.Unwatch(fd);
 	connections_.erase(it);
+	ResumeAccepting();
 	LOG_DEBUG("closed connection fd=" + std::to_string(fd), ctx);
 }
 
@@ -379,4 +427,10 @@ void	EventLoop::CheckTimeouts(){
 	for (const auto& item : to_apply){
 		ApplyInstructions(item.instructions, item.owner_fd);
 	}
+}
+
+// ENFILE case
+void	EventLoop::RetryAcceptIfIdle(){
+	if (accept_paused_ && connections_.empty())
+		ResumeAccepting();
 }

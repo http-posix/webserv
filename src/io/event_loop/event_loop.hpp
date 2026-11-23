@@ -4,6 +4,7 @@
 #include "io/event_loop/poll_manager.hpp"
 #include "io/connection/connection.hpp"
 #include "io/event_loop/child_reaper.hpp"
+#include "utils/posix/posix.hpp"
 
 #include <cstddef>
 #include <unordered_map>
@@ -37,18 +38,25 @@ class EventLoop{
 		std::unordered_map<int, Connection>	connections_;
 		std::unordered_map<int, int>		cgi_owners_;
 
-		// methods
-		void		ProcessEvents();
-		void		HandlePollError();
-		void		HandleWatched(int ready_count);
-		void		HandleListener(pollfd poll_entry, size_t i);
-		void		HandleConnectionEvent(const pollfd poll_entry);
-		int			HandleCGI();
-		void		AcceptConnection(int fd, const Server& l);
-		void		RequestShutdown();
-		void		CloseConnection(int fd);
-		int			FindOwner(int fd);
-		void		ApplyInstructions(const InstructionList& instructions, int owner_fd);
-		void		CheckTimeouts();
-};
+		bool										accept_paused_ = false;
 
+		// methods
+		void			ProcessEvents();
+		void			HandlePollError();
+		void			HandleWatched(int ready_count);
+		void			HandleListener(pollfd poll_entry, size_t i);
+		void			LogListenerErrorAndShutdown(pollfd poll_entry, const std::string& srv_id);
+		void			AcceptConnection(int fd, const Server& l);
+		void			HandleAcceptError(int err, const Server& l);
+		void			PauseAccepting();
+		void			ResumeAccepting();
+		void			HandleConnectionEvent(pollfd poll_entry);
+		InstructionList	HandleSocketEvent(pollfd entry, Connection& conn);
+		InstructionList	HandleCgiPipeEvent(pollfd entry, Connection& conn);
+		void			RequestShutdown();
+		int				FindOwner(int fd);
+		void			ApplyInstructions(const InstructionList& instructions, int owner_fd);
+		void			CloseConnection(int fd);
+		void			CheckTimeouts();
+		void			RetryAcceptIfIdle();
+	};
