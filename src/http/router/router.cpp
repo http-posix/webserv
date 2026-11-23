@@ -203,6 +203,22 @@ void HttpRouter::HandleLocationUploadEnable()
 	upload_location_ = loc_->upload_location;
 }
 
+bool HttpRouter::HasDotDotSegment(const std::string& path)
+{
+	size_t start = 0;
+
+	while (start <= path.size())
+	{
+		size_t end = path.find('/', start);
+		if (end == std::string::npos)
+			end = path.size();
+		if (end - start == 2 && path.compare(start, 2, "..") == 0)
+			return (true);
+		start = end + 1;
+	}
+	return (false);
+}
+
 void HttpRouter::HandleLocation()
 {
 	HandleLocationRedirection();
