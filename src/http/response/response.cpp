@@ -392,6 +392,34 @@ void HttpResponse::HandlePost(const RoutedRequest& req)
 	// Create additional information if needed.
 }
 
+void HttpResponse::HandleDelete(const RoutedRequest& req)
+{
+	std::error_code ec;
+
+	if (HttpRouter::HasDotDotSegment(req.uri))
+	{
+		LOG_DEBUG("Dot segment found in DELETE request URI: " + req.uri);
+		throw (HttpResponseException(Forbidden));
+	}
+	if (!std::filesystem::exists(req.uri, ec))
+	{
+		LOG_DEBUG("Trying to delete a file that does not exist: " + req.uri);
+		throw (HttpResponseException(FileNotFound));
+	}
+	if (std::filesystem::is_directory(req.uri, ec))
+	{
+		LOG_DEBUG("Trying to delete a directory: " + req.uri);
+		throw (HttpResponseException(Forbidden));
+	}
+	if (!std::filesystem::remove(req.uri, ec))
+	{
+		LOG_WARN("Could not delete file: " + req.uri + " (" + ec.message() + ")");
+		throw (HttpResponseException(InternalServerError));
+	}
+	LOG_DEBUG("DELETE Request for file: " + req.uri);
+	throw (HttpResponseException(NoContent));
+}
+
 void HttpResponse::BuildResponse(const RoutedRequest& req)
 {
 	try {
@@ -407,6 +435,11 @@ void HttpResponse::BuildResponse(const RoutedRequest& req)
 			case (Post) :
 			{
 				HandlePost(req);
+				break ;
+			}
+			case (Delete) :
+			{
+				HandleDelete(req);
 				break ;
 			}
 			default :
