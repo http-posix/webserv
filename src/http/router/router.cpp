@@ -182,7 +182,10 @@ void HttpRouter::HandleLocationIndex()
 		if (loc_->autoindex == true)
 			autoindex_ = true;
 		else
+		{
+			LOG_DEBUG("Trying to access a directory without autoindex on");
 			throw (HttpStatusException(Forbidden));
+		}
 	}
 	else
 		AppendIndex(loc_);
