@@ -278,11 +278,11 @@ TEST_CASE("Content-Length above client max body size") {
 	p.Feed("Content-Length: 5\r\n");
 	p.Feed("\r\n");
 
-	CHECK(p.GetExternalState() == RequestEntityTooLarge);
+	CHECK(p.GetExternalState() == ContentLengthTooLarge);
 	CHECK(p.GetBody().empty());
 
 	p.Feed("Hello");
-	CHECK(p.GetExternalState() == RequestEntityTooLarge);
+	CHECK(p.GetExternalState() == ContentLengthTooLarge);
 }
 
 TEST_CASE("GET request with query string") {
