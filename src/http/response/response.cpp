@@ -6,6 +6,7 @@
 #include <filesystem>
 
 #include "http/response/response.hpp"
+#include "http/router/router.hpp"
 #include "utils/logger/logger.hpp"
 #include "config/structures.hpp"
 #include "http/http_status_code.hpp"
@@ -309,8 +310,13 @@ std::string HttpResponse::FindFilename(const RoutedRequest& req)
 	}
 	filename = ExtractFromContentDisposition(content_disposition);
 	if (filename.empty())
-		filename = CreateNewFilename(req.upload_location);
-	return (filename);
+		return (CreateNewFilename(req.upload_location));
+	if (filename == ".." || HttpRouter::HasDotDotSegment(filename))
+	{
+		LOG_WARN("Invalid filename in requested method" + filename);
+		throw (HttpResponseException(Forbidden));
+	}
+	return ((std::filesystem::path(req.upload_location) / filename).string());
 }
 
 /*
