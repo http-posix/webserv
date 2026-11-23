@@ -202,7 +202,7 @@ InstructionList	Connection::OnWritable(){
 	{
 		// Track an error
 		// can't use errno, so just close conenction
-		LOG_ERROR("writing: send_bytes < 0, fd=" + std::to_string(socket_.fd()), srv_id_);
+		LOG_WARN("writing: send_bytes < 0, fd=" + std::to_string(socket_.fd()), srv_id_);
 		instructions.Add(Action::CloseConnection, socket_.fd());
 		return instructions;
 	}
