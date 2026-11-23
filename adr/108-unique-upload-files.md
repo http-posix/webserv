@@ -1,6 +1,7 @@
 # ADR 108: Race conditions in Unique File creationg.
 
 **Date:** 2026-11-18
+**Updated:** 2026-11-23
 **Deciders:** Zach
 
 ---
@@ -12,6 +13,9 @@ requests coming in we must avoid possible race conditions where we are working w
 
 ## Decision
 A simple atomic variable should prevent the possibility from race conditions.
+
+Update 2026-11-23.
+A static integer is not needed. We need only to check whether the file exists, and if so, increment the identifier (untill we hit the limit).
 
 ## Alternatives
 - Using a timestamp as a file identifier. however this creates a possible TOCTOU (time of check, time of use)
