@@ -63,6 +63,8 @@ class HttpRouter
 		bool IsDir(std::string path);
 		bool IsCgi(std::string path);
 	public :
+		static bool HasDotDotSegment(const std::string& path);
+
 		HttpRouter(const HttpRequest& req, const ServerConfig* cfg);
 
 		std::optional<CgiRequest> GetCgiRequest();
