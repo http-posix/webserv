@@ -356,14 +356,28 @@ void CreateUploadLocation(const std::string& loc)
 
 void HttpResponse::HandlePost(const RoutedRequest& req)
 {
-	if (req.upload_enable == false)
+	if (HttpRouter::HasDotDotSegment(req.uri))
+	{
+		LOG_DEBUG("Dot segment found in POST requested URI: " + req.uri);
 		throw (HttpResponseException(Forbidden));
+	}
+	if (req.upload_enable == false)
+	{
+		LOG_DEBUG("Trying to post on location without upload_enable on");
+		throw (HttpResponseException(Forbidden));
+	}
 	if (req.upload_location.empty())
+	{
+		LOG_DEBUG("Upload location for request is empty. Possibly not set in configuration?");
 		throw(HttpResponseException(InternalServerError));
+	}
 	CreateUploadLocation(req.upload_location);
 	std::string filename = FindFilename(req);
 	if (filename.empty())
+	{
+		LOG_DEBUG("Filename for uploading is empty. Possible identifier hit maximum?");
 		throw(HttpResponseException(InternalServerError));
+	}
 
 	UploadFile(filename, req.body);
 	headers_["location"] = filename;
