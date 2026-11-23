@@ -1,25 +1,39 @@
 ## flags
 
-POLLIN - the flag that is typically used nowadays to signal that data has arrived. On listener we only read it in revents (new connection to accept()). On Connection we set it ourselves in events to control the flow, and read it in revents.
+POLLIN - the flag that is typically used nowadays to signal that data has arrived. 
+- listener: we only read it in revents (new connection to accept()).
+- connection: we set it ourselves in events to control the flow, and read it in revents.
+- cgi read pipe (script stdout): there is output to read().
 
-POLLRDNORM - a subset of POLLIN, always comes with it, we have no reason to track it separately.
+
+POLLRDNORM - a subset of POLLIN, always comes with it, no reason to track it separately.
 
 POLLRDBAND/POLLPRI - out of project scope  
 
-POLLRDBAND/POLLPRI - out of project scope  
-
-POLLOUT - set in events when we are ready to send() data back; in revents it means there is room in the buffer for our data  
+POLLOUT - set in events when we are ready to send() data back; in revents it means there is room in the buffer for our data.  
 
 POLLWRNORM - the same as POLLOUT, no reason to track it separately  
 
 POLLWRBAND - we don't use any priority data, so it's out of scope  
 
 Revents only:
-POLLERR -  means errors on fd (like read/write fails) - listener - shutdown, connection - close connection  
+POLLERR -  means errors on fd (like read/write fails)  
+- listener: not expected (only if somebody broke the socket by hand) -> shutdown  
+- connection: usually comes together with POLLIN/POLLOUT, so the normal handler runs, recv()/send() returns -1 -> close connection  
+- cgi write pipe: the script closed stdin before reading the whole body. Normal, not an error -> close only the write end, the script keeps running and we read its output  
 
-POLLHUP - hangup. Never comes with POLLOUT, but can come with POLLIN (data still in buffer). Connection was reset by peer (e.g. client killed with unread data). Tricky if CGI is still running. On listener - not expected
+POLLHUP - hangup.  
+- listener: not expected -> shutdown.
+- connection: both directions are closed. Reset by peer gives POLLERR|POLLHUP. Usually comes with POLLIN, recv() returns 0/-1 -> close connection.
+  POSIX says it never comes with POLLOUT, but on Linux TCP it can (on macOS - no).
+  If the client is gone while CGI is running -> close connection and kill the CGI child.
+- cgi read pipe: normal EOF, the script closed stdout / exited. Not an error. Can come with or without POLLIN -> read() returns 0 -> build the response.
 
-POLLNVAL - fd is not open (already closed, but still in poll set). Bug in our code, not a normal case. Remove from poll set. On listener - not expected
+POLLNVAL - fd is not open (already closed, but still in poll set). Bug in our code, not a normal case. 
+- listener -> shutdown.
+- connection socket -> LOG_ERROR + close connection.
+- cgi pipe -> LOG_ERROR, then the normal handler: read() = -1 -> 502, write() = -1 -> close the write end.
+
 
 
 **POLLIN**  
@@ -52,7 +66,7 @@ A device has been disconnected, or a pipe or FIFO has been closed by the last pr
 **POLLNVAL**  
 The specified fd value is not an open file descriptor. This flag is only valid in the revents member; it shall be ignored in the events member.  
 
-## errno
+## errno 
 
 ERRORS  
 The poll() and ppoll() functions shall fail if:
@@ -69,3 +83,21 @@ The ppoll() function shall fail if:
 
 [EINVAL]  
 An invalid timeout interval was specified.  
+
+## accept()
+	https://man7.org/linux/man-pages/man2/accept.2.html  
+
+- EMFILE (process fd limit) / ENFILE (system fd limit) -> WARN + pause accepting on all listeners.  
+  Without pause it's a busy loop: the client waits in backlog, listener stays readable, poll returns at once.  
+  Resume when an fd is freed (close connection, StopWatching a cgi pipe) or when there are no connections at all (ENFILE).  
+- EAGAIN / EWOULDBLOCK, ECONNABORTED, EINTR -> not errors: the client left before we accepted it, or a signal came. Just return, poll() will tell us again if something is waiting.  
+- anything else -> DEBUG log, return.  
+
+## errno from poll()
+
+- EINTR - a signal came (for us only SIGINT/SIGTERM) -> DEBUG, try again. while (g_signal_running) decides if we stop.
+- EAGAIN (POSIX, macOS) / ENOMEM (Linux) - kernel has no memory for now -> WARN, try again.
+- EINVAL - nfds is bigger than the fd limit, means duplicates / dead fds in our vector. Our bug -> exception.
+- EFAULT - bad pointer to the array. With std::vector only if memory is broken. Our bug -> exception.
+
+EINVAL / EFAULT are our bugs, not the OS: trying again with the same arguments fails the same way.

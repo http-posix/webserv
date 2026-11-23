@@ -122,3 +122,72 @@ while true; do
 done
 ```
 
+## siege
+
+Config file
+~/.siege/siege.conf (created on first run) MacOS
+~/.siege/siege.conf or /etc/siege/siegerc Ubuntu
+
+Useful config keys in siege.conf:
+• connection = keep-alive (default) reuses one TCP connection for several requests. Set connection = close if keep-alive is not implemented yet.
+• protocol = HTTP/1.1 is the HTTP version siege sends.
+• parser = false stops siege from also fetching images and CSS linked in the page.
+
+| Flag | Meaning | Example |
+| --- | --- | --- |
+| `-c N` | Concurrent: N virtual clients at the same time (up to N open connections) | `-c 50` |
+| `-t T` | Time: run for T, then stop and print the report. `S` = seconds, `M` = minutes, `H` = hours | `-t 30S`, `-t 1M` |
+| `-r N` | Repetitions: each client sends N requests, then stop. Total = c × r. Use either `-t` or `-r`, not both | `-r 100` |
+| `-b` | Benchmark: no pause between requests (maximum load) | `-b` |
+| `-d N` | Delay: each client waits a random 0–N seconds between requests. Ignored with `-b` | `-d 1` |
+| `-v` | Verbose: print every request and its status line | `-v` |
+| `-f FILE` | Read URLs from a file, one per line | `-f urls.txt` |
+
+Without `-t` and `-r`, siege runs until you press Ctrl+C. Ctrl+C at any time also prints the report.
+
+Commands used for webserv:
+
+```
+# 1. Smoke test: does the basic path work?
+siege -c 1 -r 10 http://localhost:8080/
+
+# 2. Several clients at once
+siege -c 10 -r 100 http://localhost:8080/
+
+# 3. Eval-style stress test on a simple page
+siege -b -c 50 -t 1M http://localhost:8080/
+
+# 4. Large file: tests partial send() and the write offset
+mkfile 10m www/big.bin            # macOS
+fallocate -l 10M www/big.bin      # Ubuntu
+siege -b -c 20 -t 1M http://localhost:8080/big.bin
+
+# 5. Endurance: "siege indefinitely" - stop with Ctrl+C
+siege -b -c 50 http://localhost:8080/
+
+# Optional: POST
+siege -c 5 -r 10 "http://localhost:8080/upload POST data=1"
+```
+
+
+## Monitoring the server
+
+Run the server in one terminal, siege in a second, and the monitors below in a third. macOS has no `/proc` and no `watch` command, so it uses `lsof` and a shell loop.
+
+| What | macOS | Ubuntu |
+| --- | --- | --- |
+| Open fd count, every second | `while true; do lsof -p $(pgrep webserv) \| wc -l; sleep 1; done` | `watch -n1 "ls /proc/$(pgrep webserv)/fd \| wc -l"` |
+| TCP sockets only | `lsof -a -p $(pgrep webserv) -i TCP` | `lsof -a -p $(pgrep webserv) -i TCP` or `ss -tanp \| grep webserv` |
+| Hanging connections | `lsof -a -p $(pgrep webserv) -i TCP \| grep CLOSE_WAIT` | same, or `ss -tanp state close-wait \| grep webserv` |
+| Memory and CPU | `top -pid $(pgrep webserv)` | `top -p $(pgrep webserv)` |
+| Zombie processes (CGI) | `while true; do ps -ef \| grep defunct \| grep -v grep; sleep 1; done` | `watch -n1 "ps -ef \| grep defunct \| grep -v grep"` |
+
+
+`ulimit -n` controls how many file descriptors one process may open. It works the same on macOS and Ubuntu.
+
+| Command | Effect |
+| --- | --- |
+| `ulimit -n` | Show the current limit |
+| `ulimit -n 4096` | Set the limit for this terminal and the programs started from it |
+| `ulimit -Hn` | Show the hard limit; the soft limit cannot go above it |
+
