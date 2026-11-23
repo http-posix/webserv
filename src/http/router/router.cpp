@@ -203,12 +203,6 @@ void HttpRouter::HandleLocationUploadEnable()
 	upload_location_ = loc_->upload_location;
 }
 
-void HttpRouter::HandleLocationUploadEnable()
-{
-	upload_enable_ = loc_->upload_enable;
-	upload_location_ = loc_->upload_location;
-}
-
 void HttpRouter::HandleLocation()
 {
 	HandleLocationRedirection();
