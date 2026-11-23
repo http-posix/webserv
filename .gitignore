@@ -48,6 +48,9 @@ tests/build/
 echo_server
 buckets
 
+# temporary (upload) files
+temp/
+
 #clangd configuration
 compile_flags.txt
 .clangd
