@@ -110,3 +110,6 @@ echo $? # run right after the server stops
 
 
 `strace -f ./webserv` - Linux, not MacOS
+
+
+https://man7.org/linux/man-pages/man2/accept.2.html
