@@ -47,6 +47,9 @@ webserv
 tests/build/
 echo_server
 
+# temporary (upload) files
+temp/
+
 #clangd configuration
 compile_flags.txt
 .clangd
