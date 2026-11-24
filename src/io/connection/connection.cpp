@@ -123,29 +123,52 @@ InstructionList Connection::ProcessReceivedBytes(const char* buf){
 }
 
 InstructionList	Connection::HandleCompleteRequest(){
-	InstructionList			instructions;
-	const HttpRequest&		request = http_parser_.GetRequest();
-	HttpRouter				router(request, server_config_);
-	HttpResponse			response(server_config_);
+	InstructionList		instructions;
+	HttpRequest			request = http_parser_.GetRequest();
+	HttpRouter			router(request, server_config_);
 
 	auto routed_request = router.GetRoutedRequest();
-	if (routed_request != std::nullopt)
-	{
-		response.BuildResponse(*routed_request);
-		instructions.Add(Action::WaitWritable, socket_.fd());
-		state_ = StateWriting{response.Serialize(), 0};
-		LOG_DEBUG("reading: request parsed -> writing fd=" + std::to_string(socket_.fd()), srv_id_);
+	if (routed_request != std::nullopt){
+			HttpResponse			response(server_config_);
+
+			response.BuildResponse(*routed_request);
+			instructions.Add(Action::WaitWritable, socket_.fd());
+			state_ = StateWriting{response.Serialize(), 0};
+			LOG_DEBUG("reading: request parsed -> writing fd=" + std::to_string(socket_.fd()), srv_id_);
 	}
-
-	// if (CGI == true){
-	// 	Cgi	cgi(request, response, server_config_, srv_id_);
-	// 	instructions.Add(Action::WatchCgi, cgi.pipe_fd());
-	// 	state_ = StateCGI{cgi.pipe_fd(), cgi.process_num()};
-		// LOG_DEBUG("reading: request parsed -> cgi fd=" + std::to_string(socket_.fd()), srv_id_);
-	// }
-	// else{
-	// }
-
+	else{
+		auto cgi_request = router.GetCgiRequest();
+		// invariant from router
+		assert(cgi_request != std::nullopt);
+	
+		Cgi	cgi(conn_info_, request, *cgi_request, srv_id_);
+		HttpStatusCode	status_code = cgi.SpawnChild();
+	
+		if (status_code != HttpStatusCode::OK){
+			// TODO check flow for dynamic resources
+			instructions.Add(Action::WaitWritable, socket_.fd());
+			state_ = StateWriting{BuildCgiError(status_code), 0};
+			LOG_WARN("reading: cgi spawn failed fd=" + std::to_string(socket_.fd()), srv_id_);
+		}
+		else{
+			if (cgi.pipe_write_fd() != posix::kInvalidFd)
+				instructions.Add(Action::WatchCgiWrite, cgi.pipe_write_fd());
+			instructions.Add(Action::WatchCgiRead, cgi.pipe_read_fd());
+			[[maybe_unused]] size_t body_size = request.body_.size();
+			state_ = StateCGI{cgi.pipe_read_fd(), 
+								cgi.child_pid(),
+								{},
+								{Clock::now() + kCgiTimeout},
+								cgi.pipe_write_fd(),
+								std::move(request.body_),
+								0
+							};
+			LOG_DEBUG("reading: cgi request parsed -> cgi fd=" + std::to_string(socket_.fd())
+					+ " pid=" + std::to_string(cgi.child_pid())
+					+ " body_size=" + std::to_string(body_size),
+					srv_id_);
+		}
+	}
 	return instructions;
 }
 
