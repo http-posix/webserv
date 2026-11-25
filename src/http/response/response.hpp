@@ -32,7 +32,8 @@ class HttpResponse
 
 		void HandleGet(const RoutedRequest& req);
 		void HandlePost(const RoutedRequest& req);
-		//void HandleDelete();
+		void HandleDelete(const RoutedRequest& req);
+
 	public :
 		class HttpResponseException : public std::exception {
 			private :
