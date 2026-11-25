@@ -10,8 +10,9 @@ server
 	}
 	location /upload
 	{
-		methods POST;
+		methods POST DELETE;
 		upload_enable on;
 		upload_store temp/;
+		root temp;
 	}
 }
