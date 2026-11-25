@@ -80,6 +80,9 @@ class Connection{
 		InstructionList	HandleReadTimeout(Clock::time_point now);
 		InstructionList	HandleWriteTimeout(Clock::time_point now);
 		InstructionList	HandleCgiDeadline(Clock::time_point now);
+		InstructionList ProcessReceivedBytes(const char* buf, size_t length);
+		InstructionList	HandleCompleteRequest();
+		InstructionList HandleErrorResponse(int status_code);
 
 		//bool				keep_alive_ ;
 	};
