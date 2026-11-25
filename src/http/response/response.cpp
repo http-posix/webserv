@@ -302,10 +302,9 @@ std::string ExtractFromContentDisposition(std::string str)
 		end++;
 	}
 	if (quote != 0)
-		result = str.substr(pos, end - pos);
-	else 
 		result = str.substr(pos + 1, end - pos + 1);
-		
+	else 
+		result = str.substr(pos, end - pos);
 	return (result);
 }
 
