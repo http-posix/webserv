@@ -68,6 +68,8 @@ class HttpRouter
 		std::optional<CgiRequest> GetCgiRequest();
 		std::optional<RoutedRequest> GetRoutedRequest();
 
+		// DotDotSegment also used in Response generation, hence needs to be public
+		bool static HasDotDotSegment(const std::string& path); 
 		class HttpStatusException : public std::exception {
 			private :
 				int error_code_;
