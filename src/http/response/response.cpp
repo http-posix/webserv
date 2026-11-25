@@ -321,8 +321,7 @@ std::string HttpResponse::FindFilename(const RoutedRequest& req)
 	}
 	filename = ExtractFromContentDisposition(content_disposition);
 	if (filename.empty())
-		filename = CreateNewFilename(req.upload_location);
-	return (filename);
+		return (CreateNewFilename(req.upload_location));
 	if (filename == ".." || HttpRouter::HasDotDotSegment(filename))
 	{
 		LOG_WARN("Invalid filename in requested method" + filename);
