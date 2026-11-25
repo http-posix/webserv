@@ -48,11 +48,6 @@ class Connection{
 		InstructionList	OnCgiWritable();
 		InstructionList	HandleTimeouts(Clock::time_point now);
 
-		InstructionList	OnCgi();
-		InstructionList ProcessReceivedBytes(const char* buf, size_t length);
-		InstructionList	HandleCompleteRequest();
-		InstructionList	HandleErrorResponse(int status_code);
-
 		const std::string	srv_id() const noexcept;
 		bool				InStateCgi() const noexcept;
 		int					cgi_read_fd() const noexcept;
