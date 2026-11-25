@@ -134,7 +134,7 @@ void HttpRouter::HandleLocationMethod()
 	std::string req_method_str;
 
 	if (loc_->allowed_methods.empty())
-		return ;
+		throw (HttpStatusException(Forbidden));
 	switch (req_.method_)
 	{
 		case (Get) : req_method_str = "GET"; break;
