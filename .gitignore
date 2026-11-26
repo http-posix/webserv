@@ -55,6 +55,7 @@ temp/
 compile_flags.txt
 .clangd
 compile_commands.json
+.cache/
 
 # macOS System files
 .DS_Store
