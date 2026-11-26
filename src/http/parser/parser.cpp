@@ -190,6 +190,7 @@ int HttpParser::ParseSingleHeaderLine(const std::string& header_line)
 	// But it cannot be at the start of the header line...
 	if (header_line[0] == ' ' || header_line[0] == '\t')
 	{
+		LOG_DEBUG("(Invalid Request) OWS found at start of header line");
 		state_ = Error;
 		external_state_ = InvalidRequest;
 		return (-1);
@@ -197,6 +198,7 @@ int HttpParser::ParseSingleHeaderLine(const std::string& header_line)
 	size_t colon = header_line.find(":");
 	if (colon == std::string::npos)
 	{
+		LOG_DEBUG("(Invalid Request) No colon found in header");
 		state_ = Error;
 		external_state_ = InvalidRequest;
 		return (-1);
@@ -209,6 +211,7 @@ int HttpParser::ParseSingleHeaderLine(const std::string& header_line)
 	// Empty name for header is invalid.
 	if (name.empty())
 	{
+		LOG_DEBUG("(Invalid Request): Empty header found");
 		state_ = Error;
 		external_state_ = InvalidRequest;
 		return (-1);
@@ -219,6 +222,7 @@ int HttpParser::ParseSingleHeaderLine(const std::string& header_line)
 	// It means we DO have whitespace and the name is invalid.
 	if (name.find(" ") != std::string::npos)
 	{
+		LOG_DEBUG("(Invalid Request): OWS found in header name");
 		state_ = Error;
 		external_state_ = InvalidRequest;
 		return (-1);
@@ -231,6 +235,7 @@ int HttpParser::ParseSingleHeaderLine(const std::string& header_line)
 	// included by this specific file.
 	if (string_has_non_token_character(name))
 	{
+		LOG_DEBUG("(Invalid Request): Non-token characters found in header name");
 		state_ = Error;
 		external_state_ = InvalidRequest;
 		return (-1);
@@ -306,6 +311,7 @@ int HttpParser::ParseHeaders()
 		// would need another decoder, so we reject them instead of guessing.
 		if (te != "chunked")
 		{
+			LOG_DEBUG("(Invalid Request): transfer-encoding header with non-chunked value");
 			state_ = Error;
 			external_state_ = InvalidRequest;
 			return (-1);
@@ -322,6 +328,7 @@ int HttpParser::ParseHeaders()
 		// wins, but rejecting it is simpler and keeps the parser strict.
 		if (chunked_)
 		{
+			LOG_DEBUG("(Invalid Request): Both Content-Length and Transfer-Encoding in request");
 			state_ = Error;
 			external_state_ = InvalidRequest;
 			return (-1);
@@ -330,6 +337,7 @@ int HttpParser::ParseHeaders()
 		// In case we have an invalid entry for content-length we result in an error.
 		if (!ParseDecimalSize(it->second, &len))
 		{
+			LOG_DEBUG("(Invalid Request): Error in parsing DecimalSize of Chunked HeaderLine");
 			state_ = Error;
 			external_state_ = InvalidRequest;
 			return (-1);
@@ -375,6 +383,7 @@ int HttpParser::ParseBody()
 	}
 	if (input_buffer_.size() > body_expected_len_)
 	{
+		LOG_DEBUG("(Invalid Request): Body of request bigger than Expected Length!");
 		state_ = Error;
 		external_state_ = InvalidRequest;
 		return (-1);
@@ -402,6 +411,7 @@ int HttpParser::ParseChunkedBody()
 		line = TrimOWS(line);
 		if (!ParseHexSize(line, &chunk_size_))
 		{
+			LOG_DEBUG("(Invalid Request): Couldn't parse heximal size of Chunked Body");
 			state_ = Error;
 			external_state_ = InvalidRequest;
 			return (-1);
@@ -524,6 +534,7 @@ int HttpParser::ParseRequestLine()
 	temp = input_buffer_.substr(0, i);
 	if (ParseMethod(temp) == -1)
 	{
+		LOG_DEBUG("(Invalid Request): Couldn't parse method (" + temp + ")");
 		state_ = Error;
 		external_state_ = InvalidRequest;
 		return (-1);
@@ -535,6 +546,7 @@ int HttpParser::ParseRequestLine()
 	j = input_buffer_.find(" ", i);
 	if (j == std::string::npos)
 	{
+		LOG_DEBUG("(Invalid Request): No space found between HTTP and Version");
 		state_ = Error;
 		external_state_ = InvalidRequest;
 		return (-1);
@@ -550,8 +562,12 @@ int HttpParser::ParseRequestLine()
 	// Trim Optional Whitespace left over from the path
 	temp = TrimOWS(temp);
 	if (ParseVersion(temp) == -1)
-		return (-1);	// TODO
-						// Invalid Version.
+	{
+		LOG_DEBUG("(Invalid Request): Version not Supported (" + temp + ")");
+		state_ = Error;
+		external_state_ = InvalidRequest; //TODO: Should really be 505
+		return (-1);	
+	}
 	
 	// Trim beginning of buffer to remove the request line. +2 to remove \r\n char as well.
 	input_buffer_ = input_buffer_.substr(input_i_ + 2);
