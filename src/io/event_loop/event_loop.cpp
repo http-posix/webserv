@@ -221,7 +221,7 @@ void	EventLoop::AcceptConnection(int entry_fd, const Server& l){
 	connections_.emplace(fd, 
 				Connection(std::move(accepted_socket), info, l.srv_id(), l.server_config()));
 	LOG_DEBUG("accept: new client fd=" + std::to_string(fd)
-				+ " from " + info.addr,
+				+ " from " + info.addr + ":" + std::to_string(ntohs(addr.sin_port)),
 				l.srv_id());
 	pm_.Watch(fd, POLLIN);
 }
