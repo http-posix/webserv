@@ -115,7 +115,7 @@ InstructionList Connection::ProcessReceivedBytes(const char* buf, size_t length)
 			break;
 		case HttpParserState::InvalidRequest:
 			LOG_DEBUG("reading: invalid request, closing fd=" + std::to_string(socket_.fd()), srv_id_);
-			instructions.Add(Action::CloseConnection, socket_.fd());
+			instructions = HandleErrorResponse(BadRequest);
 			break;
 		case HttpParserState::ContentLengthTooLarge:
 			instructions = HandleErrorResponse(PayloadTooLarge);
