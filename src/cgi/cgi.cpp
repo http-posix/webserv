@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <cstdlib>
 #include <fcntl.h>
+#include <sys/stat.h>
 
 /* ========================================================================== */
 /*                             Anonymous Namespace                            */
@@ -53,6 +54,10 @@ Cgi::Cgi(const ConnInfo& info,
 /* ========================================================================== */
 
 HttpStatusCode	Cgi::SpawnChild(){
+	if (!CheckInterpreter()){
+		return HttpStatusCode::InternalServerError;
+	}
+
 	if (!OpenPipe(stdout_pipe_, kReadEnd, "stdout_pipe"))
 		return HttpStatusCode::InternalServerError;
 	if (has_body_ && !OpenPipe(stdin_pipe_, kWriteEnd, "stdin_pipe")){
@@ -67,9 +72,6 @@ HttpStatusCode	Cgi::SpawnChild(){
 		ClosePipeFds(stdin_pipe_);
 		return HttpStatusCode::InternalServerError;
 	}
-	// who check access to script - here or in http parser?
-	// TODO: access(F_OK) -> 404, access(R_OK) -> 403. 
-	// Do it BEFORE pipe() (here or router), otherwise missing script = 502
 	if (pid_ == posix::kForkChild){
 		if (::dup2(stdout_pipe_[kWriteEnd], STDOUT_FILENO) == posix::kSyscallError){
 			LOG_ERROR("dup2() failed",  srv_id_);
@@ -149,6 +151,18 @@ bool	Cgi::OpenPipe(std::array<int, 2>& fds, int server_end, const char* name){
 	}
 	if (!posix::SetNonBlockingMode(fds[server_end], "pipe fd", srv_id_)){
 		ClosePipeFds(fds);
+		return false;
+	}
+	return true;
+}
+
+bool	Cgi::CheckInterpreter(){
+	struct stat	st;
+
+	if (::stat(interpreter_.c_str(), &st) == posix::kSyscallError
+		|| !S_ISREG(st.st_mode)
+		|| ::access(interpreter_.c_str(), X_OK) == posix::kSyscallError){
+		LOG_ERROR("cgi interpreter not executable: " + interpreter_, srv_id_);
 		return false;
 	}
 	return true;
