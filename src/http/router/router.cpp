@@ -198,7 +198,10 @@ void HttpRouter::HandleLocationIndex()
 		if (loc_->autoindex == true)
 			autoindex_ = true;
 		else
+		{
+			LOG_DEBUG("Attempting to open directory without autoindex enabled");
 			throw (HttpStatusException(Forbidden));
+		}
 	}
 	else
 		AppendIndex(loc_);
@@ -236,7 +239,10 @@ void HttpRouter::HandleNoLocation()
 	PrefixServerRoot();
 	// All methods except for GET need to be specified (and allowed) for specific location settings.
 	if (req_.method_ != Get)
+	{
+		LOG_DEBUG("Trying to POST/DELETE in folder without location settings");
 		throw(HttpStatusException(Forbidden));
+	}
 	AppendIndex(srv_cfg_);
 }
 

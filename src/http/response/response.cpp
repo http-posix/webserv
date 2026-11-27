@@ -368,13 +368,22 @@ void CreateUploadLocation(const std::string& loc)
 void HttpResponse::HandlePost(const RoutedRequest& req)
 {
 	if (req.upload_enable == false)
+	{
+		LOG_DEBUG("Trying to post in location without upload_enable on");
 		throw (HttpResponseException(Forbidden));
+	}
 	if (req.upload_location.empty())
+	{
+		LOG_DEBUG("No Upload location for location with upload_enable on");
 		throw(HttpResponseException(InternalServerError));
+	}
 	CreateUploadLocation(req.upload_location);
 	std::string filename = FindFilename(req);
 	if (filename.empty())
+	{
+		LOG_WARN("Could not create filename for POST method");
 		throw(HttpResponseException(InternalServerError));
+	}
 
 	UploadFile(filename, req.body);
 	headers_["location"] = filename;
