@@ -209,6 +209,14 @@ void HttpRouter::HandleLocationIndex()
 
 void HttpRouter::HandleLocationCgi()
 {
+	std::filesystem::path path = rerouted_filepath_;
+	LOG_DEBUG("Trying to check: " + rerouted_filepath_);
+	if (!std::filesystem::exists(path))
+	{
+		LOG_DEBUG("CGI file does not exist");
+		throw(HttpStatusException(FileNotFound));
+		return ;
+	}
 	if (!IsCgi(rerouted_filepath_))
 		return ;
 	cgi_ = true;
