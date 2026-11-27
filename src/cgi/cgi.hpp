@@ -65,4 +65,5 @@ class Cgi{
 		void	CloseFd(int& fd);
 		void	CloseInheritedFds();
 		bool	OpenPipe(std::array<int, 2>& fds, int server_end, const char* name);
+		bool	CheckInterpreter();
 	};
