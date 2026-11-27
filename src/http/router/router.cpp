@@ -280,7 +280,7 @@ HttpRouter::HttpRouter(const HttpRequest& req, const ServerConfig* cfg) :
 	// Otherwise append index and set default root.
 	try
 	{
-		if (req_.method_ == Post && HasDotDotSegment(req_.path_))
+		if (HasDotDotSegment(req_.path_))
 		{
 			LOG_DEBUG("Rejected path traversal attempt: " + req_.path_);
 			throw (HttpStatusException(Forbidden));
