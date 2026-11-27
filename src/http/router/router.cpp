@@ -215,7 +215,11 @@ void HttpRouter::HandleLocationCgi()
 	{
 		LOG_DEBUG("CGI file does not exist");
 		throw(HttpStatusException(FileNotFound));
-		return ;
+	}
+	if (std::filesystem::is_directory(path))
+	{
+		LOG_DEBUG("CGI File is really a directory");
+		throw(HttpStatusException(Forbidden));
 	}
 	if (!IsCgi(rerouted_filepath_))
 		return ;
