@@ -126,13 +126,12 @@ TEST_SUITE("Cgi") {
 		CHECK(WEXITSTATUS(r.status) != 0);
 	}
 
-	TEST_CASE("Missing interpreter -> execve fails, exit 1 (502)") {
+	TEST_CASE("Missing interpreter -> fails before pipe() (500)") {
 		Cgi	cgi(conn, MakeRequest(), MakeInfo("/no/such/python", "env.py"), "test");
-		REQUIRE(cgi.SpawnChild() == HttpStatusCode::OK);
+		REQUIRE(cgi.SpawnChild() == HttpStatusCode::InternalServerError);
 
-		ChildResult	r = ReadUntilEof(cgi.pipe_read_fd(), cgi.child_pid());
-		CHECK(r.eof);
-		CHECK(r.output.empty());
-		CHECK(WEXITSTATUS(r.status) == 127);
+		CHECK(cgi.child_pid() == posix::kInvalidPid);
+		CHECK(cgi.pipe_read_fd() == posix::kInvalidFd);
+		CHECK(cgi.pipe_write_fd() == posix::kInvalidFd);
 	}
 }
